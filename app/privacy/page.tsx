@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-export const metadata = { title: "Privacy Policy — Bias-Free Careers" };
+export const metadata = { title: "Privacy Policy — Equalhires" };
 
 export default function PrivacyPage() {
   return (
@@ -17,7 +17,7 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="text-xl font-semibold text-gray-900 mb-3">1. Who we are</h2>
-          <p>Bias-Free Careers (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is a skills-first hiring platform designed to reduce unconscious bias in recruitment. We are headquartered in Canada. Our platform masks personally identifiable information from recruiters until an interview is voluntarily scheduled.</p>
+          <p>Equalhires (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is a skills-first hiring platform designed to reduce unconscious bias in recruitment. We are headquartered in Canada. Our platform masks personally identifiable information from recruiters until an interview is voluntarily scheduled.</p>
         </section>
 
         <section>
@@ -72,7 +72,7 @@ export default function PrivacyPage() {
             <li>Opt out of marketing communications</li>
             <li>Data portability</li>
           </ul>
-          <p className="mt-3">To exercise these rights, contact us at <strong>privacy@biasfree.careers</strong>.</p>
+          <p className="mt-3">To exercise these rights, contact us at <strong>info@equalhires.com</strong>.</p>
         </section>
 
         <section>
@@ -92,7 +92,7 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="text-xl font-semibold text-gray-900 mb-3">11. Contact</h2>
-          <p>Questions? Reach us at <strong>privacy@biasfree.careers</strong> or through our <Link href="/about" className="text-brand-600 hover:underline">about page</Link>.</p>
+          <p>Questions? Reach us at <strong>info@equalhires.com</strong> or through our <Link href="/about" className="text-brand-600 hover:underline">about page</Link>.</p>
         </section>
       </div>
     </div>

@@ -20,7 +20,7 @@ interface ChatMessage {
 const WELCOME: ChatMessage = {
   id: "welcome",
   role: "bot",
-  text: "Hi! I'm your Bias-Free Careers assistant.\n\nI can help with job searching, applications, profile tips, navigation, and more. What would you like to know?",
+  text: "Hi! I'm your Equalhires assistant.\n\nI can help with job searching, applications, profile tips, navigation, and more. What would you like to know?",
   suggestions: [
     "How does it work?",
     "Find jobs",

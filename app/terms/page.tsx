@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-export const metadata = { title: "Terms of Service — Bias-Free Careers" };
+export const metadata = { title: "Terms of Service — Equalhires" };
 
 export default function TermsPage() {
   return (
@@ -17,7 +17,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="text-xl font-semibold text-gray-900 mb-3">1. Acceptance of terms</h2>
-          <p>By creating an account or using Bias-Free Careers (&quot;the platform&quot;, &quot;we&quot;, &quot;our&quot;), you agree to these Terms of Service. If you do not agree, do not use the platform.</p>
+          <p>By creating an account or using Equalhires (&quot;the platform&quot;, &quot;we&quot;, &quot;our&quot;), you agree to these Terms of Service. If you do not agree, do not use the platform.</p>
         </section>
 
         <section>
@@ -70,7 +70,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="text-xl font-semibold text-gray-900 mb-3">7. Intellectual property</h2>
-          <p>The platform, its design, and its code are owned by Bias-Free Careers. Your content (profile data, job postings) remains yours. You grant us a limited license to display and process it to operate the service.</p>
+          <p>The platform, its design, and its code are owned by Equalhires. Your content (profile data, job postings) remains yours. You grant us a limited license to display and process it to operate the service.</p>
         </section>
 
         <section>
@@ -95,7 +95,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="text-xl font-semibold text-gray-900 mb-3">12. Contact</h2>
-          <p>Questions about these terms? Email <strong>legal@biasfree.careers</strong> or see our <Link href="/privacy" className="text-brand-600 hover:underline">Privacy Policy</Link>.</p>
+          <p>Questions about these terms? Email <strong>info@equalhires.com</strong> or see our <Link href="/privacy" className="text-brand-600 hover:underline">Privacy Policy</Link>.</p>
         </section>
       </div>
     </div>

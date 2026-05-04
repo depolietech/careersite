@@ -76,7 +76,7 @@ export default function HelpCenterPage() {
         </div>
         <h1 className="text-3xl font-bold text-gray-900">Help Center</h1>
         <p className="text-gray-500 max-w-xl mx-auto">
-          Everything you need to know about applying for jobs anonymously and managing your career on Bias-Free Careers.
+          Everything you need to know about applying for jobs anonymously and managing your career on Equalhires.
         </p>
       </div>
 

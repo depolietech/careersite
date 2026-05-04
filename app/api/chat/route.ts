@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
       case "greeting": {
         if (userId && userRole === "JOB_SEEKER") {
           response = {
-            reply: "Hello! I'm your Bias-Free Careers assistant. How can I help you today?",
+            reply: "Hello! I'm your Equalhires assistant. How can I help you today?",
             suggestions: [
               "Show my applications",
               "Find jobs",
@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
         } else {
           response = {
             reply:
-              "Hello! Welcome to Bias-Free Careers — where hiring is based on skills, not identity. How can I help you?",
+              "Hello! Welcome to Equalhires — where hiring is based on skills, not identity. How can I help you?",
             suggestions: [
               "How does it work?",
               "Find jobs",
@@ -173,7 +173,7 @@ export async function POST(req: NextRequest) {
         } else {
           response = {
             reply:
-              "Bias-Free Careers works in 3 simple steps:\n\n🛡️ **Apply Anonymously** — Your name, photo, and personal details are hidden from employers\n\n⚡ **Get Evaluated Fairly** — Employers see only your skills and experience\n\n🔒 **Identity Revealed at Interview** — Your personal details are only shared once an interview is scheduled\n\nIt's completely free for job seekers!",
+              "Equalhires works in 3 simple steps:\n\n🛡️ **Apply Anonymously** — Your name, photo, and personal details are hidden from employers\n\n⚡ **Get Evaluated Fairly** — Employers see only your skills and experience\n\n🔒 **Identity Revealed at Interview** — Your personal details are only shared once an interview is scheduled\n\nIt's completely free for job seekers!",
             suggestions: [
               "Create a job seeker account",
               "I'm an employer",
@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
         const jobCount = await db.job.count({ where: { status: "ACTIVE" } });
         if (jobCount > 0) {
           response = {
-            reply: `There are currently **${jobCount} active job${jobCount !== 1 ? "s" : ""}** on Bias-Free Careers. You can browse all listings and filter by job type, location, or required skills.${
+            reply: `There are currently **${jobCount} active job${jobCount !== 1 ? "s" : ""}** on Equalhires. You can browse all listings and filter by job type, location, or required skills.${
               !userId ? "\n\nBrowsing is free — you'll need an account to apply." : ""
             }`,
             suggestions: [
@@ -222,7 +222,7 @@ export async function POST(req: NextRequest) {
         if (!userId) {
           response = {
             reply:
-              "To apply to jobs on Bias-Free Careers:\n\n1. **Create a free account** as a job seeker\n2. **Complete your profile** — add skills, experience, and education\n3. **Browse jobs** and click Apply on any listing\n4. Add an optional cover letter to stand out\n5. Your application is submitted anonymously — identity masked until an interview",
+              "To apply to jobs on Equalhires:\n\n1. **Create a free account** as a job seeker\n2. **Complete your profile** — add skills, experience, and education\n3. **Browse jobs** and click Apply on any listing\n4. Add an optional cover letter to stand out\n5. Your application is submitted anonymously — identity masked until an interview",
             suggestions: ["Create an account", "How does masking work?", "Browse jobs"],
             links: [
               { label: "Create Account", href: "/register?role=job-seeker" },
@@ -332,7 +332,7 @@ export async function POST(req: NextRequest) {
         if (!userId) {
           response = {
             reply:
-              "Interviews on Bias-Free Careers work differently:\n\n🔒 **Before interview:** Your identity is fully anonymous\n📅 **Interview scheduled:** The employer requests an interview with you\n✅ **Reveal:** Your name and personal details are shared with the employer\n📹 **Interview types:** Video call, phone, or in-person\n\nThis ensures you're evaluated on your skills first — not who you are.",
+              "Interviews on Equalhires work differently:\n\n🔒 **Before interview:** Your identity is fully anonymous\n📅 **Interview scheduled:** The employer requests an interview with you\n✅ **Reveal:** Your name and personal details are shared with the employer\n📹 **Interview types:** Video call, phone, or in-person\n\nThis ensures you're evaluated on your skills first — not who you are.",
             suggestions: ["Create an account", "How does masking work?", "Browse jobs"],
             links: [{ label: "Create Account", href: "/register?role=job-seeker" }],
           };
@@ -370,7 +370,7 @@ export async function POST(req: NextRequest) {
         if (!userId) {
           response = {
             reply:
-              "You can store up to **3 resumes** (PDF format, max 5 MB each) in your Bias-Free Careers account.\n\nResumes are managed from your profile — they supplement your anonymous profile when employers reveal your identity after scheduling an interview.",
+              "You can store up to **3 resumes** (PDF format, max 5 MB each) in your Equalhires account.\n\nResumes are managed from your profile — they supplement your anonymous profile when employers reveal your identity after scheduling an interview.",
             suggestions: ["Create an account", "Browse jobs", "How does it work?"],
             links: [{ label: "Create Account", href: "/register?role=job-seeker" }],
           };
@@ -398,7 +398,7 @@ export async function POST(req: NextRequest) {
         if (!userId) {
           response = {
             reply:
-              "Your profile on Bias-Free Careers includes:\n\n• **Skills & experience** — always visible to employers\n• **Work history** — role duration shown, company names masked\n• **Education** — degree shown, institution masked\n• **Personal details** — hidden until an interview is scheduled\n\nA complete profile helps you get shortlisted faster!",
+              "Your profile on Equalhires includes:\n\n• **Skills & experience** — always visible to employers\n• **Work history** — role duration shown, company names masked\n• **Education** — degree shown, institution masked\n• **Personal details** — hidden until an interview is scheduled\n\nA complete profile helps you get shortlisted faster!",
             suggestions: ["Create an account", "How does masking work?"],
             links: [{ label: "Create Account", href: "/register?role=job-seeker" }],
           };
@@ -449,7 +449,7 @@ export async function POST(req: NextRequest) {
       case "bias": {
         response = {
           reply:
-            "**How anonymous hiring works on Bias-Free Careers:**\n\n🛡️ **Hidden from employers:**\n• Your name and photo\n• School and university names\n• Employment dates and company names\n• Phone number\n\n👀 **Visible to employers:**\n• Your skills and years of experience\n• Job title and role description\n• Duration of each role\n• Degree type and field\n\n🔓 **When your identity is revealed:**\nOnly when an employer schedules an interview with you — never before.",
+            "**How anonymous hiring works on Equalhires:**\n\n🛡️ **Hidden from employers:**\n• Your name and photo\n• School and university names\n• Employment dates and company names\n• Phone number\n\n👀 **Visible to employers:**\n• Your skills and years of experience\n• Job title and role description\n• Duration of each role\n• Degree type and field\n\n🔓 **When your identity is revealed:**\nOnly when an employer schedules an interview with you — never before.",
           suggestions: [
             "Create an account",
             "How does interview reveal work?",
@@ -522,7 +522,7 @@ export async function POST(req: NextRequest) {
         if (!userId) {
           response = {
             reply:
-              "As an employer on Bias-Free Careers, you can:\n\n• **Post jobs** — describe the role and required skills\n• **Review anonymous candidates** — evaluated on skills only\n• **Shortlist fairly** — no unconscious bias\n• **Schedule interviews** — candidate identity is revealed automatically\n\nCompanies using anonymous hiring report **3× more diverse shortlists**.",
+              "As an employer on Equalhires, you can:\n\n• **Post jobs** — describe the role and required skills\n• **Review anonymous candidates** — evaluated on skills only\n• **Shortlist fairly** — no unconscious bias\n• **Schedule interviews** — candidate identity is revealed automatically\n\nCompanies using anonymous hiring report **3× more diverse shortlists**.",
             suggestions: ["Create employer account", "How does screening work?", "What's the cost?"],
             links: [{ label: "Start Hiring", href: "/register?role=employer" }],
           };
@@ -595,7 +595,7 @@ export async function POST(req: NextRequest) {
         } else {
           response = {
             reply:
-              "To get started on Bias-Free Careers:\n\n👤 **Job Seeker** — free account to apply to jobs anonymously\n🏢 **Employer** — post jobs and review bias-free applications\n\nAlready have an account? Sign in to continue.",
+              "To get started on Equalhires:\n\n👤 **Job Seeker** — free account to apply to jobs anonymously\n🏢 **Employer** — post jobs and review bias-free applications\n\nAlready have an account? Sign in to continue.",
             suggestions: [
               "Create job seeker account",
               "Create employer account",

@@ -21,12 +21,12 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: {
-    default: "Bias-Free Careers — Skills-First Hiring",
-    template: "%s | Bias-Free Careers",
+    default: "Equalhires — Skills-First Hiring",
+    template: "%s | Equalhires",
   },
   description:
     "A fair recruitment platform where candidates are evaluated on skills and experience — personal details revealed only when an interview is scheduled.",
-  keywords: ["jobs", "recruitment", "bias-free hiring", "fair hiring", "diversity"],
+  keywords: ["jobs", "recruitment", "equalhires", "fair hiring", "diversity"],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

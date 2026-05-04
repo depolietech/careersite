@@ -11,13 +11,13 @@ const CONTACT_DETAILS = [
   {
     icon: Mail,
     label: "Email us",
-    value: "hello@equalhire.io",
+    value: "info@equalhires.com",
     sub: "We reply within 1 business day.",
   },
   {
     icon: MapPin,
     label: "Headquarters",
-    value: "United States",
+    value: "Canada",
     sub: "Remote-first team.",
   },
   {
@@ -50,8 +50,11 @@ export default function ContactPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    // Simulate sending — replace with a real API call or email service later
-    await new Promise((r) => setTimeout(r, 1200));
+    await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
     setLoading(false);
     setSent(true);
   }
