@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Smartphone, ArrowUpRight, Star, CheckCircle2, MapPin, Briefcase, ArrowRight, Clock } from "lucide-react";

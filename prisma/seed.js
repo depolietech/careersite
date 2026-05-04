@@ -3,7 +3,8 @@ const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 
 const db = new PrismaClient();
-const HASH = bcrypt.hashSync("demo1234", 12);
+const HASH       = bcrypt.hashSync("demo1234", 12);
+const ADMIN_HASH = bcrypt.hashSync("Admin@Equalhires2024!", 12);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const skills = (...s) => JSON.stringify(s);
@@ -24,6 +25,17 @@ async function main() {
   await db.contractorProfile.deleteMany();
   await db.verificationToken.deleteMany();
   await db.user.deleteMany();
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // ADMIN
+  // ════════════════════════════════════════════════════════════════════════════
+  console.log("🔑 Creating admin account…");
+  await db.user.create({ data: {
+    email: "admin@equalhires.com",
+    passwordHash: ADMIN_HASH,
+    role: "ADMIN",
+    emailVerified: new Date(),
+  }});
 
   // ════════════════════════════════════════════════════════════════════════════
   // EMPLOYERS
@@ -1214,6 +1226,8 @@ async function main() {
   console.log(`   Conversations: ${counts[4]}`);
   console.log(`   Messages:      ${counts[5]}`);
 
+  console.log("\n🔑 Admin account:");
+  console.log("  admin@equalhires.com  — password: Admin@Equalhires2024!");
   console.log("\n📧 Demo accounts (password: demo1234)\n");
   console.log("RECRUITERS:");
   console.log("  recruiter.active@demo.com  — TechHire Solutions (agency, 3 jobs)");
