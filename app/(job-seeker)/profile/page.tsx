@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { Plus, Trash2, Upload, EyeOff, Linkedin, Github, Info, Loader2, Pencil, X, Building2, GraduationCap, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, TextArea, Select } from "@/components/ui/input";
+import { COUNTRIES, STATES, buildLocation, parseLocation, CURRENCY_LABEL } from "@/lib/locations";
 
 const IMPORT_SOURCES = [
   { id: "linkedin",     label: "LinkedIn",     logo: "🔵" },
@@ -18,14 +19,6 @@ const JOB_TYPE_OPTIONS = [
   { value: "part-time",  label: "Part-time" },
   { value: "contract",   label: "Contract" },
   { value: "remote",     label: "Remote only" },
-];
-
-const LOCATION_OPTIONS = [
-  { value: "",       label: "Select location" },
-  { value: "Remote", label: "Remote" },
-  { value: "Canada", label: "Canada" },
-  { value: "USA",    label: "United States" },
-  { value: "Mexico", label: "Mexico" },
 ];
 
 const ROLE_CATEGORY_OPTIONS = [
@@ -49,10 +42,6 @@ const DEGREE_OPTIONS = [
   { value: "Other",           label: "Other" },
 ];
 
-const CURRENCY_LABEL: Record<string, string> = {
-  Canada: "CAD", Mexico: "MXN",
-};
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type ProfileData = {
@@ -60,7 +49,7 @@ type ProfileData = {
   linkedinUrl: string; githubUrl: string;
   headline: string; summary: string;
   yearsExperience: string; jobType: string;
-  salaryMin: string; salaryMax: string; location: string;
+  salaryMin: string; salaryMax: string;
 };
 
 type WorkExpEntry = {
@@ -97,7 +86,7 @@ const EMPTY_PROFILE: ProfileData = {
   linkedinUrl: "", githubUrl: "",
   headline: "", summary: "",
   yearsExperience: "", jobType: "",
-  salaryMin: "", salaryMax: "", location: "",
+  salaryMin: "", salaryMax: "",
 };
 
 const EMPTY_WORK_EXP = {
@@ -381,6 +370,8 @@ export default function ProfilePage() {
   const [editingEduId, setEditingEduId] = useState<string | null>(null);
   const [addingCert, setAddingCert] = useState(false);
   const [editingCertId, setEditingCertId] = useState<string | null>(null);
+  const [country, setCountry] = useState("");
+  const [stateProvince, setStateProvince] = useState("");
 
   useEffect(() => {
     fetch("/api/profile")
@@ -399,8 +390,10 @@ export default function ProfilePage() {
             jobType:        data.jobType       ?? "",
             salaryMin:      data.salaryMin     ? String(data.salaryMin) : "",
             salaryMax:      data.salaryMax     ? String(data.salaryMax) : "",
-            location:       data.location      ?? "",
           });
+          const { country: c, state: s } = parseLocation(data.location);
+          setCountry(c);
+          setStateProvince(s);
           try { setSkills(JSON.parse(data.skills ?? "[]")); } catch { setSkills([]); }
 
           setWorkExps(
@@ -440,7 +433,7 @@ export default function ProfilePage() {
       const res = await fetch("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...profile, skills }),
+        body: JSON.stringify({ ...profile, skills, location: buildLocation(country, stateProvince) }),
       });
       if (!res.ok) {
         const d = await res.json();
@@ -700,15 +693,30 @@ export default function ProfilePage() {
           <h2 className="font-semibold text-gray-900">Job preferences <span className="text-green-600 text-xs font-normal">(visible)</span></h2>
           <div className="grid grid-cols-2 gap-4">
             <Select label="Preferred job type" options={JOB_TYPE_OPTIONS} value={profile.jobType} onChange={set("jobType")} />
-            <Select label="Preferred location" options={LOCATION_OPTIONS} value={profile.location} onChange={set("location")} />
+            <div className="space-y-3">
+              <Select
+                label="Preferred country"
+                options={COUNTRIES}
+                value={country}
+                onChange={(e) => { setCountry(e.target.value); setStateProvince(""); }}
+              />
+              {STATES[country]?.length > 0 && (
+                <Select
+                  label="State / Province"
+                  options={STATES[country]}
+                  value={stateProvince}
+                  onChange={(e) => setStateProvince(e.target.value)}
+                />
+              )}
+            </div>
           </div>
           {(() => {
-            const curr = CURRENCY_LABEL[profile.location] ?? "USD";
-            const label = curr !== "USD" ? curr : "$";
+            const curr = CURRENCY_LABEL[country] ?? "USD";
+            const currLabel = curr !== "USD" ? curr : "$";
             return (
               <div className="grid grid-cols-2 gap-4">
-                <Input label={`Min. salary (${label}/yr)`} type="number" placeholder="80000" value={profile.salaryMin} onChange={set("salaryMin")} />
-                <Input label={`Max. salary (${label}/yr)`} type="number" placeholder="120000" value={profile.salaryMax} onChange={set("salaryMax")} />
+                <Input label={`Min. salary (${currLabel}/yr)`} type="number" placeholder="80000" value={profile.salaryMin} onChange={set("salaryMin")} />
+                <Input label={`Max. salary (${currLabel}/yr)`} type="number" placeholder="120000" value={profile.salaryMax} onChange={set("salaryMax")} />
               </div>
             );
           })()}

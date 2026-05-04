@@ -23,7 +23,8 @@ const APP_LINKS: Record<string, NavLink[]> = {
   EMPLOYER: [
     { href: "/employer/dashboard",  label: "Home" },
     { href: "/employer/post-job",   label: "Post Job" },
-    { href: "/employer/applicants", label: "Talents" },
+    { href: "/employer/talent",     label: "Talents" },
+    { href: "/employer/applicants", label: "Applicants" },
   ],
 };
 APP_LINKS.CONTRACTOR = APP_LINKS.EMPLOYER;

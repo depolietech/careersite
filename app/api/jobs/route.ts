@@ -47,6 +47,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    const minSalary = salaryMin ? Number(salaryMin) : null;
+    const maxSalary = salaryMax ? Number(salaryMax) : null;
+    if (minSalary !== null && maxSalary !== null && minSalary > maxSalary) {
+      return NextResponse.json({ error: "Minimum salary cannot exceed maximum salary." }, { status: 400 });
+    }
+
     const user = await db.user.findUnique({
       where: { id: session.user.id },
       include: { employerProfile: true },
@@ -58,8 +64,8 @@ export async function POST(req: Request) {
         description,
         location,
         jobType,
-        salaryMin: salaryMin ? Number(salaryMin) : null,
-        salaryMax: salaryMax ? Number(salaryMax) : null,
+        salaryMin: minSalary,
+        salaryMax: maxSalary,
         skills: JSON.stringify(skills ?? []),
         experience: experience ? Number(experience) : null,
         educationRequired: educationRequired || null,

@@ -17,23 +17,17 @@ function detectIntent(msg: string): string {
     return "greeting";
 
   if (
-    /\b(bias|anonymous|masked|masking|privacy|hidden|reveal|identity|fair|discrimination|diverse|diversity|unconscious)\b/.test(
-      m
-    )
+    /\b(bias|anonymous|masked|masking|privacy|hidden|reveal|identity|fair|discrimination|diverse|diversity|unconscious)\b/.test(m)
   )
     return "bias";
 
   if (
-    /\b(how.*(work|start|begin|use)|get started|new here|first time|what is this|tell me about|explain|overview)\b/.test(
-      m
-    )
+    /\b(how.*(work|start|begin|use)|get started|new here|first time|what is this|tell me about|explain|overview)\b/.test(m)
   )
     return "onboarding";
 
   if (
-    /\b(find job|search job|browse job|look.*job|job listing|open position|available job|job opening|show.*job|see.*job|what job|all job)\b/.test(
-      m
-    )
+    /\b(find job|search job|browse job|look.*job|job listing|open position|available job|job opening|show.*job|see.*job|what job|all job)\b/.test(m)
   )
     return "jobs_search";
 
@@ -45,43 +39,50 @@ function detectIntent(msg: string): string {
   if (/\bapply\b/.test(m) && !/how/.test(m)) return "apply";
 
   if (
-    /\b(track|status|check.*application|my application|where.*application|application.*status|applied|what.*application)\b/.test(
-      m
-    )
+    /\b(track|status|check.*application|my application|where.*application|application.*status|applied|what.*application)\b/.test(m)
   )
     return "track";
+
+  if (/\b(reschedule|cancel.*interview|reject.*interview|decline.*interview|accept.*interview|interview.*action)\b/.test(m))
+    return "interview_action";
 
   if (/\binterview\b/.test(m)) return "interview";
 
   if (/\b(resume|cv|curriculum vitae|upload.*resume|my resume|pdf)\b/.test(m)) return "resume";
+
+  if (/\b(certification|certificate|cert|aws|pmp|google cert|add.*cert)\b/.test(m))
+    return "certifications";
 
   if (/\b(profile|complete.*profile|edit.*profile|update.*profile|my profile|strengthen)\b/.test(m))
     return "profile";
 
   if (/\b(notification|alert|bell|unread|update.*me)\b/.test(m)) return "notifications";
 
+  if (/\b(salary|pay|compensation|wage|range|minimum.*salary|maximum.*salary)\b/.test(m))
+    return "salary";
+
+  if (/\b(talent|talent pool|browse.*candidate|find.*candidate|search.*candidate)\b/.test(m))
+    return "talent";
+
   if (
-    /\b(employer|post.*job|hire|recruiter|hiring manager|talent|candidate|i.*hiring|company)\b/.test(
-      m
-    )
+    /\b(employer|post.*job|hire|recruiter|hiring manager|candidate|i.*hiring|company)\b/.test(m)
   )
     return "employer";
 
   if (
-    /\b(where|how.*get|navigate|navigation|go to|find.*page|settings|menu|dashboard|home page)\b/.test(
-      m
-    )
+    /\b(where|how.*get|navigate|navigation|go to|find.*page|settings|menu|dashboard|home page)\b/.test(m)
   )
     return "navigation";
 
   if (/\b(help|support|assist|problem|issue|trouble|contact|stuck|faq)\b/.test(m)) return "help";
 
   if (
-    /\b(login|log in|sign in|account|password|forgot password|sign up|register|create account|log out|sign out)\b/.test(
-      m
-    )
+    /\b(login|log in|sign in|account|password|forgot password|sign up|register|create account|log out|sign out)\b/.test(m)
   )
     return "account";
+
+  if (/\b(location|country|state|province|canada|usa|mexico|remote)\b/.test(m))
+    return "location";
 
   return "fallback";
 }
@@ -310,6 +311,23 @@ export async function POST(req: NextRequest) {
         break;
       }
 
+      case "interview_action": {
+        if (!userId || userRole !== "JOB_SEEKER") {
+          response = {
+            reply: "Interview response actions are available to job seekers once an interview is scheduled.",
+            suggestions: ["How does it work?", "Browse jobs"],
+          };
+        } else {
+          response = {
+            reply:
+              "When a recruiter schedules an interview with you, you can respond directly from your **Calendar** page:\n\n✅ **Accept** — Confirm you're attending\n❌ **Decline** — Choose a reason (schedule conflict, accepted another offer, etc.)\n🔄 **Request Reschedule** — Propose a new date/time with a note to the recruiter\n\nYour response is sent instantly to the recruiter.",
+            suggestions: ["View my calendar", "Track my applications", "How do interviews work?"],
+            links: [{ label: "Go to Calendar", href: "/calendar" }],
+          };
+        }
+        break;
+      }
+
       case "interview": {
         if (!userId) {
           response = {
@@ -439,6 +457,63 @@ export async function POST(req: NextRequest) {
             "How does it work?",
           ],
           links: [{ label: "Learn More", href: "/#how-it-works" }],
+        };
+        break;
+      }
+
+      case "certifications": {
+        response = {
+          reply:
+            "You can add **multiple certifications** to your profile — there's no limit!\n\nEach certification includes:\n• Certificate name (e.g. AWS Solutions Architect)\n• Issuing organization (e.g. Amazon Web Services)\n• Date obtained\n• Expiry date (if applicable)\n\nCertifications are **always visible** to recruiters — they're not masked. Use the **+ Add** button in the Certifications section of your profile.",
+          suggestions: ["Edit my profile", "How does masking work?", "Track my applications"],
+          links: [{ label: "Edit Profile", href: "/profile" }],
+        };
+        break;
+      }
+
+      case "salary": {
+        if (userRole === "EMPLOYER") {
+          response = {
+            reply:
+              "When posting a job, you can set a salary range (min and max). The system validates that **minimum ≤ maximum** — if you enter an invalid range, you'll see an error before the job can be submitted.\n\nShowing a salary range improves application quality and reduces time-to-hire.",
+            suggestions: ["Post a job", "View my applicants"],
+            links: [{ label: "Post a Job", href: "/employer/post-job" }],
+          };
+        } else {
+          response = {
+            reply:
+              "You can set your **salary expectations** in your profile under Job Preferences:\n• Minimum expected salary\n• Maximum expected salary\n\nThis is visible to recruiters (not masked) and helps match you to jobs within your range.",
+            suggestions: ["Edit my profile", "Browse jobs"],
+            links: [{ label: "Edit Profile", href: "/profile" }],
+          };
+        }
+        break;
+      }
+
+      case "talent": {
+        if (!userId || userRole !== "EMPLOYER") {
+          response = {
+            reply: "The Talent Pool is a feature for employers to browse anonymous candidate profiles and filter by skills, experience, and location.",
+            suggestions: ["I'm an employer", "How does it work?"],
+            links: [{ label: "Create Employer Account", href: "/register?role=employer" }],
+          };
+        } else {
+          const seekerCount = await db.jobSeekerProfile.count();
+          response = {
+            reply: `The **Talent Pool** tab has **${seekerCount} anonymous candidate profile${seekerCount !== 1 ? "s" : ""}** you can browse.\n\nFilter by:\n• **Skill** (e.g. React, Python)\n• **Location** (e.g. Ontario, Texas)\n• **Min. experience** (years)\n\nAll profiles are fully anonymous. Scheduling an interview reveals the candidate's identity.`,
+            suggestions: ["Browse talent", "Post a job", "View my applicants"],
+            links: [{ label: "Browse Talent Pool", href: "/employer/talent" }],
+          };
+        }
+        break;
+      }
+
+      case "location": {
+        response = {
+          reply:
+            "Location selection now supports **Country → State/Province**:\n\n🇨🇦 **Canada** → all provinces & territories\n🇺🇸 **United States** → all 50 states + D.C.\n🇲🇽 **Mexico** → all 31 states + CDMX\n🌐 **Remote** → no state required\n\nYou can set your preferred location in your **profile**, and recruiters set job locations when **posting a job**.",
+          suggestions: ["Edit my profile", "Browse jobs", "How does it work?"],
+          links: [{ label: "Edit Profile", href: "/profile" }],
         };
         break;
       }

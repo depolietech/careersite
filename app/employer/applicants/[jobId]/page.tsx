@@ -1,7 +1,7 @@
 "use client";
 import { useState, use, useEffect } from "react";
 import {
-  EyeOff, Calendar, Send, ChevronDown, ChevronUp,
+  EyeOff, Calendar, ChevronDown, ChevronUp,
   ArrowLeft, MapPin, Clock, Star, StarOff, X, Loader2, User,
 } from "lucide-react";
 import Link from "next/link";
@@ -72,6 +72,14 @@ const STATUS_OPTIONS = [
 ];
 
 // ─── Schedule Interview Modal ──────────────────────────────────────────────
+const MEETING_LINK_PATTERN =
+  /^https?:\/\/([\w-]+\.)?((zoom\.us|us\d+web\.zoom\.us)\/(j|my|wc)\/|(meet\.google\.com|hangouts\.google\.com)\/([\w-]+)|teams\.microsoft\.com\/l\/meetup-join\/|teams\.live\.com\/meet\/|gotomeeting\.com\/join\/|webex\.com\/meet\/|whereby\.com\/)/i;
+
+function validateMeetingLink(url: string): boolean {
+  if (!url) return true; // optional field
+  return MEETING_LINK_PATTERN.test(url);
+}
+
 function ScheduleModal({ candidateCode, applicationId, onClose, onScheduled }: {
   candidateCode: string;
   applicationId: string;
@@ -79,9 +87,25 @@ function ScheduleModal({ candidateCode, applicationId, onClose, onScheduled }: {
   onScheduled: (id: string) => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const [meetingLink, setMeetingLink] = useState("");
+  const [linkError, setLinkError] = useState("");
+
+  function handleLinkChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = e.target.value;
+    setMeetingLink(v);
+    if (v && !validateMeetingLink(v)) {
+      setLinkError("Please enter a valid Zoom, Google Meet, or Microsoft Teams link.");
+    } else {
+      setLinkError("");
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (meetingLink && !validateMeetingLink(meetingLink)) {
+      setLinkError("Please enter a valid Zoom, Google Meet, or Microsoft Teams link.");
+      return;
+    }
     setLoading(true);
     const fd = new FormData(e.currentTarget);
     await fetch("/api/applications/schedule", {
@@ -92,7 +116,7 @@ function ScheduleModal({ candidateCode, applicationId, onClose, onScheduled }: {
         scheduledAt: fd.get("scheduledAt"),
         duration: Number(fd.get("duration") ?? 60),
         type: fd.get("type"),
-        meetingLink: fd.get("meetingLink"),
+        meetingLink: meetingLink || null,
         notes: fd.get("notes"),
       }),
     });
@@ -103,7 +127,7 @@ function ScheduleModal({ candidateCode, applicationId, onClose, onScheduled }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="card w-full max-w-lg p-8 space-y-6">
+      <div className="card w-full max-w-lg overflow-y-auto max-h-[90vh] p-8 space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-gray-900">Schedule Interview</h2>
@@ -120,7 +144,7 @@ function ScheduleModal({ candidateCode, applicationId, onClose, onScheduled }: {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input name="scheduledAt" label="Date & time" type="datetime-local" required />
             <Select name="type" label="Interview format" options={INTERVIEW_TYPES} required />
           </div>
@@ -130,7 +154,16 @@ function ScheduleModal({ candidateCode, applicationId, onClose, onScheduled }: {
             { value: "60", label: "1 hour" },
             { value: "90", label: "90 minutes" },
           ]} />
-          <Input name="meetingLink" label="Meeting link" placeholder="https://meet.google.com/..." />
+          <div className="space-y-1">
+            <Input
+              label="Meeting link"
+              placeholder="https://meet.google.com/... or Zoom/Teams link"
+              value={meetingLink}
+              onChange={handleLinkChange}
+            />
+            {linkError && <p className="text-xs text-red-600">{linkError}</p>}
+            <p className="text-xs text-gray-400">Supported: Zoom, Google Meet, Microsoft Teams, GoToMeeting, Webex, Whereby</p>
+          </div>
           <TextArea name="notes" label="Notes for candidate" placeholder="Anything the candidate should prepare or know beforehand..." />
 
           <div className="flex gap-3 pt-2">
@@ -148,7 +181,6 @@ function ScheduleModal({ candidateCode, applicationId, onClose, onScheduled }: {
 // ─── Candidate Card ────────────────────────────────────────────────────────
 function CandidateCard({
   candidate,
-  jobId,
   onStatusChange,
 }: {
   candidate: Candidate;

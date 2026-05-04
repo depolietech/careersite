@@ -1,10 +1,22 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Calendar, Clock, Video, Phone, MapPin, Loader2 } from "lucide-react";
+import { Calendar, Clock, Video, Phone, MapPin, Loader2, CheckCircle, XCircle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Select, TextArea } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 
 const TYPE_ICON: Record<string, React.ElementType> = {
   video: Video, phone: Phone, "in-person": MapPin,
 };
+
+const REJECT_REASONS = [
+  { value: "",                            label: "Select a reason" },
+  { value: "Schedule conflict",           label: "Schedule conflict" },
+  { value: "No longer interested",        label: "No longer interested" },
+  { value: "Accepted another offer",      label: "Accepted another offer" },
+  { value: "Role not a good fit",         label: "Role not a good fit" },
+  { value: "Other",                       label: "Other" },
+];
 
 type Interview = {
   id: string;
@@ -13,8 +25,180 @@ type Interview = {
   type: string;
   meetingLink: string | null;
   notes: string | null;
+  seekerStatus: string;
+  seekerRescheduleProposedAt: string | null;
+  seekerRescheduleNote: string | null;
   application: { job: { title: string; location: string } };
 };
+
+type ActionPanel = "reject" | "reschedule" | null;
+
+function InterviewCard({ interview, onUpdated }: { interview: Interview; onUpdated: (iv: Interview) => void }) {
+  const Icon = TYPE_ICON[interview.type] ?? Video;
+  const [panel, setPanel] = useState<ActionPanel>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rescheduleAt, setRescheduleAt] = useState("");
+  const [rescheduleNote, setRescheduleNote] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const status = interview.seekerStatus ?? "PENDING";
+
+  function fmtDate(s: string) {
+    return new Date(s).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  }
+  function fmtTime(s: string, duration: number) {
+    const start = new Date(s);
+    const end = new Date(start.getTime() + duration * 60000);
+    return `${start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} – ${end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
+  }
+
+  async function sendAction(action: "ACCEPTED" | "REJECTED" | "RESCHEDULE_REQUESTED") {
+    if (action === "REJECTED" && !rejectReason) return;
+    if (action === "RESCHEDULE_REQUESTED" && !rescheduleAt) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/interviews", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          interviewId: interview.id,
+          action,
+          rejectionReason: rejectReason || undefined,
+          rescheduleProposedAt: rescheduleAt || undefined,
+          rescheduleNote: rescheduleNote || undefined,
+        }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        onUpdated({ ...interview, ...updated });
+        setPanel(null);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const statusBadge = () => {
+    if (status === "ACCEPTED")
+      return <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">Accepted</span>;
+    if (status === "REJECTED")
+      return <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-600">Declined</span>;
+    if (status === "RESCHEDULE_REQUESTED")
+      return <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">Reschedule Requested</span>;
+    return <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">Awaiting Response</span>;
+  };
+
+  return (
+    <div className="card p-6 space-y-4">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="font-bold text-gray-900 text-lg">{interview.application.job.title}</p>
+            {statusBadge()}
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-gray-500">
+            <span className="flex items-center gap-1.5"><Calendar size={14} />{fmtDate(interview.scheduledAt)}</span>
+            <span className="flex items-center gap-1.5"><Clock size={14} />{fmtTime(interview.scheduledAt, interview.duration)}</span>
+            <span className="flex items-center gap-1.5 capitalize"><Icon size={14} />{interview.type}</span>
+          </div>
+        </div>
+      </div>
+
+      {interview.notes && (
+        <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 text-sm text-gray-600">
+          <strong className="text-gray-700">Note from recruiter: </strong>{interview.notes}
+        </div>
+      )}
+
+      {interview.meetingLink && (
+        <a href={interview.meetingLink} target="_blank" rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 transition-colors">
+          <Video size={14} /> Join meeting
+        </a>
+      )}
+
+      {/* Action buttons — only show if pending */}
+      {status === "PENDING" && panel === null && (
+        <div className="flex flex-wrap gap-2 pt-1">
+          <Button size="sm" onClick={() => sendAction("ACCEPTED")} loading={saving}>
+            <CheckCircle size={14} /> Accept
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => { setPanel("reschedule"); }}
+          >
+            <RefreshCw size={14} /> Request Reschedule
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => { setPanel("reject"); }}
+            className="text-red-600 border-red-200 hover:bg-red-50"
+          >
+            <XCircle size={14} /> Decline
+          </Button>
+        </div>
+      )}
+
+      {/* Re-respond if previously acted */}
+      {status !== "PENDING" && panel === null && (
+        <button
+          onClick={() => setPanel("reject")}
+          className="text-xs text-gray-400 hover:text-gray-600 underline"
+        >
+          Change response
+        </button>
+      )}
+
+      {/* Reject panel */}
+      {panel === "reject" && (
+        <div className="rounded-xl bg-red-50 border border-red-100 p-4 space-y-3">
+          <p className="text-sm font-semibold text-red-700">Decline this interview</p>
+          <Select
+            label="Reason"
+            options={REJECT_REASONS}
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+          />
+          <div className="flex gap-2">
+            <Button size="sm" loading={saving} onClick={() => sendAction("REJECTED")} disabled={!rejectReason}>
+              Confirm decline
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => setPanel(null)}>Back</Button>
+          </div>
+        </div>
+      )}
+
+      {/* Reschedule panel */}
+      {panel === "reschedule" && (
+        <div className="rounded-xl bg-amber-50 border border-amber-100 p-4 space-y-3">
+          <p className="text-sm font-semibold text-amber-800">Request a different time</p>
+          <Input
+            label="Proposed date & time"
+            type="datetime-local"
+            value={rescheduleAt}
+            onChange={(e) => setRescheduleAt(e.target.value)}
+            required
+          />
+          <TextArea
+            label="Note to recruiter (optional)"
+            placeholder="e.g. I'm available after 2 PM on weekdays"
+            value={rescheduleNote}
+            onChange={(e) => setRescheduleNote(e.target.value)}
+          />
+          <div className="flex gap-2">
+            <Button size="sm" loading={saving} onClick={() => sendAction("RESCHEDULE_REQUESTED")} disabled={!rescheduleAt}>
+              Send request
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => setPanel(null)}>Back</Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CalendarPage() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
@@ -27,20 +211,15 @@ export default function CalendarPage() {
       .catch(() => setLoading(false));
   }, []);
 
-  function fmtDate(s: string) {
-    return new Date(s).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-  }
-  function fmtTime(s: string, duration: number) {
-    const start = new Date(s);
-    const end = new Date(start.getTime() + duration * 60000);
-    return `${start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} – ${end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
+  function handleUpdated(updated: Interview) {
+    setInterviews((prev) => prev.map((iv) => (iv.id === updated.id ? updated : iv)));
   }
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Calendar</h1>
-        <p className="text-gray-500 mt-1">Your upcoming interviews and events.</p>
+        <p className="text-gray-500 mt-1">Your upcoming interviews. Accept, decline, or request a different time.</p>
       </div>
 
       {loading ? (
@@ -55,35 +234,9 @@ export default function CalendarPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {interviews.map((iv) => {
-            const Icon = TYPE_ICON[iv.type] ?? Video;
-            return (
-              <div key={iv.id} className="card p-6 space-y-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="font-bold text-gray-900 text-lg">{iv.application.job.title}</p>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-gray-500">
-                      <span className="flex items-center gap-1.5"><Calendar size={14} />{fmtDate(iv.scheduledAt)}</span>
-                      <span className="flex items-center gap-1.5"><Clock size={14} />{fmtTime(iv.scheduledAt, iv.duration)}</span>
-                      <span className="flex items-center gap-1.5 capitalize"><Icon size={14} />{iv.type}</span>
-                    </div>
-                  </div>
-                  <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 shrink-0">Confirmed</span>
-                </div>
-                {iv.notes && (
-                  <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 text-sm text-gray-600">
-                    <strong className="text-gray-700">Note from recruiter: </strong>{iv.notes}
-                  </div>
-                )}
-                {iv.meetingLink && (
-                  <a href={iv.meetingLink} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 transition-colors">
-                    <Video size={14} /> Join meeting
-                  </a>
-                )}
-              </div>
-            );
-          })}
+          {interviews.map((iv) => (
+            <InterviewCard key={iv.id} interview={iv} onUpdated={handleUpdated} />
+          ))}
         </div>
       )}
     </div>

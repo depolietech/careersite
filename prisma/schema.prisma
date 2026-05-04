@@ -296,7 +296,29 @@ model Interview {
   meetingLink  String?
   notes        String?
 
-  createdAt    DateTime @default(now())
+  // Job seeker response
+  seekerStatus              String  @default("PENDING") // "PENDING" | "ACCEPTED" | "REJECTED" | "RESCHEDULE_REQUESTED"
+  seekerRejectionReason     String?
+  seekerRescheduleProposedAt DateTime?
+  seekerRescheduleNote      String?
+
+  // Recruiter cancel reason
+  cancelReason  String?
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime? @updatedAt
+}
+
+// ─── Admin Audit Log ──────────────────────────────────────────────────────────
+
+model AdminLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  action     String   // "DELETE_USER" | "BLOCK_USER" | "UNBLOCK_USER" | "APPROVE_EMPLOYER" | "NOTE"
+  targetId   String?  // userId or other entity id
+  targetType String?  // "USER" | "JOB" | "APPLICATION"
+  note       String?
+  createdAt  DateTime @default(now())
 }
 
 // ─── Messaging ────────────────────────────────────────────────────────────────
