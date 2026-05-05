@@ -27,6 +27,8 @@ export default function PostJobPage() {
   const router = useRouter();
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
+  const [certs, setCerts] = useState<string[]>([]);
+  const [certInput, setCertInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [country, setCountry] = useState("");
@@ -42,6 +44,12 @@ export default function PostJobPage() {
     const s = skillInput.trim();
     if (s && !skills.includes(s)) setSkills((p) => [...p, s]);
     setSkillInput("");
+  }
+
+  function addCert() {
+    const c = certInput.trim();
+    if (c && !certs.includes(c)) setCerts((p) => [...p, c]);
+    setCertInput("");
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -74,7 +82,7 @@ export default function PostJobPage() {
           salaryMax: maxVal,
           experience: fd.get("experience") || null,
           educationRequired: fd.get("educationRequired") || null,
-          certificateRequired: fd.get("certificateRequired") || null,
+          certificateRequired: certs.length > 0 ? certs.join(", ") : null,
           skills,
         }),
       });
@@ -133,11 +141,31 @@ export default function PostJobPage() {
             <Input name="experience" label="Years of experience required" type="number" placeholder="3" />
             <Select name="educationRequired" label="Minimum education" options={EDUCATION_OPTIONS} />
           </div>
-          <Input
-            name="certificateRequired"
-            label="Required certifications"
-            placeholder="e.g. PMP, AWS Solutions Architect (leave blank if none)"
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Required certifications <span className="text-gray-400 font-normal">(optional)</span></label>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {certs.map((c) => (
+                <span key={c} className="flex items-center gap-1.5 badge bg-brand-50 text-brand-700 text-sm px-3 py-1">
+                  {c}
+                  <button type="button" onClick={() => setCerts((p) => p.filter((x) => x !== c))}>
+                    <Trash2 size={11} className="text-brand-400 hover:text-brand-700" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                className="input flex-1"
+                placeholder="e.g. PMP, AWS Solutions Architect"
+                value={certInput}
+                onChange={(e) => setCertInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCert(); } }}
+              />
+              <Button type="button" variant="secondary" onClick={addCert}>
+                <Plus size={16} /> Add
+              </Button>
+            </div>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Required skills</label>
             <div className="flex flex-wrap gap-2 mb-3">
