@@ -9,10 +9,10 @@ const NAV = [
   { href: "/admin/logs",     label: "Audit Logs",   icon: FileText },
 ];
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminProtectedLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") {
-    redirect("/login?callbackUrl=/admin");
+    redirect("/admin/login");
   }
 
   return (
