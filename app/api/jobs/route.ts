@@ -14,12 +14,11 @@ export async function GET(req: Request) {
     where: {
       status: "ACTIVE",
       ...(q && { OR: [
-        { title: { contains: q } },
-        { description: { contains: q } },
-        { skills: { contains: q } },
+        { title: { contains: q, mode: "insensitive" as const } },
+        { description: { contains: q, mode: "insensitive" as const } },
+        { skills: { contains: q, mode: "insensitive" as const } },
       ]}),
-      // Exact match for location since values come from a controlled dropdown
-      ...(location && { location }),
+      ...(location && { location: { contains: location, mode: "insensitive" as const } }),
       ...(jobType && { jobType }),
     },
     include: {

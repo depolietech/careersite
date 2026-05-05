@@ -52,7 +52,7 @@ async function main() {
         companyName: "TechHire Solutions", companySize: "11-50",
         industry: "Staffing & Recruiting", website: "https://techhire.demo",
         description: "We connect elite tech talent with forward-thinking companies across North America.",
-        location: "Toronto, ON",
+        location: "Toronto, ON, Canada",
         interviewsScheduled: 24, interviewsCancelled: 2, trustScore: 96,
       }},
     }, include: { employerProfile: true } }),
@@ -63,7 +63,7 @@ async function main() {
       role: "EMPLOYER", recruiterType: "COMPANY", emailVerified: new Date(),
       employerProfile: { create: {
         companyName: "Bright Futures Staffing", companySize: "1-10",
-        industry: "Staffing & Recruiting", location: "Chicago, IL",
+        industry: "Staffing & Recruiting", location: "Chicago, IL, USA",
         interviewsScheduled: 0, trustScore: 100,
       }},
     }, include: { employerProfile: true } }),
@@ -76,7 +76,7 @@ async function main() {
         companyName: "TechCorp Americas", companySize: "201-1000",
         industry: "Software / SaaS", website: "https://techcorp.demo",
         description: "Leading SaaS company building the next generation of fintech infrastructure.",
-        location: "New York, NY",
+        location: "New York, NY, USA",
         interviewsScheduled: 18, interviewsCancelled: 1, trustScore: 98,
       }},
     }, include: { employerProfile: true } }),
@@ -89,7 +89,7 @@ async function main() {
         companyName: "FinServe Innovation", companySize: "51-200",
         industry: "Fintech", website: "https://finserve.demo",
         description: "Building next-gen payment rails and lending infrastructure for North American markets.",
-        location: "San Francisco, CA",
+        location: "San Francisco, CA, USA",
         interviewsScheduled: 12, interviewsCancelled: 0, trustScore: 100,
       }},
     }, include: { employerProfile: true } }),
@@ -102,7 +102,7 @@ async function main() {
         companyName: "HealthFirst Tech", companySize: "51-200",
         industry: "HealthTech", website: "https://healthfirst.demo",
         description: "Digital health platform connecting patients and providers across North America.",
-        location: "Seattle, WA",
+        location: "Seattle, WA, USA",
         interviewsScheduled: 9, interviewsCancelled: 1, trustScore: 95,
       }},
     }, include: { employerProfile: true } }),
@@ -115,7 +115,7 @@ async function main() {
         companyName: "StartupX", companySize: "1-10",
         industry: "E-Commerce", website: "https://startupx.demo",
         description: "Early-stage B2C marketplace disrupting local retail across North America.",
-        location: "Austin, TX",
+        location: "Austin, TX, USA",
         interviewsScheduled: 3, interviewsCancelled: 0, trustScore: 100,
       }},
     }, include: { employerProfile: true } }),
@@ -128,7 +128,7 @@ async function main() {
         companyName: "TalentBridge Agency", companySize: "11-50",
         industry: "Staffing & Recruiting",
         description: "Specialist tech recruiters placing senior engineers at top-tier companies across North America.",
-        location: "Vancouver, BC",
+        location: "Vancouver, BC, Canada",
         interviewsScheduled: 31, interviewsCancelled: 3, trustScore: 91,
       }},
     }, include: { employerProfile: true } }),
@@ -155,7 +155,7 @@ async function main() {
     // ── TechHire Solutions (r1) ──────────────────────────────────────────────
     db.job.create({ data: {
       title: "Senior Frontend Engineer", status: "ACTIVE",
-      location: "Remote (North America)", jobType: "full-time",
+      location: "Remote", jobType: "full-time",
       salaryMin: 80000, salaryMax: 110000, experience: 5,
       skills: skills("React", "TypeScript", "CSS", "GraphQL", "Figma"),
       description: "Own the front-end architecture for a fast-growing SaaS platform. You'll mentor junior engineers, set coding standards, and ship polished React UIs.\n\nResponsibilities:\n- Architect scalable component libraries\n- Drive Figma-to-code handoffs with designers\n- Lead performance and accessibility improvements\n- Conduct code reviews",
@@ -164,7 +164,7 @@ async function main() {
 
     db.job.create({ data: {
       title: "Backend Engineer – Node.js", status: "ACTIVE",
-      location: "Toronto, ON (Hybrid)", jobType: "full-time",
+      location: "Toronto, ON, Canada", jobType: "full-time",
       salaryMin: 70000, salaryMax: 100000, experience: 3,
       skills: skills("Node.js", "PostgreSQL", "Docker", "AWS", "TypeScript"),
       description: "Build robust REST and GraphQL APIs for a high-traffic platform. You'll own database design, API contracts, and CI/CD pipelines.\n\nYou will:\n- Design and implement APIs used by 100k+ users\n- Optimise PostgreSQL queries and indexing\n- Set up and maintain Docker and AWS infrastructure\n- Write comprehensive unit and integration tests",
@@ -183,7 +183,7 @@ async function main() {
     // ── TechCorp Africa (r3) ─────────────────────────────────────────────────
     db.job.create({ data: {
       title: "Full-Stack Developer", status: "ACTIVE",
-      location: "New York, NY", jobType: "full-time",
+      location: "New York, NY, USA", jobType: "full-time",
       salaryMin: 60000, salaryMax: 85000, experience: 3,
       skills: skills("React", "Node.js", "MongoDB", "TypeScript", "Redis"),
       description: "Join our core product team building mission-critical fintech infrastructure. You'll contribute across the full stack from API to UI.\n\nWhat you'll do:\n- Build new product features end-to-end\n- Collaborate on API design and database modelling\n- Write tests and participate in code reviews\n- Own features from design through deployment",
@@ -192,7 +192,7 @@ async function main() {
 
     db.job.create({ data: {
       title: "React Native Developer", status: "ACTIVE",
-      location: "Toronto, ON (Remote OK)", jobType: "full-time",
+      location: "Toronto, ON, Canada", jobType: "full-time",
       salaryMin: 55000, salaryMax: 80000, experience: 3,
       skills: skills("React Native", "TypeScript", "iOS", "Android", "Firebase"),
       description: "Build our consumer-facing mobile apps for iOS and Android. You will work closely with the design team to deliver pixel-perfect, performant mobile experiences.",
@@ -211,7 +211,7 @@ async function main() {
     // ── FinServe Innovation (r4) ─────────────────────────────────────────────
     db.job.create({ data: {
       title: "Machine Learning Engineer", status: "ACTIVE",
-      location: "New York, NY (Hybrid)", jobType: "full-time",
+      location: "New York, NY, USA", jobType: "full-time",
       salaryMin: 90000, salaryMax: 130000, experience: 4,
       skills: skills("Python", "TensorFlow", "PyTorch", "MLflow", "AWS SageMaker"),
       description: "Build and productionise ML models for credit scoring, fraud detection, and personalisation at scale. Collaborate with data scientists and engineers to take models from experiment to production.",
@@ -220,7 +220,7 @@ async function main() {
 
     db.job.create({ data: {
       title: "Backend Python Developer", status: "ACTIVE",
-      location: "New York, NY", jobType: "full-time",
+      location: "New York, NY, USA", jobType: "full-time",
       salaryMin: 80000, salaryMax: 110000, experience: 3,
       skills: skills("Python", "Django", "PostgreSQL", "Celery", "Redis", "Docker"),
       description: "Join our platform team building the core payment and lending APIs. High-throughput systems serving millions of transactions daily.",
@@ -229,7 +229,7 @@ async function main() {
 
     db.job.create({ data: {
       title: "Security Engineer", status: "ACTIVE",
-      location: "New York, NY (Hybrid)", jobType: "full-time",
+      location: "New York, NY, USA", jobType: "full-time",
       salaryMin: 95000, salaryMax: 135000, experience: 5,
       skills: skills("Penetration Testing", "OWASP", "AWS Security", "SIEM", "Compliance"),
       description: "Own our security posture across infrastructure, applications, and processes. Conduct penetration tests, implement threat detection, and advise engineering teams on secure coding.",
@@ -239,7 +239,7 @@ async function main() {
     // ── HealthFirst Tech (r5) ────────────────────────────────────────────────
     db.job.create({ data: {
       title: "Full-Stack Engineer – HealthTech", status: "ACTIVE",
-      location: "Seattle, WA (Hybrid)", jobType: "full-time",
+      location: "Seattle, WA, USA", jobType: "full-time",
       salaryMin: 45000, salaryMax: 65000, experience: 3,
       skills: skills("React", "Django", "PostgreSQL", "AWS", "FHIR"),
       description: "Build life-changing health applications connecting patients and clinicians. Work on EHR integrations, telemedicine features, and patient portals.",
@@ -257,7 +257,7 @@ async function main() {
 
     db.job.create({ data: {
       title: "Product Manager – Patient Experience", status: "ACTIVE",
-      location: "Seattle, WA", jobType: "full-time",
+      location: "Seattle, WA, USA", jobType: "full-time",
       salaryMin: 55000, salaryMax: 75000, experience: 4,
       skills: skills("Product Strategy", "Roadmapping", "Data Analysis", "Agile", "Healthcare"),
       description: "Own the patient-facing product roadmap. Work with clinicians, engineers, and designers to identify problems and ship solutions that improve health outcomes.",
@@ -267,7 +267,7 @@ async function main() {
     // ── StartupX (r6) ────────────────────────────────────────────────────────
     db.job.create({ data: {
       title: "Full-Stack Developer (Founding Team)", status: "ACTIVE",
-      location: "Austin, TX", jobType: "full-time",
+      location: "Austin, TX, USA", jobType: "full-time",
       salaryMin: 35000, salaryMax: 55000, experience: 2,
       skills: skills("React", "Node.js", "PostgreSQL", "TypeScript", "Stripe"),
       description: "Join our 5-person founding team and own everything from API to checkout. Expect high ownership, fast pace, and meaningful equity.\n\nYou'll be the 2nd engineer — your architecture decisions will shape the product for years.",
@@ -276,7 +276,7 @@ async function main() {
 
     db.job.create({ data: {
       title: "Growth & Marketing Lead", status: "ACTIVE",
-      location: "Austin, TX (Hybrid)", jobType: "full-time",
+      location: "Austin, TX, USA", jobType: "full-time",
       salaryMin: 30000, salaryMax: 50000, experience: 2,
       skills: skills("SEO", "Content Marketing", "Social Media", "Analytics", "Copywriting"),
       description: "Drive user acquisition and retention for our marketplace. Own our social channels, SEO strategy, paid campaigns, and content calendar.",
@@ -286,7 +286,7 @@ async function main() {
     // ── TalentBridge Agency (r7) ─────────────────────────────────────────────
     db.job.create({ data: {
       title: "Senior Java Developer", status: "ACTIVE",
-      location: "Vancouver, BC (Hybrid)", jobType: "full-time",
+      location: "Vancouver, BC, Canada", jobType: "full-time",
       salaryMin: 90000, salaryMax: 120000, experience: 6,
       skills: skills("Java", "Spring Boot", "Microservices", "Kafka", "PostgreSQL"),
       description: "Exciting opportunity with a leading European enterprise software company. You'll build high-scale microservices handling 10M+ daily events.",
@@ -324,7 +324,7 @@ async function main() {
     // ── Extra jobs for realism (posted by r1, r3) ────────────────────────────
     db.job.create({ data: {
       title: "Android Developer – Kotlin", status: "ACTIVE",
-      location: "Toronto, ON", jobType: "full-time",
+      location: "Toronto, ON, Canada", jobType: "full-time",
       salaryMin: 50000, salaryMax: 75000, experience: 3,
       skills: skills("Kotlin", "Android", "Jetpack Compose", "Firebase", "REST APIs"),
       description: "Build and maintain our Android application serving 200k+ users. Work closely with backend engineers and product designers.",
@@ -351,7 +351,7 @@ async function main() {
 
     db.job.create({ data: {
       title: "Scrum Master / Agile Coach", status: "ACTIVE",
-      location: "New York, NY", jobType: "full-time",
+      location: "New York, NY, USA", jobType: "full-time",
       salaryMin: 70000, salaryMax: 90000, experience: 4,
       skills: skills("Agile", "Scrum", "Jira", "Team Facilitation", "Stakeholder Management"),
       description: "Facilitate 3 cross-functional engineering teams delivering high-impact fintech features. Coach teams on continuous improvement.",
@@ -360,7 +360,7 @@ async function main() {
 
     db.job.create({ data: {
       title: "Frontend Developer – Vue.js", status: "ACTIVE",
-      location: "Vancouver, BC", jobType: "full-time",
+      location: "Vancouver, BC, Canada", jobType: "full-time",
       salaryMin: 65000, salaryMax: 90000, experience: 3,
       skills: skills("Vue.js", "TypeScript", "Pinia", "Nuxt", "TailwindCSS"),
       description: "Join a small product team building a B2B SaaS dashboard. Own the frontend, contribute to product direction, and ship with high craft.",
@@ -369,7 +369,7 @@ async function main() {
 
     db.job.create({ data: {
       title: "Data Analyst – Business Intelligence", status: "ACTIVE",
-      location: "Seattle, WA", jobType: "full-time",
+      location: "Seattle, WA, USA", jobType: "full-time",
       salaryMin: 35000, salaryMax: 55000, experience: 2,
       skills: skills("SQL", "Tableau", "Python", "Google Sheets", "dbt"),
       description: "Transform raw data into insights that drive business decisions. Build dashboards, run ad-hoc analyses, and work closely with product and ops teams.",
@@ -427,7 +427,7 @@ async function main() {
       headline: "Frontend Engineer | React & TypeScript Specialist",
       summary: "Detail-obsessed frontend engineer who loves crafting performant, accessible UIs. Open-source contributor with a design sensibility.",
       skills: skills("React","TypeScript","Next.js","TailwindCSS","Jest","Figma"),
-      yearsExperience: 4, jobType: "full-time", location: "Toronto, ON",
+      yearsExperience: 4, jobType: "full-time", location: "Toronto, ON, Canada",
       salaryMin: 55000, salaryMax: 80000,
       experiences: [
         { title: "Frontend Engineer", company: "PayStack (contract)", startDate: "2023-01", current: true,
@@ -445,7 +445,7 @@ async function main() {
       headline: "Data Scientist | ML & Predictive Analytics",
       summary: "Data scientist with 5 years building predictive models in finance and e-commerce. Comfortable taking an idea from raw data to deployed API.",
       skills: skills("Python","TensorFlow","Scikit-learn","SQL","Tableau","AWS SageMaker"),
-      yearsExperience: 5, jobType: "full-time", location: "San Francisco, CA",
+      yearsExperience: 5, jobType: "full-time", location: "San Francisco, CA, USA",
       salaryMin: 110000, salaryMax: 150000,
       experiences: [
         { title: "Data Scientist", company: "Stripe", startDate: "2021-04", current: true,
@@ -463,7 +463,7 @@ async function main() {
       headline: "UX/UI Designer | Product Design & Research",
       summary: "Empathy-driven designer with 3 years crafting accessible, conversion-focused product experiences for mobile and web.",
       skills: skills("Figma","User Research","Usability Testing","Prototyping","Design Systems","Accessibility"),
-      yearsExperience: 3, jobType: "full-time", location: "Los Angeles, CA",
+      yearsExperience: 3, jobType: "full-time", location: "Los Angeles, CA, USA",
       salaryMin: 45000, salaryMax: 65000,
       experiences: [
         { title: "Product Designer", company: "Razorpay", startDate: "2022-06", current: true,
@@ -499,7 +499,7 @@ async function main() {
       headline: "Product Manager | B2B SaaS & Fintech",
       summary: "Product leader with a track record of shipping 0-to-1 features in fintech and B2B SaaS. Data-informed, customer-obsessed.",
       skills: skills("Product Strategy","Roadmapping","SQL","A/B Testing","Agile","Jira","Figma"),
-      yearsExperience: 5, jobType: "full-time", location: "New York, NY",
+      yearsExperience: 5, jobType: "full-time", location: "New York, NY, USA",
       salaryMin: 80000, salaryMax: 110000,
       experiences: [
         { title: "Senior Product Manager", company: "Monzo", startDate: "2021-07", current: true,
@@ -517,7 +517,7 @@ async function main() {
       headline: "Backend Python Engineer | Django & FastAPI",
       summary: "Backend engineer specialising in high-performance Python APIs and async systems. Contributor to open-source Django packages.",
       skills: skills("Python","Django","FastAPI","PostgreSQL","Redis","Celery","Docker"),
-      yearsExperience: 3, jobType: "full-time", location: "Austin, TX",
+      yearsExperience: 3, jobType: "full-time", location: "Austin, TX, USA",
       salaryMin: 40000, salaryMax: 60000,
       experiences: [
         { title: "Backend Engineer", company: "Hubtel", startDate: "2022-01", current: true,
@@ -553,7 +553,7 @@ async function main() {
       headline: "Mobile Developer | React Native & iOS (Swift)",
       summary: "Cross-platform mobile engineer with 4 years shipping consumer apps to the App Store and Google Play. Obsessed with smooth animations and app performance.",
       skills: skills("React Native","TypeScript","Swift","iOS","Android","Firebase","Expo"),
-      yearsExperience: 4, jobType: "full-time", location: "Chicago, IL",
+      yearsExperience: 4, jobType: "full-time", location: "Chicago, IL, USA",
       salaryMin: 50000, salaryMax: 75000,
       experiences: [
         { title: "Senior Mobile Developer", company: "CRED", startDate: "2021-10", current: true,
@@ -571,7 +571,7 @@ async function main() {
       headline: "ML / AI Engineer | NLP & Computer Vision",
       summary: "Machine learning engineer with 6 years across research and production ML systems. Published author in NLP. Expert in taking models from notebook to production API.",
       skills: skills("Python","PyTorch","Transformers","MLflow","AWS SageMaker","Docker","FastAPI"),
-      yearsExperience: 6, jobType: "full-time", location: "San Francisco, CA",
+      yearsExperience: 6, jobType: "full-time", location: "San Francisco, CA, USA",
       salaryMin: 95000, salaryMax: 135000,
       experiences: [
         { title: "Senior ML Engineer", company: "Sea Group (Shopee)", startDate: "2021-01", current: true,
@@ -589,7 +589,7 @@ async function main() {
       headline: "Full-Stack Developer | React, Node.js, MongoDB",
       summary: "Product-minded full-stack developer who loves building from idea to launch. Experience in e-commerce and edtech startups.",
       skills: skills("React","Node.js","MongoDB","Express","TypeScript","TailwindCSS","Vercel"),
-      yearsExperience: 3, jobType: "full-time", location: "Miami, FL",
+      yearsExperience: 3, jobType: "full-time", location: "Miami, FL, USA",
       salaryMin: 50000, salaryMax: 75000,
       experiences: [
         { title: "Full-Stack Developer", company: "Noon (E-Commerce)", startDate: "2022-04", current: true,
@@ -607,7 +607,7 @@ async function main() {
       headline: "Junior Frontend Developer | React & Vanilla JS",
       summary: "Recent graduate passionate about web development. Strong fundamentals in HTML, CSS, and JavaScript with growing React experience.",
       skills: skills("JavaScript","React","HTML","CSS","Git","Figma"),
-      yearsExperience: 1, jobType: "full-time", location: "Atlanta, GA",
+      yearsExperience: 1, jobType: "full-time", location: "Atlanta, GA, USA",
       salaryMin: 55000, salaryMax: 70000,
       experiences: [
         { title: "Junior Frontend Developer", company: "Local Digital Agency", startDate: "2023-09", current: true,
@@ -622,7 +622,7 @@ async function main() {
       headline: "Software Engineer | Java & Spring Boot",
       summary: "Backend engineer with 4 years building enterprise-grade microservices. Certified AWS Solutions Architect.",
       skills: skills("Java","Spring Boot","Microservices","PostgreSQL","Kafka","Docker","AWS"),
-      yearsExperience: 4, jobType: "full-time", location: "Phoenix, AZ",
+      yearsExperience: 4, jobType: "full-time", location: "Phoenix, AZ, USA",
       salaryMin: 55000, salaryMax: 80000,
       experiences: [
         { title: "Software Engineer", company: "Fawry (Fintech)", startDate: "2021-07", current: true,
@@ -640,7 +640,7 @@ async function main() {
       headline: "Senior Backend Engineer | Java, Kafka, Microservices",
       summary: "Seasoned backend engineer specialising in high-throughput event-driven systems. 6 years in fintech and logistics.",
       skills: skills("Java","Spring Boot","Kafka","Kubernetes","PostgreSQL","Redis","AWS"),
-      yearsExperience: 6, jobType: "full-time", location: "Vancouver, BC",
+      yearsExperience: 6, jobType: "full-time", location: "Vancouver, BC, Canada",
       salaryMin: 85000, salaryMax: 115000,
       experiences: [
         { title: "Senior Backend Engineer", company: "Booking.com", startDate: "2020-09", current: true,
@@ -658,7 +658,7 @@ async function main() {
       headline: "UX Researcher | Mixed Methods & Usability Testing",
       summary: "UX researcher who turns ambiguous problems into clear design opportunities. I run qualitative and quantitative studies that shape product strategy.",
       skills: skills("User Research","Usability Testing","Survey Design","Figma","Data Analysis","Accessibility"),
-      yearsExperience: 3, jobType: "full-time", location: "Portland, OR",
+      yearsExperience: 3, jobType: "full-time", location: "Portland, OR, USA",
       salaryMin: 60000, salaryMax: 85000,
       experiences: [
         { title: "UX Researcher", company: "Kakao", startDate: "2022-02", current: true,
@@ -676,7 +676,7 @@ async function main() {
       headline: "Cloud / Infrastructure Engineer | GCP & Kubernetes",
       summary: "Platform engineer with 5 years building reliable, scalable cloud infrastructure. Advocate for GitOps and infrastructure-as-code.",
       skills: skills("GCP","Kubernetes","Terraform","Helm","GitHub Actions","Prometheus","Grafana"),
-      yearsExperience: 5, jobType: "full-time", location: "Austin, TX",
+      yearsExperience: 5, jobType: "full-time", location: "Austin, TX, USA",
       salaryMin: 70000, salaryMax: 100000,
       experiences: [
         { title: "Senior Cloud Engineer", company: "MTN Group", startDate: "2021-08", current: true,
@@ -694,7 +694,7 @@ async function main() {
       headline: "Frontend Developer | Vue.js & Nuxt Specialist",
       summary: "Frontend developer with a keen eye for design and a passion for Vue.js. Experienced in building complex SPAs and SSR applications.",
       skills: skills("Vue.js","Nuxt","TypeScript","Pinia","TailwindCSS","REST APIs"),
-      yearsExperience: 3, jobType: "full-time", location: "Vancouver, BC",
+      yearsExperience: 3, jobType: "full-time", location: "Vancouver, BC, Canada",
       salaryMin: 60000, salaryMax: 85000,
       experiences: [
         { title: "Frontend Developer", company: "Mollie (Payments)", startDate: "2022-03", current: true,
@@ -730,7 +730,7 @@ async function main() {
       headline: "Data Analyst | SQL, Python & Tableau",
       summary: "Data analyst with 2 years turning messy business data into actionable insights. Strong in SQL, Python, and storytelling with data.",
       skills: skills("SQL","Python","Tableau","dbt","Google Analytics","Excel","BigQuery"),
-      yearsExperience: 2, jobType: "full-time", location: "Boston, MA",
+      yearsExperience: 2, jobType: "full-time", location: "Boston, MA, USA",
       salaryMin: 45000, salaryMax: 65000,
       experiences: [
         { title: "Data Analyst", company: "Mercari (E-Commerce)", startDate: "2023-04", current: true,
@@ -748,7 +748,7 @@ async function main() {
       headline: "Full-Stack Engineer | React & Django",
       summary: "5 years building products in edtech and agritech. Comfortable from database schema to React component. Proud open-source maintainer.",
       skills: skills("React","Django","PostgreSQL","AWS","TypeScript","REST APIs","Docker"),
-      yearsExperience: 5, jobType: "full-time", location: "Houston, TX",
+      yearsExperience: 5, jobType: "full-time", location: "Houston, TX, USA",
       salaryMin: 45000, salaryMax: 65000,
       experiences: [
         { title: "Full-Stack Engineer", company: "Wave Mobile Money", startDate: "2020-10", current: true,
@@ -766,7 +766,7 @@ async function main() {
       headline: "Product Designer | Design Systems & SaaS",
       summary: "Systematic product designer with a background in front-end development. I bridge the gap between design and engineering to ship scalable, beautiful products.",
       skills: skills("Figma","Design Systems","Prototyping","User Research","HTML","CSS","Framer"),
-      yearsExperience: 4, jobType: "full-time", location: "Boston, MA",
+      yearsExperience: 4, jobType: "full-time", location: "Boston, MA, USA",
       salaryMin: 65000, salaryMax: 90000,
       experiences: [
         { title: "Senior Product Designer", company: "N26 (Neobank)", startDate: "2021-06", current: true,
@@ -784,7 +784,7 @@ async function main() {
       headline: "Backend Engineer | Node.js, GraphQL & AWS",
       summary: "Backend engineer focused on scalable APIs and developer experience. Advocate for API-first design and thorough documentation.",
       skills: skills("Node.js","TypeScript","GraphQL","PostgreSQL","AWS","Redis","Prisma"),
-      yearsExperience: 3, jobType: "full-time", location: "Toronto, ON",
+      yearsExperience: 3, jobType: "full-time", location: "Toronto, ON, Canada",
       salaryMin: 50000, salaryMax: 70000,
       experiences: [
         { title: "Backend Engineer", company: "Flutterwave", startDate: "2022-05", current: true,
@@ -802,7 +802,7 @@ async function main() {
       headline: "Frontend Developer | React & Next.js",
       summary: "Junior-to-mid frontend developer passionate about component-driven development and great user experience.",
       skills: skills("React","Next.js","TypeScript","CSS Modules","Jest","Storybook"),
-      yearsExperience: 2, jobType: "full-time", location: "San Jose, CA",
+      yearsExperience: 2, jobType: "full-time", location: "San Jose, CA, USA",
       salaryMin: 40000, salaryMax: 60000,
       experiences: [
         { title: "Frontend Developer", company: "Tencent (contract)", startDate: "2023-01", current: true,
@@ -820,7 +820,7 @@ async function main() {
       headline: "Senior DevOps Engineer | Kubernetes & GCP",
       summary: "Infrastructure-obsessed engineer with 6 years automating everything that can be automated. Kubernetes CKA certified.",
       skills: skills("Kubernetes","GCP","Terraform","Helm","Prometheus","Grafana","ArgoCD","Golang"),
-      yearsExperience: 6, jobType: "full-time", location: "Calgary, AB",
+      yearsExperience: 6, jobType: "full-time", location: "Calgary, AB, Canada",
       salaryMin: 75000, salaryMax: 105000,
       experiences: [
         { title: "Senior DevOps Engineer", company: "Takealot (SA E-Commerce)", startDate: "2020-02", current: true,
@@ -838,7 +838,7 @@ async function main() {
       headline: "AI / ML Engineer | LLMs & Computer Vision",
       summary: "Applied ML engineer with 4 years delivering AI products in production. Specialises in fine-tuning LLMs and deploying computer vision pipelines.",
       skills: skills("Python","PyTorch","HuggingFace","OpenAI API","Computer Vision","FastAPI","AWS"),
-      yearsExperience: 4, jobType: "full-time", location: "Boston, MA",
+      yearsExperience: 4, jobType: "full-time", location: "Boston, MA, USA",
       salaryMin: 90000, salaryMax: 130000,
       experiences: [
         { title: "ML Engineer", company: "Aleph Alpha (AI)", startDate: "2022-09", current: true,
@@ -856,7 +856,7 @@ async function main() {
       headline: "Full-Stack Engineer | TypeScript End-to-End",
       summary: "TypeScript across the entire stack — React, Next.js, Node.js, Prisma. 5 years building and scaling startup products.",
       skills: skills("TypeScript","React","Next.js","Node.js","Prisma","PostgreSQL","tRPC","Tailwind"),
-      yearsExperience: 5, jobType: "full-time", location: "Ottawa, ON",
+      yearsExperience: 5, jobType: "full-time", location: "Ottawa, ON, Canada",
       salaryMin: 80000, salaryMax: 115000,
       experiences: [
         { title: "Senior Full-Stack Engineer", company: "Intercom", startDate: "2021-04", current: true,
@@ -874,7 +874,7 @@ async function main() {
       headline: "UX/UI Designer | Mobile-First & Inclusive Design",
       summary: "Designer specialising in mobile UX for emerging markets. Experience across fintech, e-commerce, and health apps. Strong research background.",
       skills: skills("Figma","User Research","Mobile UX","Accessibility","Prototyping","Lottie Animations"),
-      yearsExperience: 3, jobType: "full-time", location: "Seattle, WA",
+      yearsExperience: 3, jobType: "full-time", location: "Seattle, WA, USA",
       salaryMin: 40000, salaryMax: 60000,
       experiences: [
         { title: "UX Designer", company: "M-Pesa / Vodacom", startDate: "2022-09", current: true,
@@ -892,7 +892,7 @@ async function main() {
       headline: "Principal Engineer | Architecture & Team Leadership",
       summary: "7-year engineering career spanning IC work and tech lead roles. Expert in system design, mentoring, and building engineering culture.",
       skills: skills("System Design","TypeScript","Go","Kubernetes","PostgreSQL","Architecture","Team Leadership"),
-      yearsExperience: 7, jobType: "full-time", location: "New York, NY",
+      yearsExperience: 7, jobType: "full-time", location: "New York, NY, USA",
       salaryMin: 120000, salaryMax: 170000,
       experiences: [
         { title: "Tech Lead / Principal Engineer", company: "Revolut", startDate: "2020-05", current: true,
@@ -910,7 +910,7 @@ async function main() {
       headline: "Frontend Engineer | React & Performance Optimisation",
       summary: "Performance-focused frontend engineer. I obsess over Core Web Vitals, bundle sizes, and render-blocking resources.",
       skills: skills("React","TypeScript","Next.js","Web Performance","Lighthouse","CSS","Testing Library"),
-      yearsExperience: 3, jobType: "full-time", location: "Toronto, Canada",
+      yearsExperience: 3, jobType: "full-time", location: "Toronto, ON, Canada",
       salaryMin: 75000, salaryMax: 100000,
       experiences: [
         { title: "Frontend Engineer", company: "Shopify", startDate: "2022-09", current: true,
