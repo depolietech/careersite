@@ -77,8 +77,10 @@ function LoginForm() {
         router.push(callbackUrl);
       } else {
         const session = await fetch("/api/auth/session").then((r) => r.json());
-        const role = session?.user?.role;
-        router.push(role === "JOB_SEEKER" ? "/dashboard" : "/employer/dashboard");
+        const userRole = session?.user?.role;
+        if (userRole === "ADMIN") router.push("/admin");
+        else if (userRole === "JOB_SEEKER") router.push("/dashboard");
+        else router.push("/employer/dashboard");
       }
       router.refresh();
     } catch (err) {
