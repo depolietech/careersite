@@ -268,8 +268,8 @@ export default function JobsPage() {
       {/* Split layout */}
       <div className="flex gap-6">
 
-        {/* Job list */}
-        <div className="w-full md:w-96 shrink-0 space-y-3">
+        {/* Job list — hidden on mobile when a job is selected */}
+        <div className={`shrink-0 space-y-3 ${selectedJob && !bulkMode ? "hidden md:block md:w-96" : "w-full md:w-96"}`}>
           {loading && (
             <div className="flex justify-center py-12">
               <Loader2 size={24} className="animate-spin text-gray-400" />
@@ -336,8 +336,15 @@ export default function JobsPage() {
           </div>
         )}
         {selectedJob && !bulkMode && (
-          <div className="hidden md:block flex-1">
-            <div className="card p-8 sticky top-24 space-y-6 max-h-[calc(100vh-8rem)] overflow-y-auto">
+          <div className="flex-1">
+            <div className="card p-6 md:p-8 md:sticky md:top-24 space-y-6 md:max-h-[calc(100vh-8rem)] md:overflow-y-auto">
+              {/* Back button — mobile only */}
+              <button
+                className="flex md:hidden items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 -mt-1 mb-1"
+                onClick={() => setSelectedJob(null)}
+              >
+                <ArrowRight size={14} className="rotate-180" /> Back to jobs
+              </button>
               {(() => {
                 const skills = parseSkills(selectedJob.skills);
                 return (
