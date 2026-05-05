@@ -175,9 +175,9 @@ export default async function HomePage() {
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {recentJobs.map((job) => (
-                  <div key={job.id} className="card p-5 flex flex-col gap-3 hover:shadow-card-hover transition-shadow">
+                  <Link key={job.id} href="/jobs" className="card p-5 flex flex-col gap-3 hover:shadow-card-hover transition-shadow group">
                     <div>
-                      <p className="font-semibold text-gray-900">{job.title}</p>
+                      <p className="font-semibold text-gray-900 group-hover:text-brand-600 transition-colors">{job.title}</p>
                       <p className="text-sm text-gray-500 mt-0.5">
                         {job.employerProfile?.industry ?? "Company"}
                       </p>
@@ -189,14 +189,11 @@ export default async function HomePage() {
                     </div>
                     <div className="mt-auto pt-2 flex items-center justify-between">
                       <span className="text-xs text-gray-400">{job._count.applications} applicant{job._count.applications !== 1 ? "s" : ""}</span>
-                      <Link
-                        href="/register?role=job-seeker"
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-600 transition-colors"
-                      >
-                        Apply <ArrowRight size={12} />
-                      </Link>
+                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white group-hover:bg-brand-600 transition-colors">
+                        View job <ArrowRight size={12} />
+                      </span>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
