@@ -23,17 +23,31 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { companyName, companySize, industry, website, description, location } = await req.json();
+  const { companyName, companyLegalName, companySize, industry, website, businessAddress, phone, businessRegistrationNumber, linkedinUrl, description, location } = await req.json();
+
+  // If key identity fields changed after a rejection, reset to INCOMPLETE so they re-submit
+  const existing = await db.employerProfile.findUnique({ where: { userId: session.user.id } });
+  const identityChanged =
+    existing?.verificationStatus === "REJECTED" &&
+    (companyName !== existing.companyName ||
+      website !== existing.website ||
+      businessAddress !== existing.businessAddress);
 
   const profile = await db.employerProfile.update({
     where: { userId: session.user.id },
     data: {
-      companyName: companyName ?? undefined,
-      companySize: companySize ?? undefined,
-      industry: industry ?? undefined,
-      website: website ?? undefined,
-      description: description ?? undefined,
-      location: location ?? undefined,
+      companyName:                companyName                ?? undefined,
+      companyLegalName:           companyLegalName           ?? undefined,
+      companySize:                companySize                ?? undefined,
+      industry:                   industry                   ?? undefined,
+      website:                    website                    ?? undefined,
+      businessAddress:            businessAddress            ?? undefined,
+      phone:                      phone                      ?? undefined,
+      businessRegistrationNumber: businessRegistrationNumber ?? undefined,
+      linkedinUrl:                linkedinUrl                ?? undefined,
+      description:                description                ?? undefined,
+      location:                   location                   ?? undefined,
+      ...(identityChanged && { verificationStatus: "INCOMPLETE", verificationNote: null }),
     },
   });
 

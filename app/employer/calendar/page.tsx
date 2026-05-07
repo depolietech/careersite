@@ -4,24 +4,11 @@ import { Calendar, Clock, Video, Phone, MapPin, Plus, Loader2, ArrowLeft, X, Ref
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input, Select, TextArea } from "@/components/ui/input";
+import { useI18n } from "@/lib/i18n";
 
 const TYPE_ICON: Record<string, React.ElementType> = {
   video: Video, phone: Phone, "in-person": MapPin,
 };
-
-const INTERVIEW_TYPES = [
-  { value: "video",     label: "Video call" },
-  { value: "phone",     label: "Phone call" },
-  { value: "in-person", label: "In person" },
-];
-
-const CANCEL_REASONS = [
-  { value: "",                    label: "Select a reason" },
-  { value: "Role cancelled",      label: "Role cancelled" },
-  { value: "Candidate mismatch",  label: "Candidate mismatch" },
-  { value: "Scheduling conflict", label: "Scheduling conflict" },
-  { value: "Other",               label: "Other" },
-];
 
 type Interview = {
   id: string;
@@ -45,6 +32,21 @@ function validateMeetingLink(url: string) {
 export default function EmployerCalendarPage() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useI18n();
+
+  const INTERVIEW_TYPES = [
+    { value: "video",     label: t("interview.videoCall") },
+    { value: "phone",     label: t("interview.phoneCall") },
+    { value: "in-person", label: t("interview.inPerson") },
+  ];
+
+  const CANCEL_REASONS = [
+    { value: "",                    label: t("interview.selectReason") },
+    { value: "Role cancelled",      label: t("interview.reasonRoleCancelled") },
+    { value: "Candidate mismatch",  label: t("interview.reasonCandidateMismatch") },
+    { value: "Scheduling conflict", label: t("interview.reasonSchedulingConflict") },
+    { value: "Other",               label: t("profile.other") },
+  ];
 
   // cancel state
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -86,7 +88,7 @@ export default function EmployerCalendarPage() {
         setCancellingId(null);
         setCancelReason("");
         if (data.blocked) {
-          alert("Your account has been blocked due to 3 or more interview cancellations. Please contact admin.");
+          alert(t("employer.accountBlocked"));
         }
       }
     } finally {
@@ -112,7 +114,7 @@ export default function EmployerCalendarPage() {
   async function handleReschedule(id: string) {
     if (!rescheduleForm.scheduledAt) return;
     if (rescheduleForm.meetingLink && !validateMeetingLink(rescheduleForm.meetingLink)) {
-      setRescheduleLinkError("Please enter a valid Zoom, Google Meet, or Microsoft Teams link.");
+      setRescheduleLinkError(t("interview.invalidMeetingLink"));
       return;
     }
     setRescheduling(true);
@@ -144,10 +146,10 @@ export default function EmployerCalendarPage() {
   }
 
   const seekerBadge = (status: string) => {
-    if (status === "ACCEPTED") return <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Accepted by candidate</span>;
-    if (status === "REJECTED") return <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">Declined by candidate</span>;
-    if (status === "RESCHEDULE_REQUESTED") return <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">Reschedule requested</span>;
-    return <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Awaiting response</span>;
+    if (status === "ACCEPTED") return <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full">{t("interview.acceptedByCandidate")}</span>;
+    if (status === "REJECTED") return <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">{t("interview.declinedByCandidate")}</span>;
+    if (status === "RESCHEDULE_REQUESTED") return <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">{t("interview.rescheduleRequestedStatus")}</span>;
+    return <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{t("interview.awaitingCandidateResponse")}</span>;
   };
 
   return (
@@ -155,16 +157,16 @@ export default function EmployerCalendarPage() {
       <div className="flex items-center justify-between">
         <div>
           <Link href="/employer/dashboard" className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-3">
-            <ArrowLeft size={14} /> Back to dashboard
+            <ArrowLeft size={14} /> {t("employer.backToDashboard")}
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">Calendar</h1>
-          <p className="text-gray-500 mt-1">Upcoming interviews and scheduled sessions.</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t("interview.calendarTitle")}</h1>
+          <p className="text-gray-500 mt-1">{t("interview.employerCalendarDesc")}</p>
         </div>
         <Link
           href="/employer/applicants"
           className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 transition-colors"
         >
-          <Plus size={14} /> Schedule interview
+          <Plus size={14} /> {t("interview.scheduleInterview")}
         </Link>
       </div>
 
@@ -175,8 +177,8 @@ export default function EmployerCalendarPage() {
           <div className="h-14 w-14 rounded-full bg-gray-100 flex items-center justify-center">
             <Calendar size={24} className="text-gray-400" />
           </div>
-          <p className="font-semibold text-gray-900">No upcoming interviews</p>
-          <p className="text-sm text-gray-500">Schedule an interview from the applicants page to see it here.</p>
+          <p className="font-semibold text-gray-900">{t("interview.noInterviews")}</p>
+          <p className="text-sm text-gray-500">{t("interview.noInterviewsEmployer")}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -207,20 +209,20 @@ export default function EmployerCalendarPage() {
                         <Video size={13} /> Join
                       </a>
                     )}
-                    <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">Confirmed</span>
+                    <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">{t("interview.confirmed")}</span>
                     {!isCancelling && !isRescheduling && (
                       <>
                         <button
                           onClick={() => openReschedule(iv)}
                           className="rounded-lg border border-brand-200 px-3 py-1.5 text-xs font-semibold text-brand-600 hover:bg-brand-50 transition-colors flex items-center gap-1"
                         >
-                          <RefreshCw size={12} /> Reschedule
+                          <RefreshCw size={12} /> {t("interview.reschedule")}
                         </button>
                         <button
                           onClick={() => { setCancellingId(iv.id); setCancelReason(""); setReschedulingId(null); }}
                           className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-1"
                         >
-                          <X size={12} /> Cancel
+                          <X size={12} /> {t("interview.cancel")}
                         </button>
                       </>
                     )}
@@ -230,17 +232,17 @@ export default function EmployerCalendarPage() {
                 {/* Reschedule form */}
                 {isRescheduling && (
                   <div className="rounded-xl bg-brand-50 border border-brand-100 p-4 space-y-4">
-                    <p className="text-sm font-semibold text-brand-800">Reschedule interview</p>
+                    <p className="text-sm font-semibold text-brand-800">{t("interview.reschedulePanel")}</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <Input
-                        label="New date & time"
+                        label={t("interview.newDateTime")}
                         type="datetime-local"
                         value={rescheduleForm.scheduledAt}
                         onChange={(e) => setRescheduleForm((f) => ({ ...f, scheduledAt: e.target.value }))}
                         required
                       />
                       <Select
-                        label="Format"
+                        label={t("interview.format")}
                         options={INTERVIEW_TYPES}
                         value={rescheduleForm.type}
                         onChange={(e) => setRescheduleForm((f) => ({ ...f, type: e.target.value }))}
@@ -248,32 +250,32 @@ export default function EmployerCalendarPage() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <Select
-                        label="Duration"
+                        label={t("interview.interviewDuration")}
                         options={[
-                          { value: "30", label: "30 minutes" },
-                          { value: "45", label: "45 minutes" },
-                          { value: "60", label: "1 hour" },
-                          { value: "90", label: "90 minutes" },
+                          { value: "30", label: t("interview.duration30") },
+                          { value: "45", label: t("interview.duration45") },
+                          { value: "60", label: t("interview.duration60") },
+                          { value: "90", label: t("interview.duration90") },
                         ]}
                         value={rescheduleForm.duration}
                         onChange={(e) => setRescheduleForm((f) => ({ ...f, duration: e.target.value }))}
                       />
                       <div className="space-y-1">
                         <Input
-                          label="Meeting link"
-                          placeholder="Zoom / Google Meet / Teams"
+                          label={t("interview.meetingLink")}
+                          placeholder={t("interview.meetingLinkPlaceholder")}
                           value={rescheduleForm.meetingLink}
                           onChange={(e) => {
                             setRescheduleForm((f) => ({ ...f, meetingLink: e.target.value }));
-                            setRescheduleLinkError(e.target.value && !validateMeetingLink(e.target.value) ? "Invalid meeting link" : "");
+                            setRescheduleLinkError(e.target.value && !validateMeetingLink(e.target.value) ? t("interview.invalidMeetingLink") : "");
                           }}
                         />
                         {rescheduleLinkError && <p className="text-xs text-red-600">{rescheduleLinkError}</p>}
                       </div>
                     </div>
                     <TextArea
-                      label="Notes for candidate"
-                      placeholder="Any updates the candidate should know…"
+                      label={t("interview.notesForCandidate")}
+                      placeholder={t("interview.notesForCandidatePlaceholder")}
                       value={rescheduleForm.notes}
                       onChange={(e) => setRescheduleForm((f) => ({ ...f, notes: e.target.value }))}
                     />
@@ -283,14 +285,14 @@ export default function EmployerCalendarPage() {
                         loading={rescheduling}
                         onClick={() => handleReschedule(iv.id)}
                       >
-                        <RefreshCw size={13} /> Confirm reschedule
+                        <RefreshCw size={13} /> {t("interview.confirmReschedule")}
                       </Button>
                       <Button
                         size="sm"
                         variant="secondary"
                         onClick={() => setReschedulingId(null)}
                       >
-                        Cancel
+                        {t("common.cancel")}
                       </Button>
                     </div>
                   </div>
@@ -299,8 +301,8 @@ export default function EmployerCalendarPage() {
                 {/* Cancel form */}
                 {isCancelling && (
                   <div className="rounded-xl bg-red-50 border border-red-100 p-4 space-y-3">
-                    <p className="text-sm font-semibold text-red-700">Cancel this interview?</p>
-                    <p className="text-xs text-red-600">Cancelling resets the application to Shortlisted. After 3 cancellations your account will be blocked.</p>
+                    <p className="text-sm font-semibold text-red-700">{t("interview.cancelPanel")}</p>
+                    <p className="text-xs text-red-600">{t("interview.cancelWarning")}</p>
                     <div className="flex items-center gap-3 flex-wrap">
                       <select
                         className="input flex-1 text-sm min-w-[180px]"
@@ -316,13 +318,13 @@ export default function EmployerCalendarPage() {
                         onClick={() => handleCancel(iv.id)}
                         className="rounded-lg bg-red-500 px-4 py-2 text-xs font-semibold text-white hover:bg-red-600 transition-colors disabled:opacity-50"
                       >
-                        {cancelling ? "Cancelling…" : "Confirm cancel"}
+                        {cancelling ? t("interview.cancelling") : t("interview.confirmCancel")}
                       </button>
                       <button
                         onClick={() => { setCancellingId(null); setCancelReason(""); }}
                         className="rounded-lg border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
                       >
-                        Keep
+                        {t("interview.keep")}
                       </button>
                     </div>
                   </div>
@@ -330,7 +332,7 @@ export default function EmployerCalendarPage() {
 
                 {iv.notes && !isRescheduling && (
                   <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 text-sm text-gray-600">
-                    <strong className="text-gray-700">Notes: </strong>{iv.notes}
+                    <strong className="text-gray-700">{t("interview.notes")}</strong>{iv.notes}
                   </div>
                 )}
               </div>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { validatePasswordOrThrow } from "@/lib/password";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -16,8 +17,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    if (newPassword.length < 8) {
-      return NextResponse.json({ error: "New password must be at least 8 characters" }, { status: 400 });
+    try {
+      validatePasswordOrThrow(newPassword);
+    } catch (err) {
+      return NextResponse.json({ error: (err as Error).message }, { status: 400 });
     }
 
     const user = await db.user.findUnique({ where: { id: session.user.id } });

@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import { Providers } from "@/components/shared/Providers";
 import { Chatbot } from "@/components/shared/Chatbot";
 import { CookieBanner } from "@/components/cookie-banner";
+import { I18nProvider } from "@/lib/i18n";
 import "./globals.css";
 
 const inter = Inter({
@@ -33,11 +34,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <body>
-        <Providers>
-          {children}
-          <Chatbot />
-          <CookieBanner />
-        </Providers>
+        {/* Skip navigation — keyboard/screen reader accessibility */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg focus:outline-none"
+        >
+          Skip to main content
+        </a>
+
+        <I18nProvider>
+          <Providers>
+            {children}
+            <Chatbot />
+            <CookieBanner />
+          </Providers>
+        </I18nProvider>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { db } from "@/lib/db";
+import { sendVerificationEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
@@ -8,10 +9,8 @@ export async function POST(req: Request) {
     if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
 
     const user = await db.user.findUnique({ where: { email } });
-    // Silent success — don't reveal if the email exists
     if (!user || user.emailVerified) return NextResponse.json({ ok: true });
 
-    // Replace any existing tokens for this email
     await db.verificationToken.deleteMany({ where: { identifier: email } });
 
     const token = crypto.randomBytes(32).toString("hex");
@@ -23,8 +22,20 @@ export async function POST(req: Request) {
       },
     });
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-    console.log(`[EMAIL VERIFICATION] Resend link for ${email}: ${appUrl}/api/auth/verify-email?token=${token}`);
+    // Invalidate old email-verify OTP codes and generate a fresh one
+    await db.otpCode.deleteMany({ where: { userId: user.id, type: "email_verify" } });
+    const verifyCode = String(Math.floor(100000 + crypto.randomInt(900000)));
+    const codeHash = crypto.createHash("sha256").update(verifyCode).digest("hex");
+    await db.otpCode.create({
+      data: {
+        userId: user.id,
+        codeHash,
+        type: "email_verify",
+        expires: new Date(Date.now() + 15 * 60 * 1000),
+      },
+    });
+
+    await sendVerificationEmail(email, token, verifyCode);
 
     return NextResponse.json({ ok: true });
   } catch {

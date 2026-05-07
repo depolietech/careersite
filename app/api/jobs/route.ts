@@ -14,11 +14,11 @@ export async function GET(req: Request) {
     where: {
       status: "ACTIVE",
       ...(q && { OR: [
-        { title: { contains: q, mode: "insensitive" as const } },
-        { description: { contains: q, mode: "insensitive" as const } },
-        { skills: { contains: q, mode: "insensitive" as const } },
+        { title: { contains: q } },
+        { description: { contains: q } },
+        { skills: { contains: q } },
       ]}),
-      ...(location && { location: { contains: location, mode: "insensitive" as const } }),
+      ...(location && { location: { contains: location } }),
       ...(jobType && { jobType }),
     },
     include: {
@@ -56,6 +56,17 @@ export async function POST(req: Request) {
       where: { id: session.user.id },
       include: { employerProfile: true },
     });
+
+    if (!user?.employerProfile || user.employerProfile.verificationStatus !== "APPROVED") {
+      return NextResponse.json(
+        { error: "Your account must be verified by an admin before you can post jobs." },
+        { status: 403 }
+      );
+    }
+
+    if (user.employerProfile.isBlocked) {
+      return NextResponse.json({ error: "Your account has been suspended." }, { status: 403 });
+    }
 
     const job = await db.job.create({
       data: {

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { MessageCircle, X, Send, Bot, ExternalLink } from "lucide-react";
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n";
 
 interface ChatLink {
   label: string;
@@ -16,18 +17,6 @@ interface ChatMessage {
   suggestions?: string[];
   links?: ChatLink[];
 }
-
-const WELCOME: ChatMessage = {
-  id: "welcome",
-  role: "bot",
-  text: "Hi! I'm your Equalhires assistant.\n\nI can help with job searching, applications, profile tips, navigation, and more. What would you like to know?",
-  suggestions: [
-    "How does it work?",
-    "Find jobs",
-    "Track my applications",
-    "I'm an employer",
-  ],
-};
 
 function BotText({ text }: { text: string }) {
   const segments = text.split(/(\*\*[^*]+\*\*)/g);
@@ -48,8 +37,21 @@ function BotText({ text }: { text: string }) {
 }
 
 export function Chatbot() {
+  const { t } = useI18n();
+
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [{
+    id: "welcome",
+    role: "bot",
+    text: t("chat.welcome"),
+    suggestions: [
+      t("chat.suggestion1"),
+      t("chat.suggestion2"),
+      t("chat.suggestion3"),
+      t("chat.suggestion4"),
+    ],
+  }]);
+
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([WELCOME]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
@@ -99,7 +101,7 @@ export function Chatbot() {
         const botMsg: ChatMessage = {
           id: `b-${Date.now()}`,
           role: "bot",
-          text: typeof data.reply === "string" ? data.reply : "I couldn't find an answer. Please try again.",
+          text: typeof data.reply === "string" ? data.reply : t("chat.errorReply"),
           suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
           links: Array.isArray(data.links) ? data.links : [],
         };
@@ -113,14 +115,14 @@ export function Chatbot() {
           {
             id: `b-err-${Date.now()}`,
             role: "bot",
-            text: "Sorry, I'm having trouble right now. Please try again.",
+            text: t("chat.errorNetwork"),
           },
         ]);
       } finally {
         setIsLoading(false);
       }
     },
-    [isLoading, isOpen]
+    [isLoading, isOpen, t]
   );
 
   function handleSubmit(e: React.FormEvent) {
@@ -134,7 +136,7 @@ export function Chatbot() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          aria-label="Open chat assistant"
+          aria-label={t("chat.openLabel")}
           className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-brand-500 text-white shadow-xl hover:bg-brand-600 transition-all hover:scale-105 flex items-center justify-center"
         >
           <MessageCircle size={24} />
@@ -157,13 +159,13 @@ export function Chatbot() {
                 <Bot size={16} className="text-white" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-white leading-tight">Careers Assistant</p>
-                <p className="text-xs text-gray-400">Ask me anything</p>
+                <p className="text-sm font-semibold text-white leading-tight">{t("chat.assistantName")}</p>
+                <p className="text-xs text-gray-400">{t("chat.askMe")}</p>
               </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              aria-label="Close chat"
+              aria-label={t("chat.closeLabel")}
               className="text-gray-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
             >
               <X size={18} />
@@ -178,7 +180,6 @@ export function Chatbot() {
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div className="flex flex-col gap-2 max-w-[88%]">
-                  {/* Bubble */}
                   <div
                     className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
                       msg.role === "user"
@@ -189,7 +190,6 @@ export function Chatbot() {
                     {msg.role === "bot" ? <BotText text={msg.text} /> : msg.text}
                   </div>
 
-                  {/* CTA links */}
                   {msg.links && msg.links.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                       {msg.links.map((link) => (
@@ -206,7 +206,6 @@ export function Chatbot() {
                     </div>
                   )}
 
-                  {/* Suggestion chips */}
                   {msg.suggestions && msg.suggestions.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                       {msg.suggestions.map((s) => (
@@ -225,7 +224,6 @@ export function Chatbot() {
               </div>
             ))}
 
-            {/* Typing indicator */}
             {isLoading && (
               <div className="flex justify-start">
                 <div className="rounded-2xl rounded-bl-sm bg-white border border-gray-100 shadow-sm px-4 py-3">
@@ -255,7 +253,7 @@ export function Chatbot() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask a question..."
+              placeholder={t("chat.placeholder")}
               disabled={isLoading}
               autoComplete="off"
               className="flex-1 rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm outline-none focus:border-brand-400 focus:bg-white transition-colors disabled:opacity-50"

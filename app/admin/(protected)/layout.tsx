@@ -1,12 +1,18 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Users, FileText, Shield, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Shield, LogOut, Briefcase, ShieldCheck, Flag, User, Home } from "lucide-react";
+import { AdminSignOut } from "@/components/admin/AdminSignOut";
 
 const NAV = [
-  { href: "/admin",          label: "Dashboard",   icon: LayoutDashboard },
-  { href: "/admin/users",    label: "Users",        icon: Users },
-  { href: "/admin/logs",     label: "Audit Logs",   icon: FileText },
+  { href: "/admin",                label: "Dashboard",     icon: LayoutDashboard },
+  { href: "/admin/users",          label: "All Users",     icon: Users },
+  { href: "/admin/job-seekers",    label: "Job Seekers",   icon: User },
+  { href: "/admin/recruiters",     label: "Recruiters",    icon: Briefcase },
+  { href: "/admin/jobs",           label: "Jobs",          icon: Briefcase },
+  { href: "/admin/verifications",  label: "Verifications", icon: ShieldCheck },
+  { href: "/admin/reports",        label: "Reports",       icon: Flag },
+  { href: "/admin/logs",           label: "Audit Logs",    icon: FileText },
 ];
 
 export default async function AdminProtectedLayout({ children }: { children: React.ReactNode }) {
@@ -40,14 +46,15 @@ export default async function AdminProtectedLayout({ children }: { children: Rea
           ))}
         </nav>
 
-        <div className="px-3 py-4 border-t border-white/10">
+        <div className="px-3 py-4 border-t border-white/10 space-y-1">
           <Link
             href="/"
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-400 hover:bg-white/10 hover:text-white transition-colors"
           >
-            <LogOut size={16} />
+            <Home size={16} />
             Back to site
           </Link>
+          <AdminSignOut />
         </div>
       </aside>
 

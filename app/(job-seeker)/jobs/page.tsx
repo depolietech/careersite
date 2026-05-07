@@ -9,28 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatSalary, timeAgo, locationToCurrency } from "@/lib/utils";
-
-const JOB_TYPE_LABELS: Record<string, string> = {
-  "full-time": "Full-time",
-  "part-time": "Part-time",
-  "contract":  "Contract",
-  "remote":    "Remote only",
-};
-
-const NA_LOCATIONS = [
-  { value: "",         label: "All Locations" },
-  { value: "Remote",   label: "Remote" },
-  { value: "USA",      label: "United States" },
-  { value: "Canada",   label: "Canada" },
-  { value: "Mexico",   label: "Mexico" },
-];
-
-const JOB_TYPES = [
-  { value: "",           label: "All Types" },
-  { value: "full-time",  label: "Full-time" },
-  { value: "part-time",  label: "Part-time" },
-  { value: "contract",   label: "Contract" },
-];
+import { useI18n } from "@/lib/i18n";
 
 type Job = {
   id: string;
@@ -52,6 +31,29 @@ type ApplyResult = { jobId: string; status: "ok" | "duplicate" | "error"; messag
 export default function JobsPage() {
   const { status: authStatus } = useSession();
   const router = useRouter();
+  const { t } = useI18n();
+
+  const JOB_TYPE_LABELS: Record<string, string> = {
+    "full-time": t("jobs.fullTime"),
+    "part-time": t("jobs.partTime"),
+    "contract":  t("jobs.contract"),
+    "remote":    t("jobs.remote"),
+  };
+
+  const NA_LOCATIONS = [
+    { value: "",        label: t("jobs.allLocations") },
+    { value: "Remote",  label: t("jobs.remote") },
+    { value: "USA",     label: t("employer.locationUSA") },
+    { value: "Canada",  label: t("employer.locationCanada") },
+    { value: "Mexico",  label: t("employer.locationMexico") },
+  ];
+
+  const JOB_TYPES = [
+    { value: "",          label: t("jobs.allTypes") },
+    { value: "full-time", label: t("jobs.fullTime") },
+    { value: "part-time", label: t("jobs.partTime") },
+    { value: "contract",  label: t("jobs.contract") },
+  ];
 
   const [jobs, setJobs]               = useState<Job[]>([]);
   const [loading, setLoading]         = useState(true);
@@ -82,8 +84,8 @@ export default function JobsPage() {
   }, [query, location, jobType]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    const t = setTimeout(fetchJobs, 300);
-    return () => clearTimeout(t);
+    const timer = setTimeout(fetchJobs, 300);
+    return () => clearTimeout(timer);
   }, [fetchJobs]);
 
   function parseSkills(s: string): string[] {
@@ -173,7 +175,7 @@ export default function JobsPage() {
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               className="input pl-9"
-              placeholder="Job title, skill, keyword…"
+              placeholder={t("jobs.searchPlaceholder")}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
@@ -207,7 +209,7 @@ export default function JobsPage() {
       {/* Bulk apply controls */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-gray-500">
-          {loading ? "Loading…" : `${jobs.length} jobs found`}
+          {loading ? t("common.loading") : `${jobs.length} ${t("jobs.jobsFound")}`}
         </p>
         <div className="flex items-center gap-2">
           {bulkMode ? (
@@ -217,7 +219,7 @@ export default function JobsPage() {
                 className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900"
               >
                 {selected.size === jobs.length ? <CheckSquare size={16} /> : <Square size={16} />}
-                {selected.size === jobs.length ? "Deselect all" : "Select all"}
+                {selected.size === jobs.length ? t("jobs.deselectAll") : t("jobs.selectAll")}
               </button>
               <Button
                 disabled={selected.size === 0 || submitting}
@@ -225,10 +227,10 @@ export default function JobsPage() {
                 size="sm"
               >
                 {submitting ? <Loader2 size={14} className="animate-spin" /> : null}
-                Apply to selected ({selected.size})
+                {t("jobs.applyToSelected")} ({selected.size})
               </Button>
               <Button variant="secondary" size="sm" onClick={() => { setBulkMode(false); setSelected(new Set()); }}>
-                Cancel
+                {t("common.cancel")}
               </Button>
             </>
           ) : (
@@ -236,7 +238,7 @@ export default function JobsPage() {
               if (!isLoggedIn) { router.push("/login?callbackUrl=/jobs"); return; }
               setBulkMode(true);
             }}>
-              Quick Apply to Multiple Jobs
+              {t("jobs.quickApplyMultiple")}
             </Button>
           )}
         </div>
@@ -245,7 +247,7 @@ export default function JobsPage() {
       {/* Apply results banner */}
       {results.length > 0 && (
         <div className="card p-4 mb-4 space-y-2">
-          <p className="font-medium text-gray-900 text-sm">Application results</p>
+          <p className="font-medium text-gray-900 text-sm">{t("jobs.applicationResults")}</p>
           {results.map((r) => {
             const job = jobs.find((j) => j.id === r.jobId);
             return (
@@ -254,13 +256,13 @@ export default function JobsPage() {
                 {r.status === "duplicate" && <CheckCircle2 size={15} className="text-gray-400 shrink-0" />}
                 {r.status === "error"     && <XCircle      size={15} className="text-red-400 shrink-0" />}
                 <span className={r.status === "ok" ? "text-green-700" : r.status === "duplicate" ? "text-gray-500" : "text-red-600"}>
-                  {job?.title ?? r.jobId} — {r.status === "ok" ? "Applied!" : r.status === "duplicate" ? "Already applied" : r.message}
+                  {job?.title ?? r.jobId} — {r.status === "ok" ? t("jobs.applied") : r.status === "duplicate" ? t("jobs.alreadyApplied") : r.message}
                 </span>
               </div>
             );
           })}
           <button onClick={() => setResults([])} className="text-xs text-gray-400 underline hover:text-gray-600">
-            Dismiss
+            {t("jobs.dismiss")}
           </button>
         </div>
       )}
@@ -276,7 +278,7 @@ export default function JobsPage() {
             </div>
           )}
           {!loading && jobs.length === 0 && (
-            <div className="card p-8 text-center text-gray-400 text-sm">No jobs match your filters</div>
+            <div className="card p-8 text-center text-gray-400 text-sm">{t("jobs.noJobsFilter")}</div>
           )}
           {jobs.map((job) => {
             const skills = parseSkills(job.skills);
@@ -302,7 +304,7 @@ export default function JobsPage() {
                     <div>
                       <p className="font-semibold text-gray-900">{job.title}</p>
                       <p className="text-sm text-gray-500 mt-0.5">
-                        {job.employerProfile?.industry ?? "Company"} · {job.employerProfile?.companySize ?? "—"} employees
+                        {job.employerProfile?.industry ?? "Company"} · {job.employerProfile?.companySize ?? "—"} {t("employer.employees")}
                       </p>
                     </div>
                     <Badge variant="outline">{JOB_TYPE_LABELS[job.jobType] ?? job.jobType}</Badge>
@@ -331,7 +333,7 @@ export default function JobsPage() {
           <div className="hidden md:flex flex-1 items-center justify-center">
             <div className="text-center text-gray-400 space-y-2">
               <Briefcase size={32} className="mx-auto opacity-30" />
-              <p className="text-sm">Select a job to view details</p>
+              <p className="text-sm">{t("jobs.selectJobToView")}</p>
             </div>
           </div>
         )}
@@ -343,7 +345,7 @@ export default function JobsPage() {
                 className="flex md:hidden items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 -mt-1 mb-1"
                 onClick={() => setSelectedJob(null)}
               >
-                <ArrowRight size={14} className="rotate-180" /> Back to jobs
+                <ArrowRight size={14} className="rotate-180" /> {t("jobs.backToJobs")}
               </button>
               {(() => {
                 const skills = parseSkills(selectedJob.skills);
@@ -363,11 +365,11 @@ export default function JobsPage() {
                           </p>
                         )}
                       </div>
-                      <span className="text-sm text-gray-400 shrink-0">{selectedJob._count.applications} applicants</span>
+                      <span className="text-sm text-gray-400 shrink-0">{selectedJob._count.applications} {t("jobs.applicants")}</span>
                     </div>
 
                     <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">Required skills</p>
+                      <p className="text-sm font-medium text-gray-700 mb-2">{t("jobs.requiredSkills")}</p>
                       <div className="flex flex-wrap gap-2">
                         {skills.map((s) => (
                           <span key={s} className="badge bg-brand-50 text-brand-700 text-sm px-3 py-1">{s}</span>
@@ -376,12 +378,12 @@ export default function JobsPage() {
                     </div>
 
                     <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">About the role</p>
+                      <p className="text-sm font-medium text-gray-700 mb-2">{t("jobs.aboutRole")}</p>
                       <p className="text-gray-600 leading-relaxed whitespace-pre-line">{selectedJob.description}</p>
                     </div>
 
                     <div className="rounded-xl bg-brand-50 border border-brand-100 p-4 text-sm text-brand-800">
-                      <strong>Your identity is protected.</strong> The employer only sees your skills and experience — name, photo, school, and company names stay hidden until an interview is scheduled.
+                      <strong>{t("jobs.identityProtected")}</strong> {t("jobs.identityProtectedDesc")}
                     </div>
 
                     {applying ? (
@@ -391,7 +393,7 @@ export default function JobsPage() {
                           rows={5}
                           value={coverLetter}
                           onChange={(e) => setCoverLetter(e.target.value)}
-                          placeholder="Add a cover letter (optional) — focus on skills and what you can bring to the role."
+                          placeholder={t("jobs.coverLetterPlaceholder")}
                         />
                         <div className="flex gap-3">
                           <Button
@@ -400,9 +402,9 @@ export default function JobsPage() {
                             onClick={() => applyToJobs(jobsToApply)}
                           >
                             {submitting ? <Loader2 size={14} className="animate-spin" /> : null}
-                            Submit application <ArrowRight size={16} />
+                            {t("jobs.submitApplication")} <ArrowRight size={16} />
                           </Button>
-                          <Button variant="secondary" onClick={() => setApplying(false)}>Cancel</Button>
+                          <Button variant="secondary" onClick={() => setApplying(false)}>{t("common.cancel")}</Button>
                         </div>
                       </div>
                     ) : !isLoggedIn ? (
@@ -410,21 +412,21 @@ export default function JobsPage() {
                         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 flex items-start gap-3">
                           <Lock size={16} className="text-gray-400 mt-0.5 shrink-0" />
                           <p className="text-sm text-gray-600">
-                            <strong className="text-gray-900">Sign in to apply.</strong> Create a free account or log in to submit your application.
+                            <strong className="text-gray-900">{t("jobs.signInToApplyTitle")}</strong> {t("jobs.signInToApplyDesc")}
                           </p>
                         </div>
                         <div className="flex gap-3">
                           <Button size="lg" className="flex-1" onClick={() => router.push("/login?callbackUrl=/jobs")}>
-                            Sign in to apply
+                            {t("auth.signIn")}
                           </Button>
                           <Button variant="secondary" size="lg" onClick={() => router.push("/register?role=job-seeker")}>
-                            Create account
+                            {t("auth.signUp")}
                           </Button>
                         </div>
                       </div>
                     ) : (
                       <Button size="lg" className="w-full" onClick={handleApplyClick}>
-                        Apply — skills first <ArrowRight size={16} />
+                        {t("jobs.apply")} <ArrowRight size={16} />
                       </Button>
                     )}
                   </>
@@ -437,25 +439,22 @@ export default function JobsPage() {
         {bulkMode && (
           <div className="hidden md:flex flex-1 items-start">
             <div className="card p-8 sticky top-24 space-y-5 w-full">
-              <h2 className="text-lg font-semibold text-gray-900">Quick Apply</h2>
-              <p className="text-sm text-gray-500">
-                Select jobs from the list and apply to all of them at once using your saved profile.
-                Your identity stays masked — employers only see your skills and experience.
-              </p>
+              <h2 className="text-lg font-semibold text-gray-900">{t("jobs.quickApply")}</h2>
+              <p className="text-sm text-gray-500">{t("jobs.quickApplyDesc")}</p>
               <div className="rounded-xl bg-brand-50 border border-brand-100 p-4 text-sm text-brand-800">
                 <strong>{selected.size}</strong> job{selected.size !== 1 ? "s" : ""} selected
               </div>
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Cover letter <span className="text-gray-400 font-normal">(optional — applied to all)</span>
+                  {t("jobs.coverLetterLabel")} <span className="text-gray-400 font-normal">{t("jobs.coverLetterOptional")}</span>
                 </label>
                 <textarea
                   className="input resize-none"
                   rows={5}
                   value={coverLetter}
                   onChange={(e) => setCoverLetter(e.target.value)}
-                  placeholder="Describe your skills and what you bring — this will be sent with all selected applications."
+                  placeholder={t("jobs.coverLetterBulkPlaceholder")}
                 />
               </div>
               <Button
@@ -465,7 +464,7 @@ export default function JobsPage() {
                 onClick={() => applyToJobs(jobsToApply)}
               >
                 {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
-                Apply to {selected.size} job{selected.size !== 1 ? "s" : ""} <ArrowRight size={16} />
+                {t("jobs.applyToSelected")} ({selected.size}) <ArrowRight size={16} />
               </Button>
             </div>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { MessageSquare, EyeOff, Send, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 type Conversation = {
   id: string;
@@ -34,6 +35,7 @@ function Thread({ conversationId }: { conversationId: string }) {
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const { t: tGlobal } = useI18n();
 
   useEffect(() => {
     fetch(`/api/conversations/${conversationId}/messages`)
@@ -68,7 +70,7 @@ function Thread({ conversationId }: { conversationId: string }) {
     <div className="border-t border-gray-100 bg-gray-50">
       <div className="p-4 space-y-3 max-h-72 overflow-y-auto">
         {messages.length === 0 && (
-          <p className="text-sm text-gray-400 text-center py-4">No messages yet. Send one below.</p>
+          <p className="text-sm text-gray-400 text-center py-4">No messages yet.</p>
         )}
         {messages.map((m) => (
           <div key={m.id} className={`flex ${m.isOwn ? "justify-end" : "justify-start"}`}>
@@ -87,7 +89,7 @@ function Thread({ conversationId }: { conversationId: string }) {
       <div className="p-4 border-t border-gray-100 flex gap-2">
         <input
           className="input flex-1 text-sm"
-          placeholder="Type a message..."
+          placeholder={tGlobal("messages.typeMessage")}
           value={reply}
           onChange={(e) => setReply(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
@@ -108,6 +110,7 @@ export default function MessagesPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState<string | null>(null);
+  const { t: tGlobal } = useI18n();
 
   useEffect(() => {
     fetch("/api/conversations")
@@ -135,10 +138,7 @@ export default function MessagesPage() {
           <div className="h-14 w-14 rounded-full bg-gray-100 flex items-center justify-center">
             <MessageSquare size={24} className="text-gray-400" />
           </div>
-          <p className="font-semibold text-gray-900">No messages yet</p>
-          <p className="text-sm text-gray-500">
-            When a recruiter reaches out, your conversations will appear here.
-          </p>
+          <p className="font-semibold text-gray-900">{tGlobal("messages.noMessagesSeeker")}</p>
         </div>
       ) : (
         <div className="space-y-2">

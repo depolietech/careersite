@@ -4,10 +4,14 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { getServerLocale, createServerT } from "@/lib/i18n/server";
 
 export default async function AllApplicantsPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
+
+  const locale = await getServerLocale();
+  const t = createServerT(locale);
 
   const jobs = await db.job.findMany({
     where: { postedById: session.user.id },
@@ -24,11 +28,11 @@ export default async function AllApplicantsPage() {
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
       <div>
         <Link href="/employer/dashboard" className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
-          ← Back to dashboard
+          ← {t("employer.backToDashboard")}
         </Link>
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">All Applicants</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t("employer.viewApplicants")}</h1>
             <p className="text-gray-500 mt-1">
               {totalApps} total application{totalApps !== 1 ? "s" : ""} across {jobs.length} job{jobs.length !== 1 ? "s" : ""}
             </p>
@@ -37,14 +41,14 @@ export default async function AllApplicantsPage() {
             href="/employer/post-job"
             className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 transition-colors"
           >
-            + Post a job
+            + {t("employer.postJob")}
           </Link>
         </div>
       </div>
 
       <div className="rounded-xl bg-brand-50 border border-brand-100 p-4 text-sm text-brand-800 flex items-center gap-3">
         <EyeOff size={16} className="text-brand-600 shrink-0" />
-        Candidate identities are masked until you schedule an interview.
+        {t("employer.candidateMasked")}
       </div>
 
       {jobs.length === 0 ? (
@@ -52,10 +56,10 @@ export default async function AllApplicantsPage() {
           <div className="h-14 w-14 rounded-full bg-gray-100 flex items-center justify-center">
             <Briefcase size={24} className="text-gray-400" />
           </div>
-          <p className="font-semibold text-gray-900">No jobs posted yet</p>
-          <p className="text-sm text-gray-500">Post your first job to start receiving applications.</p>
+          <p className="font-semibold text-gray-900">{t("employer.noJobsPosted")}</p>
+          <p className="text-sm text-gray-500">{t("employer.noApplicants")}</p>
           <Link href="/employer/post-job" className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 transition-colors">
-            Post a job
+            {t("employer.postJob")}
           </Link>
         </div>
       ) : (
@@ -85,7 +89,7 @@ export default async function AllApplicantsPage() {
                       job.status === "DRAFT"  ? "bg-orange-100 text-orange-700" :
                       "bg-gray-100 text-gray-600"
                     }`}>
-                      {job.status.charAt(0) + job.status.slice(1).toLowerCase()}
+                      {t(`status.${job.status.toLowerCase()}`)}
                     </span>
                   </div>
                   <p className="text-sm text-gray-500 mt-0.5">{job.jobType} · {job.location}</p>

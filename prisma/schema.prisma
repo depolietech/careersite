@@ -51,10 +51,17 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   passwordHash  String?
-  role          String    // "JOB_SEEKER" | "EMPLOYER"
+  role          String    @default("JOB_SEEKER") // "JOB_SEEKER" | "EMPLOYER"
   recruiterType String?   // "COMPANY" | "AGENCY" — set only when role = EMPLOYER
+  language      String    @default("en") // "en" | "fr-CA" | "es-MX"
+  isPublicEmail Boolean   @default(false) // true if gmail/yahoo/hotmail etc.
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  // Two-Factor Authentication
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String? // TOTP secret (base32)
+  twoFactorMethod  String? // "totp" | "email"
 
   accounts      Account[]
   sessions      Session[]
@@ -71,6 +78,33 @@ model User {
   sentMessages   Message[]      @relation("SentMessages")
   notifications  Notification[]
   resumes        Resume[]
+
+  // Security
+  twoFactorBackupCodes TwoFactorBackupCode[]
+  otpCodes             OtpCode[]
+
+  // Reports filed by this user against recruiters
+  reportsFiled RecruiterReport[] @relation("ReporterReports")
+}
+
+model TwoFactorBackupCode {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String
+  type      String   // "2fa_login" | "2fa_setup"
+  expires   DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 
 // ─── Job Seeker ───────────────────────────────────────────────────────────────
@@ -165,13 +199,25 @@ model EmployerProfile {
   userId     String   @unique
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  companyName    String
-  companySize    String?   // "1-10" | "11-50" | "51-200" | "201-1000" | "1000+"
-  industry       String?
-  website        String?
-  logoUrl        String?
-  description    String?
-  location       String?
+  companyName                String
+  companyLegalName           String?
+  companySize                String?   // "1-10" | "11-50" | "51-200" | "201-1000" | "1000+"
+  industry                   String?
+  website                    String?
+  businessAddress            String?
+  phone                      String?
+  businessRegistrationNumber String?
+  linkedinUrl                String?
+  logoUrl                    String?
+  description                String?
+  location                   String?
+
+  // Verification (Layer 2 — admin must approve before jobs can be posted)
+  verificationStatus      String    @default("INCOMPLETE") // "INCOMPLETE" | "PENDING_REVIEW" | "APPROVED" | "REJECTED"
+  verificationSubmittedAt DateTime?
+  verificationNote        String?   // admin note (e.g. rejection reason)
+  websiteCheckPassed      Boolean?  // auto-checked: website is reachable
+  domainMatchPassed       Boolean?  // auto-checked: email domain matches website domain
 
   // Recruiter Audit — abuse detection
   interviewsScheduled  Int     @default(0)
@@ -179,9 +225,10 @@ model EmployerProfile {
   trustScore           Float   @default(100)
   isBlocked            Boolean @default(false)
 
-  postedJobs     Job[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  postedJobs Job[]
+  reports    RecruiterReport[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model ContractorProfile {
@@ -224,8 +271,25 @@ model Job {
   managedBy           ContractorProfile? @relation("ManagedJobs", fields: [managedById], references: [id])
 
   applications Application[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  reports      RecruiterReport[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ─── Recruiter Reports ────────────────────────────────────────────────────────
+
+model RecruiterReport {
+  id                String          @id @default(cuid())
+  reporterId        String
+  reporter          User            @relation("ReporterReports", fields: [reporterId], references: [id], onDelete: Cascade)
+  employerProfileId String
+  employerProfile   EmployerProfile @relation(fields: [employerProfileId], references: [id], onDelete: Cascade)
+  jobId             String?
+  job               Job?            @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  category          String          // "FAKE_JOB" | "SCAM" | "MISLEADING_ROLE" | "OTHER"
+  description       String?
+  status            String          @default("PENDING") // "PENDING" | "REVIEWED" | "DISMISSED"
+  createdAt         DateTime        @default(now())
 }
 
 // ─── Applications ─────────────────────────────────────────────────────────────

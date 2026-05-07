@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Users, Briefcase, MoreVertical, Plus, Calendar, Activity, ArrowRight, TrendingUp } from "lucide-react";
+import { Users, Briefcase, MoreVertical, Plus, Calendar, Activity, ArrowRight, TrendingUp, ShieldAlert, Clock, XCircle } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
+import { getServerLocale, createServerT } from "@/lib/i18n/server";
 
 const STATUS_STYLE: Record<string, string> = {
   DRAFT:  "bg-orange-500 text-white",
@@ -22,6 +23,9 @@ function formatTime(d: Date) {
 export default async function EmployerDashboard() {
   const session = await auth();
   if (!session?.user) redirect("/login");
+
+  const locale = await getServerLocale();
+  const t = createServerT(locale);
 
   const employerProfile = await db.employerProfile.findUnique({
     where: { userId: session.user.id },
@@ -66,15 +70,48 @@ export default async function EmployerDashboard() {
 
   const draftJobs = jobs.filter((j) => j.status === "DRAFT");
 
+  const vStatus = employerProfile?.verificationStatus ?? "INCOMPLETE";
+  const showVerificationBanner = vStatus !== "APPROVED";
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
 
       <div>
         <h1 className="text-3xl font-bold text-gray-900">
-          Welcome{employerProfile?.companyName ? `, ${employerProfile.companyName}` : ""}
+          {t("dashboard.welcome")}{employerProfile?.companyName ? `, ${employerProfile.companyName}` : ""}
         </h1>
-        <p className="mt-1 text-gray-500">Who are we hiring today?</p>
+        <p className="mt-1 text-gray-500">{t("employer.whoAreWeHiring")}</p>
       </div>
+
+      {showVerificationBanner && (() => {
+        const isPending  = vStatus === "PENDING_REVIEW";
+        const isRejected = vStatus === "REJECTED";
+        const Icon = isPending ? Clock : isRejected ? XCircle : ShieldAlert;
+        const colors = isPending
+          ? { bg: "bg-blue-50",   border: "border-blue-200",  text: "text-blue-700",   icon: "text-blue-500" }
+          : isRejected
+          ? { bg: "bg-red-50",    border: "border-red-200",   text: "text-red-700",    icon: "text-red-500" }
+          : { bg: "bg-amber-50",  border: "border-amber-200", text: "text-amber-700",  icon: "text-amber-500" };
+        const message = isPending
+          ? "Verification under review — you can post jobs once our team approves your account."
+          : isRejected
+          ? `Verification rejected: ${employerProfile?.verificationNote ?? "please update your company details and re-submit."}`
+          : "Complete company verification to start posting jobs.";
+        return (
+          <div className={`rounded-2xl border ${colors.border} ${colors.bg} px-5 py-4 flex items-center justify-between gap-4`}>
+            <div className="flex items-center gap-3">
+              <Icon size={18} className={colors.icon} />
+              <p className={`text-sm font-medium ${colors.text}`}>{message}</p>
+            </div>
+            <Link
+              href="/employer/company/edit"
+              className={`shrink-0 text-xs font-semibold ${colors.text} underline underline-offset-2 hover:no-underline`}
+            >
+              {isPending ? "View status" : "Complete now →"}
+            </Link>
+          </div>
+        );
+      })()}
 
       {/* Stat cards — all linked */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -84,7 +121,7 @@ export default async function EmployerDashboard() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-200">
               <Users size={16} className="text-amber-600" />
             </div>
-            <span className="text-sm font-semibold text-gray-700">Total Applicants</span>
+            <span className="text-sm font-semibold text-gray-700">{t("dashboard.totalApplicants")}</span>
           </div>
           <div className="flex items-end justify-between">
             <span className="text-4xl font-bold text-gray-900">{totalApps}</span>
@@ -99,7 +136,7 @@ export default async function EmployerDashboard() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-200">
               <Calendar size={16} className="text-purple-600" />
             </div>
-            <span className="text-sm font-semibold text-gray-700">Interviews Scheduled</span>
+            <span className="text-sm font-semibold text-gray-700">{t("dashboard.scheduledInterviews")}</span>
           </div>
           <div className="flex items-end justify-between">
             <span className="text-4xl font-bold text-gray-900">{totalInterviews}</span>
@@ -156,14 +193,14 @@ export default async function EmployerDashboard() {
             href="/employer/post-job"
             className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 transition-colors"
           >
-            <Plus size={14} /> Post a job
+            <Plus size={14} /> {t("employer.postJob")}
           </Link>
         </div>
 
         {jobs.length === 0 ? (
           <div className="px-6 py-12 text-center text-gray-400 text-sm">
-            No jobs posted yet.{" "}
-            <Link href="/employer/post-job" className="text-brand-600 hover:underline">Post your first job</Link>
+            {t("employer.noJobsPosted")}{" "}
+            <Link href="/employer/post-job" className="text-brand-600 hover:underline">{t("employer.postJob")}</Link>
           </div>
         ) : (
           <div className="divide-y divide-gray-50">
@@ -177,20 +214,20 @@ export default async function EmployerDashboard() {
                     <p className="text-xs text-gray-400 mt-0.5">{job.jobType} · {job.location}</p>
                   </div>
                   <span className={`hidden sm:inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-semibold ${STATUS_STYLE[job.status] ?? "bg-gray-200 text-gray-700"}`}>
-                    {job.status.charAt(0) + job.status.slice(1).toLowerCase()}
+                    {t(`status.${job.status.toLowerCase()}`) || (job.status.charAt(0) + job.status.slice(1).toLowerCase())}
                   </span>
                   <div className="hidden md:flex items-center gap-8 text-center">
                     <div>
                       <p className="text-lg font-bold text-gray-900">{job._count.applications}</p>
-                      <p className="text-[11px] text-gray-400">Applications</p>
+                      <p className="text-[11px] text-gray-400">{t("status.applied")}</p>
                     </div>
                     <div>
                       <p className="text-lg font-bold text-gray-900">{interviewed}</p>
-                      <p className="text-[11px] text-gray-400">Interviewed</p>
+                      <p className="text-[11px] text-gray-400">{t("status.interviewStage")}</p>
                     </div>
                     <div>
                       <p className="text-lg font-bold text-gray-900">{shortlisted}</p>
-                      <p className="text-[11px] text-gray-400">Shortlisted</p>
+                      <p className="text-[11px] text-gray-400">{t("status.shortlisted")}</p>
                     </div>
                   </div>
                   <div className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-400">
@@ -216,7 +253,7 @@ export default async function EmployerDashboard() {
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <Calendar size={16} className="text-gray-400" />
-              <span className="font-semibold text-gray-900">Upcoming Interviews</span>
+              <span className="font-semibold text-gray-900">{t("dashboard.upcomingInterviews")}</span>
             </div>
             <Link
               href="/employer/calendar"
@@ -283,7 +320,7 @@ export default async function EmployerDashboard() {
 
           <div className="px-6 py-3 border-t border-gray-50">
             <Link href="/employer/calendar" className="text-sm font-medium text-brand-600 hover:underline">
-              View all interviews +
+              {t("dashboard.viewAll")} +
             </Link>
           </div>
         </div>
@@ -292,7 +329,7 @@ export default async function EmployerDashboard() {
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <Activity size={16} className="text-gray-400" />
-              <span className="font-semibold text-gray-900">Recent Activity</span>
+              <span className="font-semibold text-gray-900">{t("dashboard.recentActivity")}</span>
             </div>
             <Link
               href="/employer/notifications"

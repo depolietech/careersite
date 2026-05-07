@@ -1,7 +1,11 @@
+"use client";
 import Link from "next/link";
 import { Logo } from "./Logo";
+import { useI18n } from "@/lib/i18n";
 
 export function Footer() {
+  const { t } = useI18n();
+
   return (
     <footer className="border-t border-gray-100 bg-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -9,17 +13,17 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Logo />
             <p className="mt-3 text-sm text-gray-500 leading-relaxed">
-              Skills-first hiring. Personal details revealed only when an interview is scheduled.
+              {t("footer.tagline")}
             </p>
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">For Job Seekers</h3>
+            <h3 className="text-sm font-semibold text-gray-900">{t("footer.forSeekers")}</h3>
             <ul className="mt-4 space-y-2">
               {[
-                { href: "/jobs", label: "Browse Jobs" },
-                { href: "/register?role=job-seeker", label: "Create Profile" },
-                { href: "/login", label: "Sign In" },
+                { href: "/jobs",                   label: t("footer.browseJobs") },
+                { href: "/register?role=job-seeker", label: t("footer.createProfile") },
+                { href: "/login",                   label: t("footer.signIn") },
               ].map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
@@ -31,12 +35,13 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">For Employers</h3>
+            <h3 className="text-sm font-semibold text-gray-900">{t("footer.forEmployers")}</h3>
             <ul className="mt-4 space-y-2">
               {[
-                { href: "/register?role=employer", label: "Post a Job" },
-                { href: "/register?role=contractor", label: "Contractor Access" },
-                { href: "/employer/dashboard", label: "Dashboard" },
+                { href: "/register?role=employer",    label: t("footer.postJob") },
+                { href: "/register?role=contractor",  label: t("footer.contractorAccess") },
+                { href: "/employer/dashboard",        label: t("footer.dashboard") },
+                { href: "/recruiter-agreement",       label: "Recruiter Agreement" },
               ].map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
@@ -48,13 +53,13 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">Company</h3>
+            <h3 className="text-sm font-semibold text-gray-900">{t("footer.company")}</h3>
             <ul className="mt-4 space-y-2">
               {[
-                { href: "/#how-it-works", label: "How it works" },
-                { href: "/#features", label: "Features" },
-                { href: "/privacy", label: "Privacy Policy" },
-                { href: "/terms", label: "Terms of Service" },
+                { href: "/#how-it-works", label: t("footer.howItWorks") },
+                { href: "/#features",     label: t("footer.features") },
+                { href: "/privacy",       label: t("footer.privacyPolicy") },
+                { href: "/terms",         label: t("footer.terms") },
               ].map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
@@ -68,10 +73,10 @@ export function Footer() {
 
         <div className="mt-10 border-t border-gray-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-gray-400">
-            © {new Date().getFullYear()} EqualHire. All rights reserved.
+            © {new Date().getFullYear()} EqualHire. {t("footer.allRightsReserved")}
           </p>
           <p className="text-sm text-gray-400">
-            Built to make hiring fairer for everyone.
+            {t("footer.fairerHiring")}
           </p>
         </div>
       </div>

@@ -4,19 +4,11 @@ import { Calendar, Clock, Video, Phone, MapPin, Loader2, CheckCircle, XCircle, R
 import { Button } from "@/components/ui/button";
 import { Select, TextArea } from "@/components/ui/input";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/lib/i18n";
 
 const TYPE_ICON: Record<string, React.ElementType> = {
   video: Video, phone: Phone, "in-person": MapPin,
 };
-
-const REJECT_REASONS = [
-  { value: "",                            label: "Select a reason" },
-  { value: "Schedule conflict",           label: "Schedule conflict" },
-  { value: "No longer interested",        label: "No longer interested" },
-  { value: "Accepted another offer",      label: "Accepted another offer" },
-  { value: "Role not a good fit",         label: "Role not a good fit" },
-  { value: "Other",                       label: "Other" },
-];
 
 type Interview = {
   id: string;
@@ -35,11 +27,21 @@ type ActionPanel = "reject" | "reschedule" | null;
 
 function InterviewCard({ interview, onUpdated }: { interview: Interview; onUpdated: (iv: Interview) => void }) {
   const Icon = TYPE_ICON[interview.type] ?? Video;
+  const { t } = useI18n();
   const [panel, setPanel] = useState<ActionPanel>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [rescheduleAt, setRescheduleAt] = useState("");
   const [rescheduleNote, setRescheduleNote] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const REJECT_REASONS = [
+    { value: "",                       label: t("interview.selectReason") },
+    { value: "Schedule conflict",      label: t("interview.reasonScheduleConflict") },
+    { value: "No longer interested",   label: t("interview.reasonNoLongerInterested") },
+    { value: "Accepted another offer", label: t("interview.reasonAnotherOffer") },
+    { value: "Role not a good fit",    label: t("interview.reasonRoleNotFit") },
+    { value: "Other",                  label: t("profile.other") },
+  ];
 
   const status = interview.seekerStatus ?? "PENDING";
 
@@ -80,12 +82,12 @@ function InterviewCard({ interview, onUpdated }: { interview: Interview; onUpdat
 
   const statusBadge = () => {
     if (status === "ACCEPTED")
-      return <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">Accepted</span>;
+      return <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">{t("interview.acceptedStatus")}</span>;
     if (status === "REJECTED")
-      return <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-600">Declined</span>;
+      return <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-600">{t("interview.declinedStatus")}</span>;
     if (status === "RESCHEDULE_REQUESTED")
-      return <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">Reschedule Requested</span>;
-    return <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">Awaiting Response</span>;
+      return <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">{t("interview.rescheduleRequestedStatus")}</span>;
+    return <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">{t("interview.awaitingResponseStatus")}</span>;
   };
 
   return (
@@ -107,14 +109,14 @@ function InterviewCard({ interview, onUpdated }: { interview: Interview; onUpdat
 
       {interview.notes && (
         <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 text-sm text-gray-600">
-          <strong className="text-gray-700">Note from recruiter: </strong>{interview.notes}
+          <strong className="text-gray-700">{t("interview.noteFromRecruiter")}</strong>{interview.notes}
         </div>
       )}
 
       {interview.meetingLink && (
         <a href={interview.meetingLink} target="_blank" rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 transition-colors">
-          <Video size={14} /> Join meeting
+          <Video size={14} /> {t("interview.joinMeeting")}
         </a>
       )}
 
@@ -122,14 +124,14 @@ function InterviewCard({ interview, onUpdated }: { interview: Interview; onUpdat
       {status === "PENDING" && panel === null && (
         <div className="flex flex-wrap gap-2 pt-1">
           <Button size="sm" onClick={() => sendAction("ACCEPTED")} loading={saving}>
-            <CheckCircle size={14} /> Accept
+            <CheckCircle size={14} /> {t("interview.accept")}
           </Button>
           <Button
             size="sm"
             variant="secondary"
             onClick={() => { setPanel("reschedule"); }}
           >
-            <RefreshCw size={14} /> Request Reschedule
+            <RefreshCw size={14} /> {t("interview.rescheduleTitle")}
           </Button>
           <Button
             size="sm"
@@ -137,7 +139,7 @@ function InterviewCard({ interview, onUpdated }: { interview: Interview; onUpdat
             onClick={() => { setPanel("reject"); }}
             className="text-red-600 border-red-200 hover:bg-red-50"
           >
-            <XCircle size={14} /> Decline
+            <XCircle size={14} /> {t("interview.decline")}
           </Button>
         </div>
       )}
@@ -148,25 +150,25 @@ function InterviewCard({ interview, onUpdated }: { interview: Interview; onUpdat
           onClick={() => setPanel("reject")}
           className="text-xs text-gray-400 hover:text-gray-600 underline"
         >
-          Change response
+          {t("interview.changeResponse")}
         </button>
       )}
 
       {/* Reject panel */}
       {panel === "reject" && (
         <div className="rounded-xl bg-red-50 border border-red-100 p-4 space-y-3">
-          <p className="text-sm font-semibold text-red-700">Decline this interview</p>
+          <p className="text-sm font-semibold text-red-700">{t("interview.declinePanel")}</p>
           <Select
-            label="Reason"
+            label={t("interview.selectReason")}
             options={REJECT_REASONS}
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
           />
           <div className="flex gap-2">
             <Button size="sm" loading={saving} onClick={() => sendAction("REJECTED")} disabled={!rejectReason}>
-              Confirm decline
+              {t("interview.confirmDecline")}
             </Button>
-            <Button size="sm" variant="secondary" onClick={() => setPanel(null)}>Back</Button>
+            <Button size="sm" variant="secondary" onClick={() => setPanel(null)}>{t("common.back")}</Button>
           </div>
         </div>
       )}
@@ -174,25 +176,25 @@ function InterviewCard({ interview, onUpdated }: { interview: Interview; onUpdat
       {/* Reschedule panel */}
       {panel === "reschedule" && (
         <div className="rounded-xl bg-amber-50 border border-amber-100 p-4 space-y-3">
-          <p className="text-sm font-semibold text-amber-800">Request a different time</p>
+          <p className="text-sm font-semibold text-amber-800">{t("interview.requestDifferentTime")}</p>
           <Input
-            label="Proposed date & time"
+            label={t("interview.proposedDate")}
             type="datetime-local"
             value={rescheduleAt}
             onChange={(e) => setRescheduleAt(e.target.value)}
             required
           />
           <TextArea
-            label="Note to recruiter (optional)"
-            placeholder="e.g. I'm available after 2 PM on weekdays"
+            label={t("interview.noteToRecruiterLabel")}
+            placeholder={t("interview.noteToRecruiterPlaceholder")}
             value={rescheduleNote}
             onChange={(e) => setRescheduleNote(e.target.value)}
           />
           <div className="flex gap-2">
             <Button size="sm" loading={saving} onClick={() => sendAction("RESCHEDULE_REQUESTED")} disabled={!rescheduleAt}>
-              Send request
+              {t("interview.sendRequest")}
             </Button>
-            <Button size="sm" variant="secondary" onClick={() => setPanel(null)}>Back</Button>
+            <Button size="sm" variant="secondary" onClick={() => setPanel(null)}>{t("common.back")}</Button>
           </div>
         </div>
       )}
@@ -203,6 +205,7 @@ function InterviewCard({ interview, onUpdated }: { interview: Interview; onUpdat
 export default function CalendarPage() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useI18n();
 
   useEffect(() => {
     fetch("/api/interviews")
@@ -218,8 +221,8 @@ export default function CalendarPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Calendar</h1>
-        <p className="text-gray-500 mt-1">Your upcoming interviews. Accept, decline, or request a different time.</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t("interview.calendarTitle")}</h1>
+        <p className="text-gray-500 mt-1">{t("interview.seekerCalendarDesc")}</p>
       </div>
 
       {loading ? (
@@ -229,8 +232,8 @@ export default function CalendarPage() {
           <div className="h-14 w-14 rounded-full bg-gray-100 flex items-center justify-center">
             <Calendar size={24} className="text-gray-400" />
           </div>
-          <p className="font-semibold text-gray-900">No upcoming interviews</p>
-          <p className="text-sm text-gray-500">Scheduled interviews will appear here once a recruiter books time with you.</p>
+          <p className="font-semibold text-gray-900">{t("interview.noInterviews")}</p>
+          <p className="text-sm text-gray-500">{t("interview.noInterviewsSeeker")}</p>
         </div>
       ) : (
         <div className="space-y-4">

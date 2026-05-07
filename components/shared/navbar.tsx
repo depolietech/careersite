@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { Menu, X, Bell, Calendar, Mail, User, ChevronRight, LogOut, Settings, Building2, UserCircle, LayoutDashboard, HelpCircle } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { Logo } from "./Logo";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useI18n } from "@/lib/i18n";
 
 interface NavbarProps {
   variant?: "marketing" | "app";
@@ -13,41 +15,6 @@ interface NavbarProps {
 }
 
 type NavLink = { href: string; label: string };
-
-const APP_LINKS: Record<string, NavLink[]> = {
-  JOB_SEEKER: [
-    { href: "/dashboard",  label: "Home" },
-    { href: "/jobs",       label: "Jobs" },
-    { href: "/profile",    label: "Profile" },
-  ],
-  EMPLOYER: [
-    { href: "/employer/dashboard",  label: "Home" },
-    { href: "/employer/post-job",   label: "Post Job" },
-    { href: "/employer/talent",     label: "Talents" },
-    { href: "/employer/applicants", label: "Applicants" },
-  ],
-};
-APP_LINKS.CONTRACTOR = APP_LINKS.EMPLOYER;
-
-const MARKETING_LINKS: NavLink[] = [
-  { href: "/",        label: "Home" },
-  { href: "/about",   label: "About" },
-  { href: "/contact", label: "Contact us" },
-];
-
-const SEEKER_MENU = [
-  { href: "/profile",           label: "Your Profile",              icon: UserCircle },
-  { href: "/dashboard",         label: "My Application Dashboard",  icon: LayoutDashboard },
-  { href: "/settings",          label: "Settings",                  icon: Settings },
-  { href: "/help",              label: "Help Center",               icon: HelpCircle },
-];
-
-const EMPLOYER_MENU = [
-  { href: "/employer/company",          label: "View company profile",  icon: Building2 },
-  { href: "/employer/company/edit",     label: "Edit company details",  icon: Building2 },
-  { href: "/employer/settings",         label: "Settings",              icon: Settings },
-  { href: "/employer/help",             label: "Help center",           icon: HelpCircle },
-];
 
 function NavLink({ href, label, active }: NavLink & { active?: boolean }) {
   return (
@@ -75,10 +42,15 @@ function OutlineBtn({ href, children }: { href: string; children: React.ReactNod
   );
 }
 
-function ProfileDropdown({ userRole }: { userRole: string }) {
+function ProfileDropdown({
+  menuItems,
+  signOutLabel,
+}: {
+  menuItems: { href: string; label: string; icon: React.ElementType }[];
+  signOutLabel: string;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const menuItems = userRole === "EMPLOYER" ? EMPLOYER_MENU : SEEKER_MENU;
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -120,7 +92,7 @@ function ProfileDropdown({ userRole }: { userRole: string }) {
               className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-white/10 hover:text-red-300 transition-colors"
             >
               <LogOut size={15} className="shrink-0" />
-              Log out
+              {signOutLabel}
             </button>
           </div>
         </div>
@@ -132,8 +104,46 @@ function ProfileDropdown({ userRole }: { userRole: string }) {
 export function Navbar({ variant = "marketing", userRole, unreadCount = 0 }: NavbarProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { t } = useI18n();
   const isApp = variant === "app" && !!userRole;
-  const links = isApp ? (APP_LINKS[userRole!] ?? []) : MARKETING_LINKS;
+
+  const appLinks: Record<string, NavLink[]> = {
+    JOB_SEEKER: [
+      { href: "/dashboard",  label: t("nav.dashboard") },
+      { href: "/jobs",       label: t("nav.jobs") },
+      { href: "/profile",    label: t("nav.profile") },
+    ],
+    EMPLOYER: [
+      { href: "/employer/dashboard",  label: t("nav.dashboard") },
+      { href: "/employer/post-job",   label: t("nav.postJob") },
+      { href: "/employer/talent",     label: t("nav.talents") },
+      { href: "/employer/applicants", label: t("nav.applicants") },
+    ],
+  };
+  appLinks.CONTRACTOR = appLinks.EMPLOYER;
+
+  const marketingLinks: NavLink[] = [
+    { href: "/",        label: t("nav.home") },
+    { href: "/about",   label: t("nav.about") },
+    { href: "/contact", label: t("nav.contactUs") },
+  ];
+
+  const seekerMenu = [
+    { href: "/profile",   label: t("nav.profile"),   icon: UserCircle },
+    { href: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
+    { href: "/settings",  label: t("nav.settings"),  icon: Settings },
+    { href: "/help",      label: t("nav.help"),      icon: HelpCircle },
+  ];
+
+  const employerMenu = [
+    { href: "/employer/company",      label: t("employer.viewCompanyProfile"),  icon: Building2 },
+    { href: "/employer/company/edit", label: t("employer.editCompanyDetails"),  icon: Building2 },
+    { href: "/employer/settings",     label: t("nav.settings"),       icon: Settings },
+    { href: "/employer/help",         label: t("nav.help"),           icon: HelpCircle },
+  ];
+
+  const links = isApp ? (appLinks[userRole!] ?? []) : marketingLinks;
+  const menuItems = userRole === "EMPLOYER" ? employerMenu : seekerMenu;
 
   function isActive(href: string) {
     if (href === "/" || href === "/employer/dashboard" || href === "/dashboard") {
@@ -156,35 +166,38 @@ export function Navbar({ variant = "marketing", userRole, unreadCount = 0 }: Nav
 
         {/* Desktop right */}
         <div className="hidden md:flex items-center gap-3">
+          <div className="[&_button]:text-gray-300 [&_button]:hover:text-white [&_button]:hover:bg-white/10 [&_button:focus-visible]:ring-white">
+            <LanguageSwitcher />
+          </div>
           {isApp ? (
             <div className="flex items-center gap-4">
               {(() => {
                 const p = userRole === "EMPLOYER" ? "/employer" : "";
                 return (
                   <>
-                    <Link href={`${p}/notifications`} className="relative text-gray-300 hover:text-white transition-colors">
-                      <Bell size={20} />
+                    <Link href={`${p}/notifications`} aria-label={`${t("nav.notifications")}${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`} className="relative text-gray-300 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white rounded">
+                      <Bell size={20} aria-hidden="true" />
                       {unreadCount > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                        <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white" aria-hidden="true">
                           {unreadCount > 9 ? "9+" : unreadCount}
                         </span>
                       )}
                     </Link>
-                    <Link href={`${p}/calendar`} className="text-gray-300 hover:text-white transition-colors">
-                      <Calendar size={20} />
+                    <Link href={`${p}/calendar`} aria-label={t("nav.calendar")} className="text-gray-300 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white rounded">
+                      <Calendar size={20} aria-hidden="true" />
                     </Link>
-                    <Link href={`${p}/messages`} className="text-gray-300 hover:text-white transition-colors">
-                      <Mail size={20} />
+                    <Link href={`${p}/messages`} aria-label={t("nav.messages")} className="text-gray-300 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white rounded">
+                      <Mail size={20} aria-hidden="true" />
                     </Link>
-                    <ProfileDropdown userRole={userRole!} />
+                    <ProfileDropdown menuItems={menuItems} signOutLabel={t("nav.signOut")} />
                   </>
                 );
               })()}
             </div>
           ) : (
             <>
-              <OutlineBtn href="/login">Sign in <ChevronRight size={14} /></OutlineBtn>
-              <OutlineBtn href="/register">Create an account <ChevronRight size={14} /></OutlineBtn>
+              <OutlineBtn href="/login">{t("nav.signIn")} <ChevronRight size={14} /></OutlineBtn>
+              <OutlineBtn href="/register">{t("nav.signUp")} <ChevronRight size={14} /></OutlineBtn>
             </>
           )}
         </div>
@@ -192,7 +205,7 @@ export function Navbar({ variant = "marketing", userRole, unreadCount = 0 }: Nav
         <button
           className="md:hidden text-gray-300 hover:text-white p-2"
           onClick={() => setOpen(!open)}
-          aria-label="Toggle menu"
+          aria-label={open ? t("a11y.closeMenu") : t("a11y.openMenu")}
         >
           {open ? <X size={20} /> : <Menu size={20} />}
         </button>
@@ -216,7 +229,7 @@ export function Navbar({ variant = "marketing", userRole, unreadCount = 0 }: Nav
           ))}
           {isApp ? (
             <div className="pt-3 border-t border-white/10 space-y-1">
-              {(userRole === "EMPLOYER" ? EMPLOYER_MENU : SEEKER_MENU).map(({ href, label, icon: Icon }) => (
+              {menuItems.map(({ href, label, icon: Icon }) => (
                 <Link
                   key={href}
                   href={href}
@@ -232,13 +245,13 @@ export function Navbar({ variant = "marketing", userRole, unreadCount = 0 }: Nav
                 className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-red-400 hover:bg-white/10"
               >
                 <LogOut size={15} />
-                Log out
+                {t("nav.signOut")}
               </button>
             </div>
           ) : (
             <div className="pt-3 flex flex-col gap-2">
-              <OutlineBtn href="/login">Sign in <ChevronRight size={14} /></OutlineBtn>
-              <OutlineBtn href="/register">Create an account <ChevronRight size={14} /></OutlineBtn>
+              <OutlineBtn href="/login">{t("nav.signIn")} <ChevronRight size={14} /></OutlineBtn>
+              <OutlineBtn href="/register">{t("nav.signUp")} <ChevronRight size={14} /></OutlineBtn>
             </div>
           )}
         </div>

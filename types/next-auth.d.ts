@@ -8,6 +8,8 @@ declare module "next-auth" {
       email: string;
       role: string;
       isEmailVerified: boolean;
+      twoFactorEnabled: boolean;
+      twoFactorVerified: boolean;
     };
   }
 
@@ -16,6 +18,8 @@ declare module "next-auth" {
     email: string;
     role: string;
     isEmailVerified?: boolean;
+    twoFactorEnabled?: boolean;
+    twoFactorMethod?: string;
   }
 }
 
@@ -24,5 +28,8 @@ declare module "next-auth/jwt" {
     id: string;
     role: string;
     isEmailVerified?: boolean;
+    twoFactorEnabled?: boolean;
+    twoFactorMethod?: string | null;
+    twoFactorVerified?: boolean;
   }
 }

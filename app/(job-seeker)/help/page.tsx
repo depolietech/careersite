@@ -9,7 +9,7 @@ const SECTIONS = [
     items: [
       { q: "How do I create an account?", a: "Click 'Create an account' on the homepage. Choose 'Job Seeker', fill in your email and a strong password, then verify your email address using the link we send you." },
       { q: "What information do I need to complete my profile?", a: "Your profile has two sections: public (headline, summary, skills, job title) which employers always see, and private (full name, photo, school names, company names, employment dates) which are hidden until an interview is scheduled." },
-      { q: "Can I import my profile from LinkedIn or Indeed?", a: "Yes — go to your Profile page and click any of the import buttons. We'll auto-fill your details and you can edit everything after." },
+      { q: "Can I import my profile from LinkedIn?", a: "LinkedIn import is currently in development. You can fill in your profile manually for now — it only takes a few minutes. We'll notify you when the import feature launches." },
     ],
   },
   {

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Bell, Users, Calendar, Star, CheckCircle2 } from "lucide-react";
+import { getServerLocale, createServerT } from "@/lib/i18n/server";
 
 const TYPE_ICON: Record<string, React.ElementType> = {
   NEW_APPLICATION:       Users,
@@ -31,6 +32,9 @@ export default async function EmployerNotificationsPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  const locale = await getServerLocale();
+  const t = createServerT(locale);
+
   const notifications = await db.notification.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
@@ -50,8 +54,8 @@ export default async function EmployerNotificationsPage() {
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-          <p className="text-gray-500 mt-1">Stay updated on applicants and hiring activity.</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t("notifications.title")}</h1>
+          <p className="text-gray-500 mt-1">{t("notifications.subtitleEmployer")}</p>
         </div>
         {unreadCount > 0 && (
           <span className="rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-700">
@@ -63,8 +67,8 @@ export default async function EmployerNotificationsPage() {
       {notifications.length === 0 ? (
         <div className="card p-10 text-center space-y-3">
           <Bell size={32} className="mx-auto text-gray-300" />
-          <p className="text-gray-500 font-medium">No notifications yet</p>
-          <p className="text-sm text-gray-400">Post a job and activity from applicants will appear here.</p>
+          <p className="text-gray-500 font-medium">{t("notifications.empty")}</p>
+          <p className="text-sm text-gray-400">{t("notifications.emptyDescEmployer")}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -94,7 +98,7 @@ export default async function EmployerNotificationsPage() {
       <div className="flex items-center gap-2 text-xs text-gray-400">
         <CheckCircle2 size={13} />
         <Calendar size={13} />
-        <span>Notifications are scoped to your account only.</span>
+        <span>{t("notifications.privacyNote")}</span>
       </div>
     </div>
   );

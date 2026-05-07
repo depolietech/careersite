@@ -3,8 +3,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, Building2, Trash2, X, AlertTriangle } from "lucide-react";
+import { ShieldCheck, Building2, Trash2, X, AlertTriangle, Globe } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { TwoFactorSettings } from "@/components/shared/TwoFactorSettings";
+import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
+import { useI18n, type Locale } from "@/lib/i18n";
 
 function DeleteAccountModal({ onClose }: { onClose: () => void }) {
   const [confirm, setConfirm] = useState("");
@@ -29,17 +32,22 @@ function DeleteAccountModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-dialog-title"
+    >
       <div className="card w-full max-w-md p-8 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+            <div className="h-10 w-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0" aria-hidden="true">
               <AlertTriangle size={18} className="text-red-600" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">Delete account</h2>
+            <h2 id="delete-dialog-title" className="text-xl font-bold text-gray-900">Delete account</h2>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
-            <X size={18} />
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500" aria-label="Close dialog">
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
 
@@ -49,10 +57,11 @@ function DeleteAccountModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <label htmlFor="delete-confirm" className="block text-sm font-medium text-gray-700">
             Type <strong>DELETE</strong> to confirm
           </label>
           <input
+            id="delete-confirm"
             className="input"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
@@ -61,7 +70,7 @@ function DeleteAccountModal({ onClose }: { onClose: () => void }) {
         </div>
 
         {error && (
-          <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
+          <div role="alert" className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
         )}
@@ -83,7 +92,15 @@ function DeleteAccountModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+const LANGUAGE_OPTIONS: { code: Locale; label: string }[] = [
+  { code: "en",    label: "English" },
+  { code: "fr-CA", label: "Français (Canada)" },
+  { code: "es-MX", label: "Español (México)" },
+];
+
 export default function EmployerSettingsPage() {
+  const { locale, setLocale } = useI18n();
+
   const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
   const [pwLoading, setPwLoading] = useState(false);
   const [pwSuccess, setPwSuccess] = useState(false);
@@ -99,10 +116,6 @@ export default function EmployerSettingsPage() {
     e.preventDefault();
     if (pwForm.next !== pwForm.confirm) {
       setPwError("New passwords do not match.");
-      return;
-    }
-    if (pwForm.next.length < 8) {
-      setPwError("New password must be at least 8 characters.");
       return;
     }
     setPwLoading(true);
@@ -128,7 +141,7 @@ export default function EmployerSettingsPage() {
     <>
       {showDeleteModal && <DeleteAccountModal onClose={() => setShowDeleteModal(false)} />}
 
-      <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 space-y-8">
+      <main id="main-content" className="mx-auto max-w-2xl px-4 py-10 sm:px-6 space-y-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
           <p className="text-gray-500 mt-1">Manage your company profile and security settings.</p>
@@ -137,7 +150,7 @@ export default function EmployerSettingsPage() {
         {/* Company profile link */}
         <div className="card p-6 space-y-4">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-violet-100 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-violet-100 flex items-center justify-center" aria-hidden="true">
               <Building2 size={16} className="text-violet-600" />
             </div>
             <h2 className="font-semibold text-gray-900">Company Profile</h2>
@@ -150,28 +163,62 @@ export default function EmployerSettingsPage() {
           </Link>
         </div>
 
+        {/* Language */}
+        <div className="card p-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center" aria-hidden="true">
+              <Globe size={16} className="text-blue-600" />
+            </div>
+            <h2 className="font-semibold text-gray-900">Language</h2>
+          </div>
+          <p className="text-sm text-gray-500">Choose your preferred language for the interface.</p>
+          <div className="flex gap-2 flex-wrap" role="group" aria-label="Select language">
+            {LANGUAGE_OPTIONS.map((l) => (
+              <button
+                key={l.code}
+                type="button"
+                onClick={() => setLocale(l.code)}
+                aria-pressed={locale === l.code}
+                className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                  locale === l.code
+                    ? "border-brand-500 bg-brand-50 text-brand-700"
+                    : "border-gray-200 text-gray-600 hover:border-gray-300"
+                }`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Two-factor authentication */}
+        <TwoFactorSettings />
+
         {/* Change password */}
         <div className="card p-6 space-y-5">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-brand-100 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-brand-100 flex items-center justify-center" aria-hidden="true">
               <ShieldCheck size={16} className="text-brand-600" />
             </div>
             <h2 className="font-semibold text-gray-900">Change Password</h2>
           </div>
 
           {pwSuccess && (
-            <div className="rounded-xl bg-green-50 border border-green-100 px-4 py-3 text-sm text-green-700">
+            <div role="status" className="rounded-xl bg-green-50 border border-green-100 px-4 py-3 text-sm text-green-700">
               Password updated successfully.
             </div>
           )}
 
-          <form onSubmit={handleChangePassword} className="space-y-4">
-            <Input label="Current password" type="password" showToggle required value={pwForm.current} onChange={pwField("current")} placeholder="••••••••" />
-            <Input label="New password" type="password" showToggle required value={pwForm.next} onChange={pwField("next")} placeholder="Min 8 characters" />
-            <Input label="Confirm new password" type="password" showToggle required value={pwForm.confirm} onChange={pwField("confirm")} placeholder="Repeat new password" />
+          <form onSubmit={handleChangePassword} className="space-y-4" noValidate>
+            <Input label="Current password" type="password" showToggle required value={pwForm.current} onChange={pwField("current")} placeholder="••••••••" autoComplete="current-password" />
+            <div className="space-y-2">
+              <Input label="New password" type="password" showToggle required value={pwForm.next} onChange={pwField("next")} placeholder="Min 8 characters" autoComplete="new-password" />
+              <PasswordStrengthMeter password={pwForm.next} />
+            </div>
+            <Input label="Confirm new password" type="password" showToggle required value={pwForm.confirm} onChange={pwField("confirm")} placeholder="Repeat new password" autoComplete="new-password" />
 
             {pwError && (
-              <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
+              <div role="alert" className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
                 {pwError}
               </div>
             )}
@@ -183,7 +230,7 @@ export default function EmployerSettingsPage() {
         {/* Danger zone */}
         <div className="card p-6 space-y-4">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-red-100 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-red-100 flex items-center justify-center" aria-hidden="true">
               <Trash2 size={16} className="text-red-600" />
             </div>
             <h2 className="font-semibold text-gray-900">Danger Zone</h2>
@@ -195,7 +242,7 @@ export default function EmployerSettingsPage() {
             Delete account
           </Button>
         </div>
-      </div>
+      </main>
     </>
   );
 }

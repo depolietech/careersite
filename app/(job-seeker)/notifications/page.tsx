@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Bell, Briefcase, Calendar, TrendingUp, CheckCircle2 } from "lucide-react";
+import { getServerLocale, createServerT } from "@/lib/i18n/server";
 
 const TYPE_ICON: Record<string, React.ElementType> = {
   APPLICATION_SUBMITTED: Briefcase,
@@ -31,6 +32,9 @@ export default async function NotificationsPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  const locale = await getServerLocale();
+  const t = createServerT(locale);
+
   const notifications = await db.notification.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
@@ -51,8 +55,8 @@ export default async function NotificationsPage() {
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-          <p className="text-gray-500 mt-1">Stay updated on your applications and activity.</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t("notifications.title")}</h1>
+          <p className="text-gray-500 mt-1">{t("notifications.subtitle")}</p>
         </div>
         {unreadCount > 0 && (
           <span className="rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-700">
@@ -64,8 +68,8 @@ export default async function NotificationsPage() {
       {notifications.length === 0 ? (
         <div className="card p-10 text-center space-y-3">
           <Bell size={32} className="mx-auto text-gray-300" />
-          <p className="text-gray-500 font-medium">No notifications yet</p>
-          <p className="text-sm text-gray-400">Apply to a job and your activity will appear here.</p>
+          <p className="text-gray-500 font-medium">{t("notifications.empty")}</p>
+          <p className="text-sm text-gray-400">{t("notifications.emptyDescSeeker")}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -94,7 +98,7 @@ export default async function NotificationsPage() {
 
       <div className="flex items-center gap-2 text-xs text-gray-400">
         <CheckCircle2 size={13} />
-        <span>Notifications are private and visible only to you.</span>
+        <span>{t("notifications.privacyNote")}</span>
       </div>
     </div>
   );

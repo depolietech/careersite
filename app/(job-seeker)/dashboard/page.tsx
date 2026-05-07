@@ -4,16 +4,17 @@ import { Badge } from "@/components/ui/badge";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
+import { getServerLocale, createServerT } from "@/lib/i18n/server";
 
-const STATUS_BADGE: Record<string, { label: string; variant: "default" | "success" | "warning" | "info" | "danger" }> = {
-  PENDING:             { label: "Applied",         variant: "default" },
-  REVIEWING:           { label: "Under Review",    variant: "info" },
-  SHORTLISTED:         { label: "Shortlisted",     variant: "success" },
-  FORWARDED:           { label: "Forwarded",       variant: "info" },
-  INTERVIEW_SCHEDULED: { label: "Interview Stage", variant: "success" },
-  REJECTED:            { label: "Not Selected",    variant: "danger" },
-  OFFER_MADE:          { label: "Offer!",          variant: "success" },
-  HIRED:               { label: "Hired",           variant: "success" },
+const STATUS_VARIANT: Record<string, "default" | "success" | "warning" | "info" | "danger"> = {
+  PENDING:             "default",
+  REVIEWING:           "info",
+  SHORTLISTED:         "success",
+  FORWARDED:           "info",
+  INTERVIEW_SCHEDULED: "success",
+  REJECTED:            "danger",
+  OFFER_MADE:          "success",
+  HIRED:               "success",
 };
 
 function timeAgo(date: Date) {
@@ -26,6 +27,20 @@ function timeAgo(date: Date) {
   return `${Math.floor(days / 30)} month${days >= 60 ? "s" : ""} ago`;
 }
 
+function getStatusLabel(t: (k: string) => string, status: string): string {
+  const map: Record<string, string> = {
+    PENDING:             t("status.applied"),
+    REVIEWING:           t("status.underReview"),
+    SHORTLISTED:         t("status.shortlisted"),
+    FORWARDED:           t("status.forwarded"),
+    INTERVIEW_SCHEDULED: t("status.interviewStage"),
+    REJECTED:            t("status.notSelected"),
+    OFFER_MADE:          t("status.offer"),
+    HIRED:               t("status.hired"),
+  };
+  return map[status] ?? status;
+}
+
 export default async function JobSeekerDashboard({
   searchParams,
 }: {
@@ -33,6 +48,9 @@ export default async function JobSeekerDashboard({
 }) {
   const session = await auth();
   if (!session?.user) redirect("/login");
+
+  const locale = await getServerLocale();
+  const t = createServerT(locale);
 
   const params = await searchParams;
   const filterStatus = params.status ?? null;
@@ -86,17 +104,17 @@ export default async function JobSeekerDashboard({
   }
 
   function completionHint(): string {
-    if (!profile) return "Create your profile to start applying";
+    if (!profile) return t("dashboard.createProfile");
     let skills: string[] = [];
     try { skills = JSON.parse(profile.skills); } catch { /* empty */ }
     const missing: string[] = [];
-    if (skills.length === 0)                missing.push("skills");
-    if (profile.workExperiences.length === 0) missing.push("work experience");
-    if (!profile.headline)                  missing.push("a headline");
-    if (!profile.summary)                   missing.push("a summary");
-    if (resumeCount === 0)                  missing.push("a resume");
-    if (missing.length === 0) return "Profile complete — you're ready to apply!";
-    return `Add ${missing.slice(0, 2).join(" and ")} to strengthen your profile`;
+    if (skills.length === 0)                missing.push(t("profile.skills").toLowerCase());
+    if (profile.workExperiences.length === 0) missing.push(t("profile.experience").toLowerCase());
+    if (!profile.headline)                  missing.push(t("profile.headline").toLowerCase());
+    if (!profile.summary)                   missing.push(t("profile.summary").toLowerCase());
+    if (resumeCount === 0)                  missing.push(t("profile.resumes").toLowerCase());
+    if (missing.length === 0) return t("dashboard.profileComplete");
+    return `${t("profile.addSkill").replace("Add a skill", "Add")} ${missing.slice(0, 2).join(" & ")} to strengthen your profile`;
   }
 
   const completion = calcCompletion();
@@ -109,10 +127,10 @@ export default async function JobSeekerDashboard({
   };
 
   const stats = [
-    { label: "Applications", value: counts.total,       icon: FileCheck,  color: "text-brand-600 bg-brand-50", status: null },
-    { label: "Interviews",   value: counts.interviews,  icon: Calendar,   color: "text-green-600 bg-green-50", status: "INTERVIEW_SCHEDULED" },
-    { label: "Shortlisted",  value: counts.shortlisted, icon: TrendingUp, color: "text-amber-600 bg-amber-50", status: "SHORTLISTED" },
-    { label: "Pending",      value: counts.pending,     icon: Clock,      color: "text-gray-600 bg-gray-50",   status: "PENDING" },
+    { label: t("status.applied"),         value: counts.total,       icon: FileCheck,  color: "text-brand-600 bg-brand-50", status: null },
+    { label: t("status.interviewStage"),  value: counts.interviews,  icon: Calendar,   color: "text-green-600 bg-green-50", status: "INTERVIEW_SCHEDULED" },
+    { label: t("status.shortlisted"),     value: counts.shortlisted, icon: TrendingUp, color: "text-amber-600 bg-amber-50", status: "SHORTLISTED" },
+    { label: t("status.pending"),         value: counts.pending,     icon: Clock,      color: "text-gray-600 bg-gray-50",   status: "PENDING" },
   ];
 
   return (
@@ -121,14 +139,14 @@ export default async function JobSeekerDashboard({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Your Dashboard</h1>
-          <p className="text-gray-500 mt-1">Track your applications and job activity</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t("dashboard.myApplications")}</h1>
+          <p className="text-gray-500 mt-1">{t("dashboard.recentActivity")}</p>
         </div>
         <Link
           href="/jobs"
           className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 transition-colors"
         >
-          Browse Jobs <ArrowRight size={16} />
+          {t("dashboard.browseJobs")} <ArrowRight size={16} />
         </Link>
       </div>
 
@@ -160,10 +178,10 @@ export default async function JobSeekerDashboard({
       {/* Profile completeness */}
       <div className="card p-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-gray-900">Profile completeness</h2>
+          <h2 className="font-semibold text-gray-900">{t("dashboard.profileStrength")}</h2>
           <div className="flex items-center gap-3">
             <span className="text-sm font-semibold text-brand-600">{completion}%</span>
-            <Link href="/profile" className="text-sm text-brand-600 hover:underline">Edit profile</Link>
+            <Link href="/profile" className="text-sm text-brand-600 hover:underline">{t("employer.editProfile")}</Link>
           </div>
         </div>
         <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
@@ -181,8 +199,8 @@ export default async function JobSeekerDashboard({
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold text-gray-900">
               {filterStatus
-                ? `${STATUS_BADGE[filterStatus]?.label ?? filterStatus} Applications`
-                : "All Applications"}
+                ? `${getStatusLabel(t, filterStatus)} Applications`
+                : t("dashboard.myApplications")}
             </h2>
             {filterStatus && (
               <Link href="/dashboard" className="text-xs text-gray-400 underline hover:text-gray-600">
@@ -190,23 +208,23 @@ export default async function JobSeekerDashboard({
               </Link>
             )}
           </div>
-          <p className="text-sm text-gray-400">Identity masked until interview</p>
+          <p className="text-sm text-gray-400">{t("employer.candidateMasked")}</p>
         </div>
 
         {filteredApps.length === 0 ? (
           <div className="card p-10 text-center space-y-3">
             <Briefcase size={32} className="mx-auto text-gray-300" />
             <p className="font-medium text-gray-500">
-              {filterStatus ? "No applications with this status yet" : "No applications yet"}
+              {t("dashboard.noApplications")}
             </p>
             <Link href="/jobs" className="inline-flex items-center gap-2 text-sm font-medium text-brand-600 hover:underline">
-              Browse open jobs <ArrowRight size={14} />
+              {t("dashboard.browseJobs")} <ArrowRight size={14} />
             </Link>
           </div>
         ) : (
           <div className="space-y-3">
             {filteredApps.map((app) => {
-              const s = STATUS_BADGE[app.status] ?? { label: app.status, variant: "default" as const };
+              const s = { label: getStatusLabel(t, app.status), variant: STATUS_VARIANT[app.status] ?? "default" as const };
               const jobClosed = app.job.status === "CLOSED" || app.job.status === "PAUSED";
               return (
                 <div key={app.id} className="card p-5 flex flex-col sm:flex-row sm:items-center gap-4">
@@ -237,7 +255,7 @@ export default async function JobSeekerDashboard({
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 rounded-lg bg-green-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-600 transition-colors"
                       >
-                        <Calendar size={12} /> Join Interview
+                        <Calendar size={12} /> {t("interview.accept")}
                       </a>
                     )}
                     {app.status === "INTERVIEW_SCHEDULED" && !app.interview?.meetingLink && (

@@ -1,53 +1,14 @@
 "use client";
 import { useState } from "react";
-
-type Step = { num: string; title: string; desc: string };
-
-const RECRUITER_STEPS: Step[] = [
-  {
-    num: "1",
-    title: "Post a Job",
-    desc: "Create a job listing and choose whether to add an assessment or keep it simple.",
-  },
-  {
-    num: "2",
-    title: "Review Anonymous Profiles",
-    desc: "Go through candidate profiles based only on skills and experience, without any personal details influencing your decision.",
-  },
-  {
-    num: "3",
-    title: "Schedule Interviews & Reveal",
-    desc: "Invite top candidates for an interview, and only then will their personal details be revealed.",
-  },
-];
-
-const SEEKER_STEPS: Step[] = [
-  {
-    num: "1",
-    title: "Build Your Profile",
-    desc: "Import from LinkedIn or fill in your skills, experience, and qualifications. Your personal details stay hidden.",
-  },
-  {
-    num: "2",
-    title: "Apply with Confidence",
-    desc: "Browse and apply to roles. Employers only see your skills and experience — not your name, photo, or background.",
-  },
-  {
-    num: "3",
-    title: "Get Selected on Merit",
-    desc: "When an employer is interested, they schedule an interview and your identity is revealed — fairly and transparently.",
-  },
-];
+import { useI18n } from "@/lib/i18n";
 
 const STEP_ICONS = [
-  // Step 1 — post a job
   <svg key="0" viewBox="0 0 64 64" className="h-10 w-10" fill="none">
     <rect x="12" y="20" width="40" height="28" rx="4" fill="#FBBF24" opacity="0.3"/>
     <rect x="16" y="16" width="32" height="28" rx="4" fill="#FBBF24" opacity="0.6"/>
     <rect x="20" y="12" width="24" height="28" rx="4" fill="#F59E0B"/>
     <path d="M28 22l8 4-8 4V22z" fill="white"/>
   </svg>,
-  // Step 2 — review profiles
   <svg key="1" viewBox="0 0 64 64" className="h-10 w-10" fill="none">
     <rect x="14" y="14" width="36" height="36" rx="4" fill="#93C5FD" opacity="0.4"/>
     <circle cx="32" cy="28" r="8" fill="#3B82F6" opacity="0.7"/>
@@ -55,7 +16,6 @@ const STEP_ICONS = [
     <circle cx="44" cy="18" r="6" fill="#EF4444" opacity="0.8"/>
     <path d="M41 18h6M44 15v6" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
   </svg>,
-  // Step 3 — reveal at interview
   <svg key="2" viewBox="0 0 64 64" className="h-10 w-10" fill="none">
     <circle cx="28" cy="24" r="10" fill="#A78BFA" opacity="0.5"/>
     <circle cx="28" cy="24" r="6" fill="#7C3AED" opacity="0.7"/>
@@ -66,7 +26,21 @@ const STEP_ICONS = [
 ];
 
 export function HowItWorksTabs() {
+  const { t } = useI18n();
   const [active, setActive] = useState<"recruiter" | "seeker">("recruiter");
+
+  const RECRUITER_STEPS = [
+    { num: "1", title: t("home.recruiterStep1Title"), desc: t("home.recruiterStep1Desc") },
+    { num: "2", title: t("home.recruiterStep2Title"), desc: t("home.recruiterStep2Desc") },
+    { num: "3", title: t("home.recruiterStep3Title"), desc: t("home.recruiterStep3Desc") },
+  ];
+
+  const SEEKER_STEPS = [
+    { num: "1", title: t("home.seekerStep1Title"), desc: t("home.seekerStep1Desc") },
+    { num: "2", title: t("home.seekerStep2Title"), desc: t("home.seekerStep2Desc") },
+    { num: "3", title: t("home.seekerStep3Title"), desc: t("home.seekerStep3Desc") },
+  ];
+
   const steps = active === "recruiter" ? RECRUITER_STEPS : SEEKER_STEPS;
 
   return (
@@ -81,7 +55,7 @@ export function HowItWorksTabs() {
                 active === tab ? "bg-brand-100 text-brand-700" : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              {tab === "recruiter" ? "Recruiter" : "Job Seeker"}
+              {tab === "recruiter" ? t("home.recruiterTab") : t("home.seekerTab")}
             </button>
           ))}
         </div>

@@ -15,6 +15,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "applicationId, scheduledAt, and type are required" }, { status: 400 });
     }
 
+    if (new Date(scheduledAt) <= new Date()) {
+      return NextResponse.json({ error: "Interview must be scheduled in the future." }, { status: 400 });
+    }
+
     // Verify the employer owns the job for this application
     const application = await db.application.findUnique({
       where: { id: applicationId },

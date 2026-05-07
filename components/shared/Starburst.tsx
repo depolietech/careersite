@@ -1,6 +1,6 @@
 const LINES = Array.from({ length: 12 }, (_, i) => ({
-  x2: 24 + 20 * Math.cos((i * 30 * Math.PI) / 180),
-  y2: 24 + 20 * Math.sin((i * 30 * Math.PI) / 180),
+  x2: Math.round((24 + 20 * Math.cos((i * 30 * Math.PI) / 180)) * 1e6) / 1e6,
+  y2: Math.round((24 + 20 * Math.sin((i * 30 * Math.PI) / 180)) * 1e6) / 1e6,
 }));
 
 interface StarburstProps {

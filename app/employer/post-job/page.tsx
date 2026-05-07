@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, ShieldAlert, Clock, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input, TextArea, Select } from "@/components/ui/input";
@@ -25,6 +25,8 @@ const EDUCATION_OPTIONS = [
 
 export default function PostJobPage() {
   const router = useRouter();
+  const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
+  const [checkingVerification, setCheckingVerification] = useState(true);
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
   const [certs, setCerts] = useState<string[]>([]);
@@ -35,6 +37,14 @@ export default function PostJobPage() {
   const [stateProvince, setStateProvince] = useState("");
   const [salaryMin, setSalaryMin] = useState("");
   const [salaryMax, setSalaryMax] = useState("");
+
+  useEffect(() => {
+    fetch("/api/employer/profile")
+      .then((r) => r.json())
+      .then((data) => { setVerificationStatus(data.verificationStatus ?? "INCOMPLETE"); })
+      .catch(() => setVerificationStatus("INCOMPLETE"))
+      .finally(() => setCheckingVerification(false));
+  }, []);
 
   const stateOptions = country ? (STATES[country] ?? []) : [];
   const currency = CURRENCY_LABEL[country] ?? "USD";
@@ -94,6 +104,51 @@ export default function PostJobPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (checkingVerification) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="h-6 w-6 rounded-full border-2 border-brand-500 border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (verificationStatus !== "APPROVED") {
+    const isPending = verificationStatus === "PENDING_REVIEW";
+    const Icon = isPending ? Clock : ShieldAlert;
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8 space-y-6">
+        <div>
+          <Link href="/employer/dashboard" className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
+            <ArrowLeft size={14} /> Back to dashboard
+          </Link>
+          <h1 className="text-2xl font-bold text-gray-900">Post a job</h1>
+        </div>
+        <div className={`rounded-2xl border p-8 flex flex-col items-center text-center space-y-4 ${isPending ? "bg-blue-50 border-blue-200" : "bg-amber-50 border-amber-200"}`}>
+          <div className={`flex h-14 w-14 items-center justify-center rounded-full ${isPending ? "bg-blue-100" : "bg-amber-100"}`}>
+            <Icon size={28} className={isPending ? "text-blue-600" : "text-amber-600"} />
+          </div>
+          <h2 className="text-lg font-bold text-gray-900">
+            {isPending ? "Verification Under Review" : "Account Verification Required"}
+          </h2>
+          <p className="text-sm text-gray-600 max-w-sm">
+            {isPending
+              ? "Your verification request is being reviewed by our team. You'll be able to post jobs once approved, typically within 1–2 business days."
+              : "You must complete company verification before posting jobs. Fill in your company details and submit for admin review."}
+          </p>
+          <Link href="/employer/company/edit">
+            <Button type="button" variant={isPending ? "secondary" : "primary"}>
+              {isPending ? (
+                <><Clock size={14} /> View verification status</>
+              ) : (
+                <><ShieldCheck size={14} /> Complete verification</>
+              )}
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
