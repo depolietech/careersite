@@ -3,16 +3,18 @@ import { Circle, Rocket } from "lucide-react";
 const IN_PROGRESS = [
   "Mobile app — iOS & Android",
   "LinkedIn profile import",
-  "Recruiter verification workflow enhancements",
-  "Password reset & account recovery",
+  "Fair Hiring Analytics",
 ];
 
 const PLANNED = [
   "AI-powered skills-to-job matching",
   "Indeed & job board integration",
-  "Video interview scheduling",
   "Employer analytics dashboard",
-  "Candidate skill assessments",
+  "Verified Skills & Certifications",
+  "Skill badges",
+  "Profile visibility controls",
+  "Recruiter Reviews & Ratings",
+  "Additional Language Support — Arabic, Portuguese, German, Mandarin, Hindi",
 ];
 
 export function PlatformUpdates() {
