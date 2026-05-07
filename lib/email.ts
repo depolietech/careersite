@@ -12,7 +12,7 @@ function createTransporter() {
   });
 }
 
-const FROM = `"Equalhires" <${process.env.SMTP_USER ?? "noreply@equalhires.com"}>`;
+const FROM = `"Equalhires" <${process.env.SMTP_FROM ?? "noreply@equalhires.com"}>`;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 function baseTemplate(title: string, body: string) {
