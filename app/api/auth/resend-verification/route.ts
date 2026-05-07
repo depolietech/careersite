@@ -35,7 +35,12 @@ export async function POST(req: Request) {
       },
     });
 
-    await sendVerificationEmail(email, token, verifyCode);
+    try {
+      await sendVerificationEmail(email, token, verifyCode);
+    } catch (emailErr) {
+      console.error("[resend-verification] email failed:", emailErr);
+      return NextResponse.json({ error: "Failed to send email. Please check SMTP configuration." }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true });
   } catch {

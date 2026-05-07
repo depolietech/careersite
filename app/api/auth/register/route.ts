@@ -95,7 +95,12 @@ export async function POST(req: Request) {
       },
     });
 
-    await sendVerificationEmail(email, token, verifyCode);
+    try {
+      await sendVerificationEmail(email, token, verifyCode);
+    } catch (emailErr) {
+      console.error("[register] verification email failed:", emailErr);
+      // Registration succeeded — don't block the user, they can resend from the check-email page
+    }
 
     return NextResponse.json({ id: user.id, email: user.email, role: user.role }, { status: 201 });
   } catch (err) {
