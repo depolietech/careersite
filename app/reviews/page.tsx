@@ -6,6 +6,7 @@ import { Star, Building2, X, ChevronLeft, ChevronRight, Loader2, CheckCircle2, S
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 
 type Company = { id: string; companyName: string; industry: string | null };
 
@@ -53,6 +54,7 @@ function ReviewModal({ companies, onClose, onSubmitted }: {
   onClose: () => void;
   onSubmitted: () => void;
 }) {
+  const { t } = useI18n();
   const [employerProfileId, setEmployerProfileId] = useState("");
   const [rating, setRating] = useState(0);
   const [title, setTitle] = useState("");
@@ -64,8 +66,8 @@ function ReviewModal({ companies, onClose, onSubmitted }: {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!employerProfileId) { setError("Please select a company."); return; }
-    if (rating === 0) { setError("Please select a star rating."); return; }
+    if (!employerProfileId) { setError(t("reviews.errSelectCompany")); return; }
+    if (rating === 0) { setError(t("reviews.errSelectRating")); return; }
     setSubmitting(true);
     const res = await fetch("/api/reviews", {
       method: "POST",
@@ -74,7 +76,7 @@ function ReviewModal({ companies, onClose, onSubmitted }: {
     });
     const data = await res.json();
     setSubmitting(false);
-    if (!res.ok) { setError(data.error ?? "Failed to submit review."); return; }
+    if (!res.ok) { setError(data.error ?? t("reviews.errSubmit")); return; }
     onSubmitted();
   }
 
@@ -82,21 +84,21 @@ function ReviewModal({ companies, onClose, onSubmitted }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900">Write a Company Review</h2>
+          <h2 className="text-lg font-bold text-gray-900">{t("reviews.modalTitle")}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X size={20} />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Company</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t("reviews.companyLabel")}</label>
             <select
               className="input w-full"
               value={employerProfileId}
               onChange={(e) => setEmployerProfileId(e.target.value)}
               required
             >
-              <option value="">Select a company…</option>
+              <option value="">{t("reviews.selectCompany")}</option>
               {companies.map((c) => (
                 <option key={c.id} value={c.id}>{c.companyName}{c.industry ? ` · ${c.industry}` : ""}</option>
               ))}
@@ -104,20 +106,27 @@ function ReviewModal({ companies, onClose, onSubmitted }: {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Overall Rating</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t("reviews.overallRating")}</label>
             <Stars rating={rating} interactive onChange={setRating} />
             {rating > 0 && (
               <p className="text-xs text-gray-500 mt-1">
-                {["", "Poor", "Fair", "Good", "Very Good", "Excellent"][rating]}
+                {[
+                  "",
+                  t("reviews.ratingPoor"),
+                  t("reviews.ratingFair"),
+                  t("reviews.ratingGood"),
+                  t("reviews.ratingVeryGood"),
+                  t("reviews.ratingExcellent"),
+                ][rating]}
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Review Title</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t("reviews.reviewTitle")}</label>
             <input
               className="input w-full"
-              placeholder="Summarize your experience in a few words"
+              placeholder={t("reviews.titlePlaceholder")}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={120}
@@ -126,11 +135,11 @@ function ReviewModal({ companies, onClose, onSubmitted }: {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Your Review</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">{t("reviews.reviewBody")}</label>
             <textarea
               className="input w-full resize-none"
               rows={5}
-              placeholder="Share details about your experience applying or interviewing with this company…"
+              placeholder={t("reviews.bodyPlaceholder")}
               value={body}
               onChange={(e) => setBody(e.target.value)}
               maxLength={3000}
@@ -146,7 +155,7 @@ function ReviewModal({ companies, onClose, onSubmitted }: {
               onChange={(e) => setIsAnonymous(e.target.checked)}
               className="w-4 h-4 accent-brand-600"
             />
-            <span className="text-sm text-gray-600">Post anonymously</span>
+            <span className="text-sm text-gray-600">{t("reviews.postAnonymously")}</span>
           </label>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
@@ -154,9 +163,9 @@ function ReviewModal({ companies, onClose, onSubmitted }: {
           <div className="flex gap-3 pt-1">
             <Button type="submit" className="flex-1" disabled={submitting}>
               {submitting && <Loader2 size={14} className="animate-spin" />}
-              Submit Review
+              {t("reviews.submitReview")}
             </Button>
-            <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
+            <Button type="button" variant="secondary" onClick={onClose}>{t("common.cancel")}</Button>
           </div>
         </form>
       </div>
@@ -165,6 +174,7 @@ function ReviewModal({ companies, onClose, onSubmitted }: {
 }
 
 function ReviewCard({ review }: { review: Review }) {
+  const { t } = useI18n();
   return (
     <div className="card p-5 space-y-3">
       <div className="flex items-start justify-between gap-4">
@@ -188,7 +198,7 @@ function ReviewCard({ review }: { review: Review }) {
       </div>
 
       <div className="flex items-center gap-3 text-xs text-gray-400 pt-1 border-t border-gray-50">
-        <span>{review.isAnonymous ? "Anonymous reviewer" : review.reviewerEmail}</span>
+        <span>{review.isAnonymous ? t("reviews.anonymousReviewer") : review.reviewerEmail}</span>
         <span>·</span>
         <span>{new Date(review.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
       </div>
@@ -199,6 +209,7 @@ function ReviewCard({ review }: { review: Review }) {
 export default function ReviewsPage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const { t } = useI18n();
   const isJobSeeker = session?.user?.role === "JOB_SEEKER";
 
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -213,7 +224,6 @@ export default function ReviewsPage() {
   const [companiesLoading, setCompaniesLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
 
-  // Load companies for the sidebar list
   useEffect(() => {
     fetch("/api/employers/public")
       .then((r) => r.json())
@@ -234,7 +244,6 @@ export default function ReviewsPage() {
 
   useEffect(() => { fetchReviews(); }, [fetchReviews]);
 
-  // Reset page when company filter changes
   useEffect(() => { setPage(1); }, [selectedCompanyId]);
 
   async function openWriteReview() {
@@ -260,6 +269,59 @@ export default function ReviewsPage() {
     ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
     : null;
 
+  const CompanySidebar = (
+    <div className="card p-4 space-y-3">
+      <h2 className="text-sm font-semibold text-gray-900">{t("reviews.browseByCompany")}</h2>
+
+      <div className="relative">
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          className="input pl-8 w-full text-sm py-1.5"
+          placeholder={t("reviews.searchCompanies")}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      <button
+        onClick={() => setSelectedCompanyId(null)}
+        className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+          !selectedCompanyId
+            ? "bg-brand-600 text-white"
+            : "text-gray-600 hover:bg-gray-100"
+        }`}
+      >
+        {t("reviews.allCompanies")}
+        <span className="ml-1.5 text-xs opacity-70">({total})</span>
+      </button>
+
+      <div className="space-y-0.5 max-h-52 md:max-h-[60vh] overflow-y-auto">
+        {companiesLoading ? (
+          <div className="flex justify-center py-6">
+            <Loader2 size={18} className="animate-spin text-gray-300" />
+          </div>
+        ) : filteredCompanies.length === 0 ? (
+          <p className="text-xs text-gray-400 px-3 py-2">{t("reviews.noCompaniesFound")}</p>
+        ) : (
+          filteredCompanies.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setSelectedCompanyId(c.id === selectedCompanyId ? null : c.id)}
+              className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                selectedCompanyId === c.id
+                  ? "bg-brand-50 text-brand-700 font-medium"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <p className="text-sm truncate">{c.companyName}</p>
+              {c.industry && <p className="text-xs text-gray-400 truncate">{c.industry}</p>}
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <>
       <Navbar variant="marketing" userRole={session?.user?.role ?? null} />
@@ -270,11 +332,11 @@ export default function ReviewsPage() {
           <div className="mx-auto max-w-5xl text-center space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium">
               <Star size={14} className="fill-amber-400 text-amber-400" />
-              Company Reviews
+              {t("reviews.badge")}
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold">Company Reviews by Job Seekers</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold">{t("reviews.heroHeading")}</h1>
             <p className="text-gray-300 text-lg max-w-xl mx-auto">
-              Real experiences from real candidates — helping you find trustworthy employers and avoid scams.
+              {t("reviews.heroDesc")}
             </p>
             <div className="pt-2">
               <Button
@@ -282,7 +344,7 @@ export default function ReviewsPage() {
                 className="bg-white text-forest hover:bg-gray-100 font-semibold"
                 onClick={openWriteReview}
               >
-                Write a Review
+                {t("reviews.writeReview")}
               </Button>
             </div>
           </div>
@@ -293,66 +355,19 @@ export default function ReviewsPage() {
           {submitted && (
             <div className="flex items-center gap-3 rounded-xl bg-green-50 border border-green-200 p-4 text-green-800 text-sm font-medium mb-6">
               <CheckCircle2 size={18} className="shrink-0 text-green-500" />
-              Your review has been submitted — thank you!
+              {t("reviews.submitted")}
             </div>
           )}
 
+          {/* Mobile sidebar (stacked above reviews) */}
+          <div className="md:hidden mb-6">
+            {CompanySidebar}
+          </div>
+
           <div className="flex gap-6 items-start">
-            {/* Company sidebar */}
-            <aside className="w-64 shrink-0 hidden md:block">
-              <div className="card p-4 space-y-3 sticky top-24">
-                <h2 className="text-sm font-semibold text-gray-900">Browse by Company</h2>
-
-                {/* Search filter */}
-                <div className="relative">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    className="input pl-8 w-full text-sm py-1.5"
-                    placeholder="Search companies…"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
-                </div>
-
-                {/* All companies option */}
-                <button
-                  onClick={() => setSelectedCompanyId(null)}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    !selectedCompanyId
-                      ? "bg-brand-600 text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  All Companies
-                  <span className="ml-1.5 text-xs opacity-70">({total})</span>
-                </button>
-
-                {/* Company list */}
-                <div className="space-y-0.5 max-h-[60vh] overflow-y-auto">
-                  {companiesLoading ? (
-                    <div className="flex justify-center py-6">
-                      <Loader2 size={18} className="animate-spin text-gray-300" />
-                    </div>
-                  ) : filteredCompanies.length === 0 ? (
-                    <p className="text-xs text-gray-400 px-3 py-2">No companies found.</p>
-                  ) : (
-                    filteredCompanies.map((c) => (
-                      <button
-                        key={c.id}
-                        onClick={() => setSelectedCompanyId(c.id === selectedCompanyId ? null : c.id)}
-                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                          selectedCompanyId === c.id
-                            ? "bg-brand-50 text-brand-700 font-medium"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`}
-                      >
-                        <p className="text-sm truncate">{c.companyName}</p>
-                        {c.industry && <p className="text-xs text-gray-400 truncate">{c.industry}</p>}
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
+            {/* Desktop sidebar */}
+            <aside className="w-64 shrink-0 hidden md:block sticky top-24">
+              {CompanySidebar}
             </aside>
 
             {/* Reviews panel */}
@@ -366,32 +381,23 @@ export default function ReviewsPage() {
                       <button
                         onClick={() => setSelectedCompanyId(null)}
                         className="text-gray-400 hover:text-gray-600"
-                        title="Clear filter"
+                        title={t("reviews.clearFilter")}
                       >
                         <X size={15} />
                       </button>
                     </div>
                   ) : (
-                    <h2 className="font-semibold text-gray-900">All Reviews</h2>
+                    <h2 className="font-semibold text-gray-900">{t("reviews.allReviews")}</h2>
                   )}
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {loading ? "Loading…" : `${total} review${total !== 1 ? "s" : ""}${avgRating ? ` · ${avgRating} avg rating` : ""}`}
+                    {loading
+                      ? t("common.loading")
+                      : `${total} ${total !== 1 ? t("reviews.reviews") : t("reviews.review")}${avgRating ? ` · ${avgRating} ${t("reviews.avgRating")}` : ""}`}
                   </p>
                 </div>
                 {avgRating && !loading && (
                   <Stars rating={Math.round(Number(avgRating))} />
                 )}
-              </div>
-
-              {/* Mobile search (visible only on small screens) */}
-              <div className="relative md:hidden">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  className="input pl-8 w-full text-sm"
-                  placeholder="Search companies…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
               </div>
 
               {loading ? (
@@ -403,11 +409,13 @@ export default function ReviewsPage() {
                   <Star size={32} className="mx-auto text-gray-200" />
                   <p className="text-gray-500 font-medium">
                     {selectedCompany
-                      ? `No reviews yet for ${selectedCompany.companyName}.`
-                      : "No reviews yet — be the first to share your experience!"}
+                      ? `${t("reviews.noReviewsCompany")} ${selectedCompany.companyName}.`
+                      : t("reviews.noReviewsYet")}
                   </p>
                   <Button variant="secondary" onClick={openWriteReview}>
-                    {selectedCompany ? `Review ${selectedCompany.companyName}` : "Write the first review"}
+                    {selectedCompany
+                      ? `${t("reviews.reviewCompany")} ${selectedCompany.companyName}`
+                      : t("reviews.writeFirst")}
                   </Button>
                 </div>
               ) : (
@@ -424,15 +432,17 @@ export default function ReviewsPage() {
                     disabled={page === 1}
                     className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 disabled:opacity-30"
                   >
-                    <ChevronLeft size={16} /> Previous
+                    <ChevronLeft size={16} /> {t("reviews.previous")}
                   </button>
-                  <span className="text-sm text-gray-400">Page {page} of {pages}</span>
+                  <span className="text-sm text-gray-400">
+                    {t("reviews.pageOf")} {page} {t("reviews.of")} {pages}
+                  </span>
                   <button
                     onClick={() => setPage((p) => Math.min(pages, p + 1))}
                     disabled={page === pages}
                     className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 disabled:opacity-30"
                   >
-                    Next <ChevronRight size={16} />
+                    {t("reviews.next")} <ChevronRight size={16} />
                   </button>
                 </div>
               )}

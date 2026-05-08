@@ -69,7 +69,17 @@ function getInitialLocale(): Locale {
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(getInitialLocale);
 
-  // Sync html lang attribute on initial load (setLocale handles it for user-triggered changes)
+  // After SSR hydration, restore locale from cookie/localStorage (lazy initializer runs on
+  // server with "en" as fallback and React does not re-call it during hydration).
+  useEffect(() => {
+    const saved = readCookieLocale() ?? (localStorage.getItem(COOKIE_KEY) as Locale | null);
+    if (saved && saved !== locale) {
+      setLocaleState(saved);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sync html lang attribute whenever locale changes
   useEffect(() => {
     if (typeof document !== "undefined") {
       document.documentElement.lang = locale;

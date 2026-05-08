@@ -19,7 +19,8 @@
     "contactUs": "Nous contacter",
     "talents": "Talents",
     "postJob": "Publier un emploi",
-    "applicants": "Candidats"
+    "applicants": "Candidats",
+    "companyReviews": "Avis d'entreprises"
   },
 
   "auth": {
@@ -702,5 +703,49 @@
     "present": "Présent",
     "obtained": "Obtenu le",
     "expires": "Expire le"
+  },
+
+  "reviews": {
+    "badge": "Avis d'entreprises",
+    "heroHeading": "Avis d'entreprises par des chercheurs d'emploi",
+    "heroDesc": "Des expériences réelles de candidats réels — pour vous aider à trouver des employeurs fiables et à éviter les arnaques.",
+    "writeReview": "Écrire un avis",
+    "submitted": "Votre avis a été soumis — merci !",
+    "browseByCompany": "Parcourir par entreprise",
+    "searchCompanies": "Rechercher des entreprises…",
+    "allCompanies": "Toutes les entreprises",
+    "allReviews": "Tous les avis",
+    "avgRating": "note moyenne",
+    "review": "avis",
+    "reviews": "avis",
+    "anonymousReviewer": "Candidat anonyme",
+    "noReviewsYet": "Aucun avis pour l'instant — soyez le premier à partager votre expérience !",
+    "noReviewsCompany": "Aucun avis pour",
+    "writeFirst": "Écrire le premier avis",
+    "reviewCompany": "Évaluer",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "pageOf": "Page",
+    "of": "sur",
+    "modalTitle": "Écrire un avis d'entreprise",
+    "companyLabel": "Entreprise",
+    "selectCompany": "Sélectionnez une entreprise…",
+    "overallRating": "Note globale",
+    "ratingPoor": "Mauvais",
+    "ratingFair": "Passable",
+    "ratingGood": "Bien",
+    "ratingVeryGood": "Très bien",
+    "ratingExcellent": "Excellent",
+    "reviewTitle": "Titre de l'avis",
+    "titlePlaceholder": "Résumez votre expérience en quelques mots",
+    "reviewBody": "Votre avis",
+    "bodyPlaceholder": "Partagez les détails de votre expérience de candidature ou d'entretien avec cette entreprise…",
+    "postAnonymously": "Publier anonymement",
+    "submitReview": "Soumettre l'avis",
+    "errSelectCompany": "Veuillez sélectionner une entreprise.",
+    "errSelectRating": "Veuillez sélectionner une note.",
+    "errSubmit": "Échec de la soumission de l'avis.",
+    "clearFilter": "Effacer le filtre",
+    "noCompaniesFound": "Aucune entreprise trouvée."
   }
 }

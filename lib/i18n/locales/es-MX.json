@@ -19,7 +19,8 @@
     "contactUs": "Contáctenos",
     "talents": "Talentos",
     "postJob": "Publicar empleo",
-    "applicants": "Candidatos"
+    "applicants": "Candidatos",
+    "companyReviews": "Reseñas de empresas"
   },
 
   "auth": {
@@ -702,5 +703,49 @@
     "present": "Presente",
     "obtained": "Obtenido",
     "expires": "Vence"
+  },
+
+  "reviews": {
+    "badge": "Reseñas de empresas",
+    "heroHeading": "Reseñas de empresas por buscadores de empleo",
+    "heroDesc": "Experiencias reales de candidatos reales — para ayudarte a encontrar empleadores confiables y evitar estafas.",
+    "writeReview": "Escribir una reseña",
+    "submitted": "Tu reseña ha sido enviada — ¡gracias!",
+    "browseByCompany": "Explorar por empresa",
+    "searchCompanies": "Buscar empresas…",
+    "allCompanies": "Todas las empresas",
+    "allReviews": "Todas las reseñas",
+    "avgRating": "calificación promedio",
+    "review": "reseña",
+    "reviews": "reseñas",
+    "anonymousReviewer": "Candidato anónimo",
+    "noReviewsYet": "Aún no hay reseñas — ¡sé el primero en compartir tu experiencia!",
+    "noReviewsCompany": "Aún no hay reseñas para",
+    "writeFirst": "Escribir la primera reseña",
+    "reviewCompany": "Reseñar",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "pageOf": "Página",
+    "of": "de",
+    "modalTitle": "Escribir una reseña de empresa",
+    "companyLabel": "Empresa",
+    "selectCompany": "Selecciona una empresa…",
+    "overallRating": "Calificación general",
+    "ratingPoor": "Deficiente",
+    "ratingFair": "Regular",
+    "ratingGood": "Bueno",
+    "ratingVeryGood": "Muy bueno",
+    "ratingExcellent": "Excelente",
+    "reviewTitle": "Título de la reseña",
+    "titlePlaceholder": "Resume tu experiencia en pocas palabras",
+    "reviewBody": "Tu reseña",
+    "bodyPlaceholder": "Comparte detalles sobre tu experiencia al postularte o entrevistar con esta empresa…",
+    "postAnonymously": "Publicar de forma anónima",
+    "submitReview": "Enviar reseña",
+    "errSelectCompany": "Por favor selecciona una empresa.",
+    "errSelectRating": "Por favor selecciona una calificación.",
+    "errSubmit": "Error al enviar la reseña.",
+    "clearFilter": "Borrar filtro",
+    "noCompaniesFound": "No se encontraron empresas."
   }
 }

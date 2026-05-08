@@ -19,7 +19,8 @@
     "contactUs": "Contact us",
     "talents": "Talents",
     "postJob": "Post Job",
-    "applicants": "Applicants"
+    "applicants": "Applicants",
+    "companyReviews": "Company Reviews"
   },
 
   "auth": {
@@ -702,5 +703,49 @@
     "present": "Present",
     "obtained": "Obtained",
     "expires": "Expires"
+  },
+
+  "reviews": {
+    "badge": "Company Reviews",
+    "heroHeading": "Company Reviews by Job Seekers",
+    "heroDesc": "Real experiences from real candidates — helping you find trustworthy employers and avoid scams.",
+    "writeReview": "Write a Review",
+    "submitted": "Your review has been submitted — thank you!",
+    "browseByCompany": "Browse by Company",
+    "searchCompanies": "Search companies…",
+    "allCompanies": "All Companies",
+    "allReviews": "All Reviews",
+    "avgRating": "avg rating",
+    "review": "review",
+    "reviews": "reviews",
+    "anonymousReviewer": "Anonymous reviewer",
+    "noReviewsYet": "No reviews yet — be the first to share your experience!",
+    "noReviewsCompany": "No reviews yet for",
+    "writeFirst": "Write the first review",
+    "reviewCompany": "Review",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page",
+    "of": "of",
+    "modalTitle": "Write a Company Review",
+    "companyLabel": "Company",
+    "selectCompany": "Select a company…",
+    "overallRating": "Overall Rating",
+    "ratingPoor": "Poor",
+    "ratingFair": "Fair",
+    "ratingGood": "Good",
+    "ratingVeryGood": "Very Good",
+    "ratingExcellent": "Excellent",
+    "reviewTitle": "Review Title",
+    "titlePlaceholder": "Summarize your experience in a few words",
+    "reviewBody": "Your Review",
+    "bodyPlaceholder": "Share details about your experience applying or interviewing with this company…",
+    "postAnonymously": "Post anonymously",
+    "submitReview": "Submit Review",
+    "errSelectCompany": "Please select a company.",
+    "errSelectRating": "Please select a star rating.",
+    "errSubmit": "Failed to submit review.",
+    "clearFilter": "Clear filter",
+    "noCompaniesFound": "No companies found."
   }
 }
