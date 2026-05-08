@@ -22,10 +22,12 @@ async function sendContactEmail(to: string, subject: string, html: string, text:
       },
       body: JSON.stringify({ from, to, subject, html, text, reply_to: replyTo }),
     });
+    const resBody = await res.json();
     if (!res.ok) {
-      const errBody = await res.text();
-      throw new Error(`Resend API error ${res.status}: ${errBody}`);
+      console.error("[contact] Resend error:", JSON.stringify(resBody));
+      throw new Error(`Resend API error ${res.status}: ${JSON.stringify(resBody)}`);
     }
+    console.log("[contact] Resend accepted, id:", resBody.id, "to:", to);
     return;
   }
 
