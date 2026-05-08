@@ -23,6 +23,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "degree, institution, and startYear are required" }, { status: 400 });
   }
 
+  const sy = Number(startYear);
+  const ey = endYear ? Number(endYear) : null;
+  const currentYear = new Date().getFullYear();
+  if (!Number.isInteger(sy) || sy < 1900 || sy > currentYear + 1) {
+    return NextResponse.json({ error: "Start year must be a valid year between 1900 and next year" }, { status: 400 });
+  }
+  if (ey !== null) {
+    if (!Number.isInteger(ey) || ey < sy) {
+      return NextResponse.json({ error: "End year must be equal to or after start year" }, { status: 400 });
+    }
+  }
+
   const edu = await db.education.create({
     data: {
       profileId: profile.id,

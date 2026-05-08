@@ -25,6 +25,17 @@ export async function PUT(
 
   const { name, issuer, dateObtained, expiryDate } = await req.json();
 
+  const YYYYMM = /^\d{4}-(0[1-9]|1[0-2])$/;
+  if (dateObtained && !YYYYMM.test(dateObtained)) {
+    return NextResponse.json({ error: "Date obtained must be in YYYY-MM format" }, { status: 400 });
+  }
+  if (expiryDate && !YYYYMM.test(expiryDate)) {
+    return NextResponse.json({ error: "Expiry date must be in YYYY-MM format" }, { status: 400 });
+  }
+  if (dateObtained && expiryDate && expiryDate <= dateObtained) {
+    return NextResponse.json({ error: "Expiry date must be after the date obtained" }, { status: 400 });
+  }
+
   const updated = await db.certification.update({
     where: { id },
     data: {

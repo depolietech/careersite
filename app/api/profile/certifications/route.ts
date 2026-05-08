@@ -23,6 +23,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "name and issuer are required" }, { status: 400 });
   }
 
+  const YYYYMM = /^\d{4}-(0[1-9]|1[0-2])$/;
+  if (dateObtained && !YYYYMM.test(dateObtained)) {
+    return NextResponse.json({ error: "Date obtained must be in YYYY-MM format (e.g. 2022-06)" }, { status: 400 });
+  }
+  if (expiryDate && !YYYYMM.test(expiryDate)) {
+    return NextResponse.json({ error: "Expiry date must be in YYYY-MM format (e.g. 2025-06)" }, { status: 400 });
+  }
+  if (dateObtained && expiryDate) {
+    if (expiryDate <= dateObtained) {
+      return NextResponse.json({ error: "Expiry date must be after the date obtained" }, { status: 400 });
+    }
+  }
+
   const cert = await db.certification.create({
     data: {
       profileId: profile.id,

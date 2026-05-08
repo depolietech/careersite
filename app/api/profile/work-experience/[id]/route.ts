@@ -25,6 +25,19 @@ export async function PUT(
 
   const { title, company, roleCategory, startDate, endDate, current, description, skills } = await req.json();
 
+  const YYYYMM = /^\d{4}-(0[1-9]|1[0-2])$/;
+  const THIS_YEAR = new Date().getFullYear();
+  if (startDate) {
+    if (!YYYYMM.test(startDate)) return NextResponse.json({ error: "Start date must be in YYYY-MM format" }, { status: 400 });
+    const [sy, sm] = startDate.split("-").map(Number);
+    if (sy < 1900 || sy > THIS_YEAR + 1) return NextResponse.json({ error: "Start year must be between 1900 and next year" }, { status: 400 });
+    if (!current && endDate) {
+      if (!YYYYMM.test(endDate)) return NextResponse.json({ error: "End date must be in YYYY-MM format" }, { status: 400 });
+      const [ey, em] = endDate.split("-").map(Number);
+      if (ey < sy || (ey === sy && em < sm)) return NextResponse.json({ error: "End date must be after start date" }, { status: 400 });
+    }
+  }
+
   const updated = await db.workExperience.update({
     where: { id },
     data: {

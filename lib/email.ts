@@ -1,19 +1,42 @@
 import nodemailer from "nodemailer";
 
-function createTransporter() {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT ?? 587),
-    secure: process.env.SMTP_SECURE === "true",
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-}
-
-const FROM = `"Equalhires" <${process.env.SMTP_FROM ?? "noreply@equalhires.com"}>`;
+const FROM_ADDRESS = process.env.SMTP_FROM ?? "noreply@equalhires.com";
+const FROM = `"Equalhires" <${FROM_ADDRESS}>`;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
+async function sendEmail(to: string, subject: string, html: string, text: string) {
+  // Preferred: Resend HTTP API — avoids SMTP auth issues entirely
+  if (process.env.RESEND_API_KEY) {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ from: FROM, to, subject, html, text }),
+    });
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new Error(`Resend API error ${res.status}: ${errBody}`);
+    }
+    return;
+  }
+
+  // Fallback: SMTP via nodemailer
+  if (process.env.SMTP_HOST) {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT ?? 587),
+      secure: process.env.SMTP_SECURE === "true",
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    });
+    await transporter.sendMail({ from: FROM, to, subject, html, text });
+    return;
+  }
+
+  // Dev: print to console
+  console.log(`\n[EMAIL] To: ${to}\nSubject: ${subject}\n${text}\n`);
+}
 
 function baseTemplate(title: string, body: string) {
   return `<!DOCTYPE html>
@@ -81,19 +104,12 @@ export async function sendVerificationEmail(email: string, token: string, code?:
     </p>
   `);
 
-  if (!process.env.SMTP_HOST) {
-    console.log(`[EMAIL VERIFICATION] Verify link for ${email}: ${url}`);
-    if (code) console.log(`[EMAIL VERIFICATION] Code for ${email}: ${code}`);
-    return;
-  }
-
-  await createTransporter().sendMail({
-    from: FROM,
-    to: email,
-    subject: "Verify your Equalhires account",
+  await sendEmail(
+    email,
+    "Verify your Equalhires account",
     html,
-    text: `Verify your email: ${url}\n\nThis link expires in 24 hours.${code ? `\n\nOr enter this code on the verification page: ${code} (expires in 15 minutes)` : ""}`,
-  });
+    `Verify your email: ${url}\n\nThis link expires in 24 hours.${code ? `\n\nOr enter this code: ${code} (expires in 15 minutes)` : ""}`
+  );
 }
 
 export async function sendOtpEmail(email: string, code: string) {
@@ -110,18 +126,7 @@ export async function sendOtpEmail(email: string, code: string) {
     </p>
   `);
 
-  if (!process.env.SMTP_HOST) {
-    console.log(`[2FA OTP] Code for ${email}: ${code}`);
-    return;
-  }
-
-  await createTransporter().sendMail({
-    from: FROM,
-    to: email,
-    subject: "Your Equalhires verification code",
-    html,
-    text: `Your verification code: ${code}\n\nExpires in 10 minutes.`,
-  });
+  await sendEmail(email, "Your Equalhires verification code", html, `Your verification code: ${code}\n\nExpires in 10 minutes.`);
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
@@ -139,18 +144,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     </p>
   `);
 
-  if (!process.env.SMTP_HOST) {
-    console.log(`[PASSWORD RESET] Reset link for ${email}: ${url}`);
-    return;
-  }
-
-  await createTransporter().sendMail({
-    from: FROM,
-    to: email,
-    subject: "Reset your Equalhires password",
-    html,
-    text: `Reset your password: ${url}\n\nThis link expires in 1 hour. If you did not request this, ignore this email.`,
-  });
+  await sendEmail(email, "Reset your Equalhires password", html, `Reset your password: ${url}\n\nThis link expires in 1 hour. If you did not request this, ignore this email.`);
 }
 
 function escapeEmailText(str: string) {
@@ -172,18 +166,7 @@ export async function sendVerificationApprovedEmail(email: string, companyName: 
     </p>
   `);
 
-  if (!process.env.SMTP_HOST) {
-    console.log(`[VERIFICATION APPROVED] Notification sent to ${email} for company: ${companyName}`);
-    return;
-  }
-
-  await createTransporter().sendMail({
-    from: FROM,
-    to: email,
-    subject: "Your Equalhires recruiter account is approved — you can now post jobs",
-    html,
-    text: `Your recruiter account for ${companyName} has been approved. Sign in at ${APP_URL}/login to start hiring.`,
-  });
+  await sendEmail(email, "Your Equalhires recruiter account is approved — you can now post jobs", html, `Your recruiter account for ${companyName} has been approved. Sign in at ${APP_URL}/login to start hiring.`);
 }
 
 export async function sendPasswordChangedEmail(email: string) {
@@ -197,16 +180,5 @@ export async function sendPasswordChangedEmail(email: string) {
     </a>
   `);
 
-  if (!process.env.SMTP_HOST) {
-    console.log(`[PASSWORD CHANGED] Notification sent to ${email}`);
-    return;
-  }
-
-  await createTransporter().sendMail({
-    from: FROM,
-    to: email,
-    subject: "Your Equalhires password was changed",
-    html,
-    text: "Your password was changed. If you did not do this, contact support.",
-  });
+  await sendEmail(email, "Your Equalhires password was changed", html, "Your password was changed. If you did not do this, contact support.");
 }

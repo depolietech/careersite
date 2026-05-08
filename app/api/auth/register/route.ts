@@ -37,6 +37,12 @@ export async function POST(req: Request) {
 
     const existing = await db.user.findUnique({ where: { email } });
     if (existing) {
+      if (existing.deletedAt) {
+        return NextResponse.json(
+          { error: "This email has been previously used on the platform. Please contact support or an admin for account reactivation." },
+          { status: 409 }
+        );
+      }
       return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
     }
 

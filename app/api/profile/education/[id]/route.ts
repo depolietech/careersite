@@ -25,6 +25,18 @@ export async function PUT(
 
   const { degree, field, institution, startYear, endYear } = await req.json();
 
+  if (startYear !== undefined) {
+    const sy = Number(startYear);
+    const ey = endYear !== undefined && endYear !== null ? Number(endYear) : null;
+    const currentYear = new Date().getFullYear();
+    if (!Number.isInteger(sy) || sy < 1900 || sy > currentYear + 1) {
+      return NextResponse.json({ error: "Start year must be a valid year between 1900 and next year" }, { status: 400 });
+    }
+    if (ey !== null && ey < sy) {
+      return NextResponse.json({ error: "End year must be equal to or after start year" }, { status: 400 });
+    }
+  }
+
   const updated = await db.education.update({
     where: { id },
     data: {

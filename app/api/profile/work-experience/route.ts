@@ -4,6 +4,21 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+const YYYYMM = /^\d{4}-(0[1-9]|1[0-2])$/;
+const THIS_YEAR = new Date().getFullYear();
+
+function validateWorkDates(startDate: string, endDate: string | null | undefined, current: boolean): string | null {
+  if (!YYYYMM.test(startDate)) return "Start date must be in YYYY-MM format (e.g. 2020-03)";
+  const [sy, sm] = startDate.split("-").map(Number);
+  if (sy < 1900 || sy > THIS_YEAR + 1) return "Start year must be between 1900 and next year";
+  if (!current && endDate) {
+    if (!YYYYMM.test(endDate)) return "End date must be in YYYY-MM format (e.g. 2023-06)";
+    const [ey, em] = endDate.split("-").map(Number);
+    if (ey < sy || (ey === sy && em < sm)) return "End date must be after start date";
+  }
+  return null;
+}
+
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user || session.user.role !== "JOB_SEEKER") {
@@ -22,6 +37,9 @@ export async function POST(req: Request) {
   if (!title || !company || !startDate) {
     return NextResponse.json({ error: "title, company, and startDate are required" }, { status: 400 });
   }
+
+  const dateError = validateWorkDates(startDate, endDate, Boolean(current));
+  if (dateError) return NextResponse.json({ error: dateError }, { status: 400 });
 
   const exp = await db.workExperience.create({
     data: {

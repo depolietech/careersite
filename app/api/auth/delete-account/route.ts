@@ -6,7 +6,10 @@ export async function DELETE() {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  await db.user.delete({ where: { id: session.user.id } });
+  await db.user.update({
+    where: { id: session.user.id },
+    data: { deletedAt: new Date() },
+  });
 
   return NextResponse.json({ ok: true });
 }

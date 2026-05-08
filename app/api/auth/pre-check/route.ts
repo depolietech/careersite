@@ -28,6 +28,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ status: "ok" });
     }
 
+    if (user.deletedAt) {
+      return NextResponse.json({ status: "ACCOUNT_DELETED" });
+    }
+
     if (!user.emailVerified) {
       return NextResponse.json({ status: "EMAIL_NOT_VERIFIED" });
     }

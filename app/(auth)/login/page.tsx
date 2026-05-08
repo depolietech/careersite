@@ -151,6 +151,10 @@ function LoginForm() {
         setError("Your account is awaiting approval by the platform administrator.");
         return;
       }
+      if (preCheck.status === "ACCOUNT_DELETED") {
+        setError("This account has been deleted. Contact support if you need to reactivate it.");
+        return;
+      }
       if (preCheck.status === "ACCOUNT_SUSPENDED") {
         setError("Your account has been temporarily suspended. Contact support for assistance.");
         return;
