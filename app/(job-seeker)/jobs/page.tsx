@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
   Search, MapPin, Briefcase, Clock, DollarSign, ArrowRight,
-  CheckSquare, Square, CheckCircle2, XCircle, Loader2, Lock,
+  CheckSquare, Square, CheckCircle2, XCircle, Loader2, Lock, Flag, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -68,6 +68,10 @@ export default function JobsPage() {
   const [results, setResults]         = useState<ApplyResult[]>([]);
   const [submitting, setSubmitting]   = useState(false);
   const [toast, setToast]             = useState<{ message: string; ok: boolean } | null>(null);
+  const [reporting, setReporting]     = useState(false);
+  const [reportCategory, setReportCategory] = useState("FAKE_JOB");
+  const [reportDesc, setReportDesc]   = useState("");
+  const [reportLoading, setReportLoading] = useState(false);
 
   const isLoggedIn = authStatus === "authenticated";
 
@@ -164,6 +168,31 @@ export default function JobsPage() {
   }
 
   const jobsToApply = bulkMode ? [...selected] : (selectedJob ? [selectedJob.id] : []);
+
+  function openReport() {
+    if (!isLoggedIn) { router.push("/login?callbackUrl=/jobs"); return; }
+    setReporting(true);
+    setReportCategory("FAKE_JOB");
+    setReportDesc("");
+  }
+
+  async function submitReport() {
+    if (!selectedJob) return;
+    setReportLoading(true);
+    const res = await fetch(`/api/jobs/${selectedJob.id}/report`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ category: reportCategory, description: reportDesc.trim() || undefined }),
+    });
+    const data = await res.json();
+    setReportLoading(false);
+    setReporting(false);
+    setToast({
+      message: res.ok ? "Report submitted. Thank you for keeping the platform safe." : (data.error ?? "Failed to submit report."),
+      ok: res.ok,
+    });
+    setTimeout(() => setToast(null), 5000);
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -428,6 +457,59 @@ export default function JobsPage() {
                       <Button size="lg" className="w-full" onClick={handleApplyClick}>
                         {t("jobs.apply")} <ArrowRight size={16} />
                       </Button>
+                    )}
+
+                    {/* Report recruiter */}
+                    {isLoggedIn && !applying && (
+                      reporting ? (
+                        <div className="rounded-xl border border-red-100 bg-red-50 p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-semibold text-red-700 flex items-center gap-1.5">
+                              <Flag size={14} /> Report this job / recruiter
+                            </p>
+                            <button onClick={() => setReporting(false)} className="text-red-400 hover:text-red-600">
+                              <X size={16} />
+                            </button>
+                          </div>
+                          <select
+                            className="input w-full text-sm"
+                            value={reportCategory}
+                            onChange={(e) => setReportCategory(e.target.value)}
+                          >
+                            <option value="FAKE_JOB">Fake job posting</option>
+                            <option value="SCAM">Scam or fraudulent behavior</option>
+                            <option value="MISLEADING_ROLE">Misleading role description</option>
+                            <option value="OTHER">Other</option>
+                          </select>
+                          <textarea
+                            className="input w-full resize-none text-sm"
+                            rows={3}
+                            placeholder="Optional: add more details about the issue…"
+                            value={reportDesc}
+                            onChange={(e) => setReportDesc(e.target.value)}
+                            maxLength={1000}
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              className="bg-red-600 hover:bg-red-700 text-white flex-1"
+                              disabled={reportLoading}
+                              onClick={submitReport}
+                            >
+                              {reportLoading ? <Loader2 size={13} className="animate-spin" /> : <Flag size={13} />}
+                              Submit Report
+                            </Button>
+                            <Button size="sm" variant="secondary" onClick={() => setReporting(false)}>Cancel</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={openReport}
+                          className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 transition-colors mx-auto"
+                        >
+                          <Flag size={12} /> Report this job or recruiter
+                        </button>
+                      )
                     )}
                   </>
                 );

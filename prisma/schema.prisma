@@ -85,7 +85,8 @@ model User {
   otpCodes             OtpCode[]
 
   // Reports filed by this user against recruiters
-  reportsFiled RecruiterReport[] @relation("ReporterReports")
+  reportsFiled   RecruiterReport[] @relation("ReporterReports")
+  companyReviews CompanyReview[]   @relation("ReviewerReviews")
 }
 
 model TwoFactorBackupCode {
@@ -226,10 +227,11 @@ model EmployerProfile {
   trustScore           Float   @default(100)
   isBlocked            Boolean @default(false)
 
-  postedJobs Job[]
-  reports    RecruiterReport[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  postedJobs     Job[]
+  reports        RecruiterReport[]
+  companyReviews CompanyReview[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model ContractorProfile {
@@ -291,6 +293,23 @@ model RecruiterReport {
   description       String?
   status            String          @default("PENDING") // "PENDING" | "REVIEWED" | "DISMISSED"
   createdAt         DateTime        @default(now())
+}
+
+// ─── Company Reviews ──────────────────────────────────────────────────────────
+
+model CompanyReview {
+  id                String          @id @default(cuid())
+  reviewerId        String
+  reviewer          User            @relation("ReviewerReviews", fields: [reviewerId], references: [id], onDelete: Cascade)
+  employerProfileId String
+  employerProfile   EmployerProfile @relation(fields: [employerProfileId], references: [id], onDelete: Cascade)
+  rating            Int             // 1–5
+  title             String
+  body              String
+  isAnonymous       Boolean         @default(true)
+  createdAt         DateTime        @default(now())
+
+  @@unique([reviewerId, employerProfileId])
 }
 
 // ─── Applications ─────────────────────────────────────────────────────────────
