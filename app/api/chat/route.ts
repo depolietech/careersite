@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
         } else {
           response = {
             reply:
-              "Hello! Welcome to Equalhires — where hiring is based on skills, not identity. How can I help you?",
+              "Hello! Welcome to Equalhires — where hiring is based on skills, not identity. How can I help you today?",
             suggestions: [
               "How does it work?",
               "Find jobs",
@@ -523,7 +523,7 @@ export async function POST(req: NextRequest) {
           response = {
             reply:
               "As an employer on Equalhires, you can:\n\n• **Post jobs** — describe the role and required skills\n• **Review anonymous candidates** — evaluated on skills only\n• **Shortlist fairly** — no unconscious bias\n• **Schedule interviews** — candidate identity is revealed automatically\n\nCompanies using anonymous hiring report **3× more diverse shortlists**.",
-            suggestions: ["Create employer account", "How does screening work?", "What's the cost?"],
+            suggestions: ["Create employer account", "How does screening work?", "Browse open jobs"],
             links: [{ label: "Start Hiring", href: "/register?role=employer" }],
           };
         } else if (userRole === "EMPLOYER") {
@@ -551,13 +551,13 @@ export async function POST(req: NextRequest) {
         let navMap: string;
         if (userId && userRole === "JOB_SEEKER") {
           navMap =
-            "• **Dashboard** → /dashboard — track your applications\n• **Browse Jobs** → /jobs — find and apply\n• **Profile** → /profile — manage your profile\n• **Notifications** → /notifications — application updates\n• **Settings** → /settings — account preferences";
+            "• **Dashboard** → /dashboard — track your applications\n• **Browse Jobs** → /jobs — find and apply\n• **Profile** → /profile — manage your profile\n• **Company Reviews** → /reviews — read and write company reviews\n• **Notifications** → /notifications — application updates\n• **Settings** → /settings — account preferences";
         } else if (userId && userRole === "EMPLOYER") {
           navMap =
-            "• **Dashboard** → /employer/dashboard — your hiring overview\n• **Post a Job** → /employer/post-job — create a listing\n• **Applicants** → /employer/applicants — review candidates\n• **Notifications** → /employer/notifications — new application alerts";
+            "• **Dashboard** → /employer/dashboard — your hiring overview\n• **Post a Job** → /employer/post-job — create a listing\n• **Applicants** → /employer/applicants — review candidates\n• **Company Reviews** → /reviews — see what candidates say about companies\n• **Notifications** → /employer/notifications — new application alerts";
         } else {
           navMap =
-            "• **Home** → / — platform overview and latest jobs\n• **Browse Jobs** → /jobs — explore open positions\n• **Sign In** → /login — access your account\n• **Register** → /register — create a new account";
+            "• **Home** → / — platform overview and latest jobs\n• **Browse Jobs** → /jobs — explore open positions\n• **Company Reviews** → /reviews — read reviews from job seekers\n• **Sign In** → /login — access your account\n• **Register** → /register — create a new account";
         }
 
         response = {
@@ -572,14 +572,16 @@ export async function POST(req: NextRequest) {
       case "help": {
         response = {
           reply:
-            "Need help? Here are some resources:\n\n• **Help Center** — detailed guides and FAQs\n• **FAQ section** — common questions on the homepage\n• **This assistant** — ask me anything about the platform!\n\nI can help with job searching, applications, your profile, resume uploads, and more.",
+            "Need help? Here are some resources:\n\n• **FAQ section** — common questions on the homepage\n• **Contact us** — reach our team directly\n• **This assistant** — ask me anything about the platform!\n\nI can help with job searching, applications, your profile, resume uploads, and more.",
           suggestions: [
             "How does it work?",
             "Track my applications",
             "Find jobs",
-            "Contact support",
           ],
-          links: [{ label: "Help Center", href: "/help" }],
+          links: [
+            { label: "FAQ", href: "/#faq" },
+            { label: "Contact Us", href: "/contact" },
+          ],
         };
         break;
       }
