@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import Link from "next/link";
 import { Logo } from "./Logo";
 import { useI18n } from "@/lib/i18n";
@@ -73,7 +73,7 @@ export function Footer() {
 
         <div className="mt-10 border-t border-gray-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-gray-400">
-            © {new Date().getFullYear()} EqualHire. {t("footer.allRightsReserved")}
+            © {new Date().getFullYear()} Equalhires. {t("footer.allRightsReserved")}
           </p>
           <p className="text-sm text-gray-400">
             {t("footer.fairerHiring")}

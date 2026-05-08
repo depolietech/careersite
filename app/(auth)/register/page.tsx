@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -136,11 +136,11 @@ function RegisterForm() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100">
-        <Link href="/" className="flex items-center gap-2 font-bold text-gray-900" aria-label="EqualHire home">
+        <Link href="/" className="flex items-center gap-2 font-bold text-gray-900" aria-label="Equalhires home">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white" aria-hidden="true">
             <ShieldCheck size={18} />
           </span>
-          EqualHire
+          Equalhires
         </Link>
         <p className="text-sm text-gray-500">
           {t("auth.haveAccount")}{" "}
@@ -155,8 +155,8 @@ function RegisterForm() {
           {step === "role" ? (
             <div className="space-y-8">
               <div className="text-center">
-                <h1 className="text-3xl font-bold text-gray-900">{t("auth.joinEqualhire")}</h1>
-                <p className="mt-2 text-gray-500">How will you be using EqualHire?</p>
+                <h1 className="text-3xl font-bold text-gray-900">{t("auth.joinEqualhires")}</h1>
+                <p className="mt-2 text-gray-500">How will you be using Equalhires?</p>
               </div>
 
               <div className="space-y-3" role="group" aria-label="Select account type">
