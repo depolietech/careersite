@@ -207,30 +207,39 @@ export default function ReviewsPage() {
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [companiesLoading, setCompaniesLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
+
+  // Load companies for the sidebar list
+  useEffect(() => {
+    fetch("/api/employers/public")
+      .then((r) => r.json())
+      .then((data) => { setCompanies(data); setCompaniesLoading(false); });
+  }, []);
 
   const fetchReviews = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({ page: String(page) });
+    if (selectedCompanyId) params.set("employerProfileId", selectedCompanyId);
     const res = await fetch(`/api/reviews?${params}`);
     const data = await res.json();
     setReviews(data.reviews ?? []);
     setTotal(data.total ?? 0);
     setPages(data.pages ?? 1);
     setLoading(false);
-  }, [page]);
+  }, [page, selectedCompanyId]);
 
   useEffect(() => { fetchReviews(); }, [fetchReviews]);
+
+  // Reset page when company filter changes
+  useEffect(() => { setPage(1); }, [selectedCompanyId]);
 
   async function openWriteReview() {
     if (!session) { router.push("/login?callbackUrl=/reviews"); return; }
     if (!isJobSeeker) return;
-    if (companies.length === 0) {
-      const res = await fetch("/api/employers/public");
-      setCompanies(await res.json());
-    }
     setShowModal(true);
   }
 
@@ -241,9 +250,11 @@ export default function ReviewsPage() {
     setTimeout(() => setSubmitted(false), 5000);
   }
 
-  const filtered = search.trim()
-    ? reviews.filter((r) => r.company.companyName.toLowerCase().includes(search.toLowerCase()))
-    : reviews;
+  const filteredCompanies = search.trim()
+    ? companies.filter((c) => c.companyName.toLowerCase().includes(search.toLowerCase()))
+    : companies;
+
+  const selectedCompany = companies.find((c) => c.id === selectedCompanyId);
 
   const avgRating = reviews.length > 0
     ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
@@ -255,17 +266,17 @@ export default function ReviewsPage() {
 
       <main className="min-h-screen bg-gray-50">
         {/* Hero */}
-        <section className="bg-forest text-white py-16 px-4">
-          <div className="mx-auto max-w-3xl text-center space-y-4">
+        <section className="bg-forest text-white py-14 px-4">
+          <div className="mx-auto max-w-5xl text-center space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium">
               <Star size={14} className="fill-amber-400 text-amber-400" />
-              Community Reviews
+              Company Reviews
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold">Company Reviews by Job Seekers</h1>
             <p className="text-gray-300 text-lg max-w-xl mx-auto">
               Real experiences from real candidates — helping you find trustworthy employers and avoid scams.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+            <div className="pt-2">
               <Button
                 size="lg"
                 className="bg-white text-forest hover:bg-gray-100 font-semibold"
@@ -277,83 +288,156 @@ export default function ReviewsPage() {
           </div>
         </section>
 
-        {/* Stats bar */}
-        {total > 0 && (
-          <div className="bg-white border-b border-gray-100 py-4 px-4">
-            <div className="mx-auto max-w-3xl flex items-center justify-between gap-4 text-sm">
-              <span className="text-gray-600"><strong className="text-gray-900">{total}</strong> review{total !== 1 ? "s" : ""} from the community</span>
-              {avgRating && (
-                <div className="flex items-center gap-2">
-                  <Stars rating={Math.round(Number(avgRating))} />
-                  <span className="font-semibold text-gray-900">{avgRating}</span>
-                  <span className="text-gray-400">avg</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="mx-auto max-w-3xl px-4 py-10 space-y-6">
+        <div className="mx-auto max-w-5xl px-4 py-10">
           {/* Success toast */}
           {submitted && (
-            <div className="flex items-center gap-3 rounded-xl bg-green-50 border border-green-200 p-4 text-green-800 text-sm font-medium">
+            <div className="flex items-center gap-3 rounded-xl bg-green-50 border border-green-200 p-4 text-green-800 text-sm font-medium mb-6">
               <CheckCircle2 size={18} className="shrink-0 text-green-500" />
               Your review has been submitted — thank you!
             </div>
           )}
 
-          {/* Search */}
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              className="input pl-9 w-full"
-              placeholder="Search by company name…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+          <div className="flex gap-6 items-start">
+            {/* Company sidebar */}
+            <aside className="w-64 shrink-0 hidden md:block">
+              <div className="card p-4 space-y-3 sticky top-24">
+                <h2 className="text-sm font-semibold text-gray-900">Browse by Company</h2>
 
-          {/* Reviews list */}
-          {loading ? (
-            <div className="flex justify-center py-16">
-              <Loader2 size={28} className="animate-spin text-gray-300" />
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="card p-12 text-center space-y-3">
-              <Star size={32} className="mx-auto text-gray-200" />
-              <p className="text-gray-500 font-medium">
-                {search ? "No reviews match your search." : "No reviews yet — be the first to share your experience!"}
-              </p>
-              {!search && (
-                <Button variant="secondary" onClick={openWriteReview}>Write the first review</Button>
+                {/* Search filter */}
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    className="input pl-8 w-full text-sm py-1.5"
+                    placeholder="Search companies…"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+
+                {/* All companies option */}
+                <button
+                  onClick={() => setSelectedCompanyId(null)}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    !selectedCompanyId
+                      ? "bg-brand-600 text-white"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  All Companies
+                  <span className="ml-1.5 text-xs opacity-70">({total})</span>
+                </button>
+
+                {/* Company list */}
+                <div className="space-y-0.5 max-h-[60vh] overflow-y-auto">
+                  {companiesLoading ? (
+                    <div className="flex justify-center py-6">
+                      <Loader2 size={18} className="animate-spin text-gray-300" />
+                    </div>
+                  ) : filteredCompanies.length === 0 ? (
+                    <p className="text-xs text-gray-400 px-3 py-2">No companies found.</p>
+                  ) : (
+                    filteredCompanies.map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => setSelectedCompanyId(c.id === selectedCompanyId ? null : c.id)}
+                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                          selectedCompanyId === c.id
+                            ? "bg-brand-50 text-brand-700 font-medium"
+                            : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                      >
+                        <p className="text-sm truncate">{c.companyName}</p>
+                        {c.industry && <p className="text-xs text-gray-400 truncate">{c.industry}</p>}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            </aside>
+
+            {/* Reviews panel */}
+            <div className="flex-1 space-y-4">
+              {/* Active filter header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  {selectedCompany ? (
+                    <div className="flex items-center gap-2">
+                      <h2 className="font-semibold text-gray-900">{selectedCompany.companyName}</h2>
+                      <button
+                        onClick={() => setSelectedCompanyId(null)}
+                        className="text-gray-400 hover:text-gray-600"
+                        title="Clear filter"
+                      >
+                        <X size={15} />
+                      </button>
+                    </div>
+                  ) : (
+                    <h2 className="font-semibold text-gray-900">All Reviews</h2>
+                  )}
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {loading ? "Loading…" : `${total} review${total !== 1 ? "s" : ""}${avgRating ? ` · ${avgRating} avg rating` : ""}`}
+                  </p>
+                </div>
+                {avgRating && !loading && (
+                  <Stars rating={Math.round(Number(avgRating))} />
+                )}
+              </div>
+
+              {/* Mobile search (visible only on small screens) */}
+              <div className="relative md:hidden">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  className="input pl-8 w-full text-sm"
+                  placeholder="Search companies…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+
+              {loading ? (
+                <div className="flex justify-center py-16">
+                  <Loader2 size={28} className="animate-spin text-gray-300" />
+                </div>
+              ) : reviews.length === 0 ? (
+                <div className="card p-12 text-center space-y-3">
+                  <Star size={32} className="mx-auto text-gray-200" />
+                  <p className="text-gray-500 font-medium">
+                    {selectedCompany
+                      ? `No reviews yet for ${selectedCompany.companyName}.`
+                      : "No reviews yet — be the first to share your experience!"}
+                  </p>
+                  <Button variant="secondary" onClick={openWriteReview}>
+                    {selectedCompany ? `Review ${selectedCompany.companyName}` : "Write the first review"}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {reviews.map((r) => <ReviewCard key={r.id} review={r} />)}
+                </div>
+              )}
+
+              {/* Pagination */}
+              {pages > 1 && (
+                <div className="flex items-center justify-center gap-3 pt-4">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 disabled:opacity-30"
+                  >
+                    <ChevronLeft size={16} /> Previous
+                  </button>
+                  <span className="text-sm text-gray-400">Page {page} of {pages}</span>
+                  <button
+                    onClick={() => setPage((p) => Math.min(pages, p + 1))}
+                    disabled={page === pages}
+                    className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 disabled:opacity-30"
+                  >
+                    Next <ChevronRight size={16} />
+                  </button>
+                </div>
               )}
             </div>
-          ) : (
-            <div className="space-y-4">
-              {filtered.map((r) => <ReviewCard key={r.id} review={r} />)}
-            </div>
-          )}
-
-          {/* Pagination */}
-          {pages > 1 && !search && (
-            <div className="flex items-center justify-center gap-3 pt-4">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 disabled:opacity-30"
-              >
-                <ChevronLeft size={16} /> Previous
-              </button>
-              <span className="text-sm text-gray-400">Page {page} of {pages}</span>
-              <button
-                onClick={() => setPage((p) => Math.min(pages, p + 1))}
-                disabled={page === pages}
-                className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 disabled:opacity-30"
-              >
-                Next <ChevronRight size={16} />
-              </button>
-            </div>
-          )}
+          </div>
         </div>
       </main>
 

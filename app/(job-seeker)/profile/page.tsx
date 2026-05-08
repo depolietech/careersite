@@ -1,14 +1,11 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, Upload, EyeOff, Linkedin, Github, Info, Loader2, Pencil, X, Building2, GraduationCap, Award } from "lucide-react";
+import { Plus, Trash2, EyeOff, Linkedin, Github, Info, Loader2, Pencil, X, Building2, GraduationCap, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, TextArea, Select } from "@/components/ui/input";
 import { COUNTRIES, STATES, buildLocation, parseLocation, CURRENCY_LABEL } from "@/lib/locations";
 import { useI18n } from "@/lib/i18n";
 
-const IMPORT_SOURCES = [
-  { id: "linkedin", label: "LinkedIn", logo: "🔵" },
-];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -589,34 +586,6 @@ export default function ProfilePage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">{t("profile.yourProfile")}</h1>
         <p className="mt-1 text-gray-500">{t("profile.pageDesc")}</p>
-      </div>
-
-      {/* Import shortcuts */}
-      <div className="card p-6 space-y-4">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Upload size={16} className="text-brand-600" />
-            <h2 className="font-semibold text-gray-900">{t("profile.importTitle")}</h2>
-          </div>
-          <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 border border-amber-100">
-            Coming soon
-          </span>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          {IMPORT_SOURCES.map((src) => (
-            <button
-              key={src.id}
-              type="button"
-              disabled
-              title="LinkedIn import is coming soon"
-              className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed opacity-60"
-            >
-              <span>{src.logo}</span>
-              {src.label}
-            </button>
-          ))}
-        </div>
-        <p className="text-xs text-gray-400">LinkedIn import is currently in development. Fill in your profile manually for now.</p>
       </div>
 
       {/* Masked fields notice */}
