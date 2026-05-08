@@ -10,6 +10,39 @@ function escapeHtml(str: string) {
     .replace(/'/g, "&#x27;");
 }
 
+async function sendContactEmail(to: string, subject: string, html: string, text: string, replyTo: string) {
+  const from = `"Equalhires Contact" <${process.env.SMTP_FROM ?? "noreply@equalhires.com"}>`;
+
+  if (process.env.RESEND_API_KEY) {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ from, to, subject, html, text, reply_to: replyTo }),
+    });
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new Error(`Resend API error ${res.status}: ${errBody}`);
+    }
+    return;
+  }
+
+  if (process.env.SMTP_HOST) {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT ?? 587),
+      secure: process.env.SMTP_SECURE === "true",
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    });
+    await transporter.sendMail({ from, to, replyTo, subject, html, text });
+    return;
+  }
+
+  console.log(`[CONTACT] From: ${replyTo}\nSubject: ${subject}\n${text}`);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { name, email, topic, message } = await req.json();
@@ -38,32 +71,17 @@ export async function POST(req: NextRequest) {
 
     const adminEmail = process.env.ADMIN_CONTACT_EMAIL ?? "info@equalhires.com";
 
-    if (!process.env.SMTP_HOST) {
-      console.log(`[CONTACT] From: ${email} | Topic: ${topic}\n${message}`);
-      return NextResponse.json({ ok: true });
-    }
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT ?? 587),
-      secure: process.env.SMTP_SECURE === "true",
-      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    });
-
-    await transporter.sendMail({
-      from: `"Equalhires Contact" <${process.env.SMTP_USER}>`,
-      to: adminEmail,
-      replyTo: email,
-      subject: `[${safeTopic}] New message from ${safeName}`,
-      text: `Name: ${name}\nEmail: ${email}\nTopic: ${topic}\n\n${message}`,
-      html: `
-        <p><strong>Name:</strong> ${safeName}</p>
-        <p><strong>Email:</strong> <a href="mailto:${safeEmail}">${safeEmail}</a></p>
-        <p><strong>Topic:</strong> ${safeTopic}</p>
-        <hr />
-        <p style="white-space:pre-wrap">${safeMessage}</p>
-      `,
-    });
+    await sendContactEmail(
+      adminEmail,
+      `[${safeTopic}] New message from ${safeName}`,
+      `<p><strong>Name:</strong> ${safeName}</p>
+       <p><strong>Email:</strong> <a href="mailto:${safeEmail}">${safeEmail}</a></p>
+       <p><strong>Topic:</strong> ${safeTopic}</p>
+       <hr />
+       <p style="white-space:pre-wrap">${safeMessage}</p>`,
+      `Name: ${name}\nEmail: ${email}\nTopic: ${topic}\n\n${message}`,
+      email
+    );
 
     return NextResponse.json({ ok: true });
   } catch (err) {
