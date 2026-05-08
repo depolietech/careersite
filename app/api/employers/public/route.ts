@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const employers = await db.employerProfile.findMany({
-    where: { verificationStatus: "APPROVED", isBlocked: false },
+    where: { isBlocked: false, companyName: { not: "" } },
     select: { id: true, companyName: true, industry: true },
     orderBy: { companyName: "asc" },
   });

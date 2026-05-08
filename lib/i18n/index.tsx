@@ -53,15 +53,28 @@ function writeCookieLocale(locale: Locale) {
   try { localStorage.setItem(COOKIE_KEY, locale); } catch {}
 }
 
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("en");
-
-  useEffect(() => {
-    const saved = readCookieLocale() ??
+function getInitialLocale(): Locale {
+  // Runs only on the client (useState lazy initializer is not called during SSR)
+  try {
+    return (
+      readCookieLocale() ??
       (localStorage.getItem(COOKIE_KEY) as Locale | null) ??
-      detectBrowserLocale();
-    setLocaleState(saved);
-  }, []);
+      detectBrowserLocale()
+    );
+  } catch {
+    return detectBrowserLocale();
+  }
+}
+
+export function I18nProvider({ children }: { children: ReactNode }) {
+  const [locale, setLocaleState] = useState<Locale>(getInitialLocale);
+
+  // Sync html lang attribute on initial load (setLocale handles it for user-triggered changes)
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = locale;
+    }
+  }, [locale]);
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);

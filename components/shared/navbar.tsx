@@ -125,7 +125,7 @@ export function Navbar({ variant = "marketing", userRole, unreadCount = 0 }: Nav
   const marketingLinks: NavLink[] = [
     { href: "/",        label: t("nav.home") },
     { href: "/about",   label: t("nav.about") },
-    { href: "/reviews", label: "Reviews" },
+    { href: "/reviews", label: "Company Reviews" },
     { href: "/contact", label: t("nav.contactUs") },
   ];
 
