@@ -9,7 +9,7 @@ export function Logo() {
         alt="Equalhires"
         width={160}
         height={48}
-        className="h-10 w-auto object-contain"
+        className="h-10 sm:h-12 w-auto object-contain"
         priority
       />
     </Link>

@@ -491,11 +491,11 @@
     "recruiterStep3Title": "Planifier les entrevues et révéler",
     "recruiterStep3Desc": "Invitez les meilleurs candidats à une entrevue, et seulement alors leurs informations personnelles seront révélées.",
     "seekerStep1Title": "Créer votre profil",
-    "seekerStep1Desc": "Remplissez vos compétences, expériences et qualifications — cela prend environ 2 minutes. Vos informations personnelles restent cachées jusqu'à ce qu'un entretien soit planifié.",
+    "seekerStep1Desc": "Ajoutez vos compétences (avec suggestion automatique), vos expériences, votre formation et téléversez un CV. Vos informations personnelles restent cachées jusqu'à ce qu'un entretien soit planifié.",
     "seekerStep2Title": "Postuler en toute confiance",
-    "seekerStep2Desc": "Parcourez et postulez à des postes. Les employeurs voient uniquement vos compétences et expériences — pas votre nom, photo ou parcours.",
+    "seekerStep2Desc": "Cliquez sur un poste pour voir les détails. Sélectionnez votre CV, ajoutez une lettre de motivation optionnelle et soumettez. Les employeurs voient uniquement vos compétences — jamais votre nom ni votre photo.",
     "seekerStep3Title": "Être sélectionné(e) au mérite",
-    "seekerStep3Desc": "Quand un employeur est intéressé, il planifie une entrevue et votre identité est révélée — équitablement et transparemment.",
+    "seekerStep3Desc": "Quand un employeur est intéressé, il planifie une entrevue et votre identité est révélée. Un instantané de votre candidature est conservé pour que vous sachiez exactement ce qui a été partagé.",
     "faq1Q": "Comment fonctionne le processus d'embauche anonyme?",
     "faq1A": "Lorsqu'un candidat postule, ses informations personnelles (nom, photo, noms d'école, noms d'entreprise et dates d'emploi) sont automatiquement masquées. Les employeurs et contractuels ne voient que les compétences, le niveau d'expérience et les qualifications.",
     "faq2Q": "Quand les informations du candidat sont-elles révélées?",
@@ -513,7 +513,11 @@
     "faq8Q": "Quelles langues la plateforme prend-elle en charge?",
     "faq8A": "Equalhires prend actuellement en charge l'anglais, le français (Canada) et l'espagnol (Mexique). Vous pouvez changer de langue à tout moment via le sélecteur de langue dans la barre de navigation. Votre préférence est enregistrée automatiquement. D'autres langues sont prévues pour les prochaines versions.",
     "faq9Q": "L'authentification à deux facteurs (2FA) est-elle disponible?",
-    "faq9A": "Oui. Vous pouvez activer la 2FA depuis vos paramètres de compte. Nous prenons en charge les applications d'authentification (TOTP) et les codes par e-mail. Des codes de secours sont fournis lors de la configuration."
+    "faq9A": "Oui. Vous pouvez activer la 2FA depuis vos paramètres de compte. Nous prenons en charge les applications d'authentification (TOTP) et les codes par e-mail. Des codes de secours sont fournis lors de la configuration.",
+    "faq10Q": "Qu'est-ce qu'un instantané de candidature?",
+    "faq10A": "Lorsque vous postulez, une copie immuable de votre profil est capturée — vos compétences, titre, historique de travail, formation et le CV sélectionné. Cet instantané ne change jamais, même si vous mettez à jour votre profil ultérieurement. Consultez-le depuis votre tableau de bord en cliquant sur 'Voir la candidature'.",
+    "faq11Q": "De quoi ai-je besoin pour pouvoir postuler?",
+    "faq11A": "Trois éléments sont requis : (1) au moins une compétence dans votre profil, (2) au moins une expérience professionnelle, et (3) au moins un CV téléversé. Si quelque chose manque, une liste de vérification guidée s'affiche avec des liens directs pour compléter chaque élément."
   },
 
   "notifications": {

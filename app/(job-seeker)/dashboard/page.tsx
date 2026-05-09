@@ -1,4 +1,4 @@
-import { Briefcase, FileCheck, Calendar, Clock, ArrowRight, TrendingUp, CheckCircle2, XCircle } from "lucide-react";
+import { Briefcase, FileCheck, Calendar, Clock, ArrowRight, TrendingUp, CheckCircle2, XCircle, Eye } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { auth } from "@/lib/auth";
@@ -246,8 +246,14 @@ export default async function JobSeekerDashboard({
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-3 shrink-0 flex-wrap">
                     <Badge variant={s.variant}>{s.label}</Badge>
+                    <Link
+                      href={`/applications/${app.id}`}
+                      className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-brand-600 transition-colors"
+                    >
+                      <Eye size={12} /> View Submission
+                    </Link>
                     {app.status === "INTERVIEW_SCHEDULED" && app.interview?.meetingLink && (
                       <a
                         href={app.interview.meetingLink}

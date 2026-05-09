@@ -74,7 +74,10 @@ function LoginForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ role }),
     });
-    const dest = role === "EMPLOYER" ? "/employer/dashboard" : "/dashboard";
+    // Preserve callbackUrl from params (e.g. a specific job page), fall back to dashboard
+    const dest = (callbackUrl && callbackUrl !== "/")
+      ? callbackUrl
+      : role === "EMPLOYER" ? "/employer/dashboard" : "/dashboard";
     await signIn(provider, { callbackUrl: dest });
   }
 

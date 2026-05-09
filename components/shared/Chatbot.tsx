@@ -59,6 +59,19 @@ export function Chatbot() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Auto-open on first visit (at most 3 times total)
+  useEffect(() => {
+    const key = "chat_auto_open_count";
+    const count = parseInt(localStorage.getItem(key) ?? "0", 10);
+    if (count < 3) {
+      const timer = setTimeout(() => {
+        setIsOpen(true);
+        localStorage.setItem(key, String(count + 1));
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
       setHasNewMessage(false);

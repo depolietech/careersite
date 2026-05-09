@@ -68,6 +68,33 @@ const EMPTY_CERT = {
   name: "", issuer: "", dateObtained: "", expiryDate: "",
 };
 
+// ─── Skills taxonomy for auto-suggest ────────────────────────────────────────
+
+const SKILL_TAXONOMY: string[] = [
+  // Engineering
+  "JavaScript","TypeScript","Python","Java","Go","Rust","C++","C#","Ruby","PHP","Swift","Kotlin",
+  "React","Next.js","Vue.js","Angular","Node.js","Express","Django","FastAPI","Spring Boot","Laravel",
+  "PostgreSQL","MySQL","MongoDB","Redis","Elasticsearch","GraphQL","REST API","gRPC",
+  "AWS","Azure","Google Cloud","Docker","Kubernetes","Terraform","CI/CD","Git","Linux",
+  // Design
+  "Figma","Sketch","Adobe XD","InVision","Zeplin","Prototyping","Wireframing","UI Design","UX Design",
+  "User Research","Usability Testing","Design Systems","Accessibility","Motion Design",
+  // Product
+  "Product Management","Roadmapping","Agile","Scrum","Kanban","JIRA","Confluence","OKRs",
+  "A/B Testing","Data Analysis","User Stories","Stakeholder Management","Go-to-Market",
+  // Data & AI
+  "Machine Learning","Deep Learning","TensorFlow","PyTorch","scikit-learn","Pandas","NumPy","SQL",
+  "Data Visualization","Tableau","Power BI","Spark","Hadoop","dbt","Airflow","LLMs","Prompt Engineering",
+  // Marketing
+  "SEO","SEM","Google Ads","Facebook Ads","Content Marketing","Email Marketing","HubSpot","Salesforce",
+  "Google Analytics","Brand Strategy","Copywriting","Social Media","Growth Hacking",
+  // Sales & Operations
+  "Sales","Account Management","CRM","Business Development","Negotiation","Project Management",
+  "Operations","Supply Chain","Process Improvement","Six Sigma","Lean","Financial Modeling","Excel",
+  // Soft skills
+  "Leadership","Communication","Problem Solving","Critical Thinking","Teamwork","Mentoring","Coaching",
+];
+
 // ─── Work Experience Form ─────────────────────────────────────────────────────
 
 function WorkExpForm({
@@ -353,6 +380,14 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileData>(EMPTY_PROFILE);
   const [skills, setSkills]   = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+
+  const skillSuggestions = skillInput.trim().length > 0
+    ? SKILL_TAXONOMY.filter(
+        (s) => s.toLowerCase().includes(skillInput.toLowerCase()) && !skills.includes(s)
+      ).slice(0, 6)
+    : [];
   const [loading, setLoading] = useState(true);
   const [saving, setSaving]   = useState(false);
   const [saved, setSaved]     = useState(false);
@@ -408,19 +443,33 @@ export default function ProfilePage() {
       .catch(() => setLoading(false));
   }, []);
 
+  // Warn user if they navigate away with unsaved changes
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (!isDirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
   function set(field: keyof ProfileData) {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       setProfile((p) => ({ ...p, [field]: e.target.value }));
+      setIsDirty(true);
+    };
   }
 
-  function addSkill() {
-    const s = skillInput.trim();
-    if (s && !skills.includes(s)) setSkills((prev) => [...prev, s]);
+  function addSkill(override?: string) {
+    const s = (override ?? skillInput).trim();
+    if (s && !skills.includes(s)) { setSkills((prev) => [...prev, s]); setIsDirty(true); }
     setSkillInput("");
   }
 
   function removeSkill(s: string) {
     setSkills((prev) => prev.filter((k) => k !== s));
+    setIsDirty(true);
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -438,6 +487,7 @@ export default function ProfilePage() {
         setError(d.error ?? "Failed to save");
       } else {
         setSaved(true);
+        setIsDirty(false);
         setTimeout(() => setSaved(false), 2500);
       }
     } catch {
@@ -651,17 +701,39 @@ export default function ProfilePage() {
               </span>
             ))}
           </div>
-          <div className="flex gap-2">
-            <input
-              className="input flex-1"
-              placeholder={t("profile.addSkillInputPlaceholder")}
-              value={skillInput}
-              onChange={(e) => setSkillInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill(); } }}
-            />
-            <Button type="button" variant="secondary" onClick={addSkill}>
-              <Plus size={16} /> {t("profile.add")}
-            </Button>
+          <div className="relative">
+            <div className="flex gap-2">
+              <input
+                className="input flex-1"
+                placeholder={t("profile.addSkillInputPlaceholder")}
+                value={skillInput}
+                onChange={(e) => { setSkillInput(e.target.value); setShowSuggestions(true); }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") { e.preventDefault(); addSkill(); setShowSuggestions(false); }
+                  if (e.key === "Escape") setShowSuggestions(false);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                autoComplete="off"
+              />
+              <Button type="button" variant="secondary" onClick={() => { addSkill(); setShowSuggestions(false); }}>
+                <Plus size={16} /> {t("profile.add")}
+              </Button>
+            </div>
+            {showSuggestions && skillSuggestions.length > 0 && (
+              <div className="absolute left-0 right-16 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                {skillSuggestions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); addSkill(s); setShowSuggestions(false); }}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-brand-50 hover:text-brand-700 transition-colors"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -922,6 +994,12 @@ export default function ProfilePage() {
       </div>
 
       {/* ─── Save — bottom of page ─────────────────────────────────────────────── */}
+      {isDirty && !saving && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-center gap-2">
+          <Info size={14} className="shrink-0" />
+          You have unsaved changes. Save before leaving this page.
+        </div>
+      )}
       <div className="card p-5 flex items-center justify-between gap-4">
         <div className="flex items-center gap-1.5 text-xs text-gray-400">
           <Info size={12} />

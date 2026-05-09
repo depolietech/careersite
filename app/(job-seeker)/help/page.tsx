@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Shield, Eye, User, Briefcase, MessageSquare, Settings, HelpCircle } from "lucide-react";
+import { ChevronRight, Shield, Eye, User, Briefcase, MessageSquare, Settings, HelpCircle, FileText } from "lucide-react";
 
 const SECTIONS = [
   {
@@ -27,10 +27,23 @@ const SECTIONS = [
     title: "Applying for jobs",
     color: "bg-green-50 text-green-600",
     items: [
-      { q: "How do I apply for a job?", a: "Browse jobs, click a listing to open the details panel, then click 'Apply — skills first'. You can add an optional cover letter focused on your relevant skills." },
+      { q: "How do I apply for a job?", a: "Click any job on the Jobs page to open the detail panel. Click 'Apply' — the platform first checks your profile is ready. Then select which of your saved resumes to send, add an optional cover letter, and submit. Your identity stays masked throughout." },
+      { q: "What do I need before I can apply?", a: "Three things are required: (1) at least one skill in your profile, (2) at least one work experience entry, and (3) at least one resume uploaded. If anything is missing, you'll see a guided checklist with direct links to fix each item before the apply form opens." },
       { q: "Can I apply to multiple jobs at once?", a: "Yes. On the Jobs page, click 'Quick Apply to Multiple Jobs', tick the jobs you want, write an optional shared cover letter, and submit. Your profile is sent to all selected employers instantly." },
       { q: "How many jobs can I apply to?", a: "There's no limit. We recommend applying broadly — our bias-free model means you'll be evaluated fairly everywhere." },
       { q: "Can I withdraw an application?", a: "Yes. Go to your Dashboard, find the application, and click 'Withdraw'. This removes your profile from that employer's review queue." },
+    ],
+  },
+  {
+    icon: FileText,
+    title: "Resumes & profile",
+    color: "bg-teal-50 text-teal-600",
+    items: [
+      { q: "How many resumes can I upload?", a: "You can store up to 3 resumes (PDF format, max 5 MB each) in your profile. At least one resume is required before you can apply to any job." },
+      { q: "How do I choose which resume to send?", a: "When you click Apply on a job, a resume picker appears — you select which of your saved resumes to attach. Your choice is recorded in the application snapshot for that job." },
+      { q: "What is a profile snapshot?", a: "When you submit an application, an immutable copy of your profile is captured — your skills, headline, work history, education, and the resume you selected. This snapshot never changes even if you later update your profile. You can view the exact snapshot for any application by clicking 'View Submission' on your Dashboard." },
+      { q: "How do I add skills faster?", a: "The skills field on your profile page has auto-suggest: start typing any skill and a dropdown shows matching options from a 100+ skill taxonomy covering engineering, design, product, data, marketing, sales, and soft skills. Click a suggestion or press Enter to add it." },
+      { q: "Will I lose my profile changes if I navigate away?", a: "If you have unsaved changes on your profile page, a warning will appear. Your browser will also prompt you before leaving. Always click Save Profile before navigating away." },
     ],
   },
   {

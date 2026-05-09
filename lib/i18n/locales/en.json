@@ -577,11 +577,11 @@
     "recruiterStep3Title": "Schedule Interviews & Reveal",
     "recruiterStep3Desc": "Invite top candidates for an interview, and only then will their personal details be revealed.",
     "seekerStep1Title": "Build Your Profile",
-    "seekerStep1Desc": "Fill in your skills, experience, and qualifications — it takes around 2 minutes. Your personal details stay hidden until an interview is scheduled.",
+    "seekerStep1Desc": "Add your skills (with auto-suggest), work experience, education, and upload a resume. Your personal details stay hidden until an interview is scheduled.",
     "seekerStep2Title": "Apply with Confidence",
-    "seekerStep2Desc": "Browse and apply to roles. Employers only see your skills and experience — not your name, photo, or background.",
+    "seekerStep2Desc": "Click any job to open the detail panel. Select your resume, add an optional cover letter, and submit. Employers see only your skills and experience — never your name or photo.",
     "seekerStep3Title": "Get Selected on Merit",
-    "seekerStep3Desc": "When an employer is interested, they schedule an interview and your identity is revealed — fairly and transparently.",
+    "seekerStep3Desc": "When an employer is interested, they schedule an interview and your identity is revealed. Your application snapshot is preserved so you always know exactly what was shared.",
     "faq1Q": "How does the anonymous hiring process work?",
     "faq1A": "When a candidate applies, their personal details (name, photo, school names, company names, and employment dates) are automatically hidden. Employers and contractors only see skills, experience level, and qualifications — ensuring decisions are based purely on merit.",
     "faq2Q": "When do candidate details get revealed?",
@@ -599,7 +599,11 @@
     "faq8Q": "What languages does the platform support?",
     "faq8A": "Equalhires currently supports English, French (Canada), and Spanish (Mexico). You can switch languages at any time using the language selector in the top navigation bar. Your preference is saved automatically. More languages are planned for future releases.",
     "faq9Q": "Is two-factor authentication (2FA) available?",
-    "faq9A": "Yes. You can enable 2FA from your account settings. We support authenticator apps (TOTP — compatible with Google Authenticator, Microsoft Authenticator, Authy, and others) and email-based one-time codes. Backup codes are generated when you set up 2FA so you can always recover access if you lose your device."
+    "faq9A": "Yes. You can enable 2FA from your account settings. We support authenticator apps (TOTP — compatible with Google Authenticator, Microsoft Authenticator, Authy, and others) and email-based one-time codes. Backup codes are generated when you set up 2FA so you can always recover access if you lose your device.",
+    "faq10Q": "What is an application snapshot?",
+    "faq10A": "When you apply to a job, an immutable copy of your profile is captured — your skills, headline, work history, education, and which resume you selected. This snapshot never changes even if you later update your profile. You can view it anytime from your Dashboard by clicking 'View Submission' next to any application. This gives you full transparency into exactly what each employer received.",
+    "faq11Q": "What do I need before I can apply?",
+    "faq11A": "Three things are required: (1) at least one skill added to your profile, (2) at least one work experience entry, and (3) at least one resume uploaded. If anything is missing when you click Apply, a guided checklist appears showing exactly which items are incomplete — with direct links to add each one."
   },
 
   "profile": {

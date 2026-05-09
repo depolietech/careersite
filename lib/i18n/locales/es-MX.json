@@ -491,11 +491,11 @@
     "recruiterStep3Title": "Programar entrevistas y revelar",
     "recruiterStep3Desc": "Invita a los mejores candidatos a una entrevista, y solo entonces se revelarán sus datos personales.",
     "seekerStep1Title": "Crear tu perfil",
-    "seekerStep1Desc": "Completa tus habilidades, experiencia y calificaciones — tarda unos 2 minutos. Tus datos personales permanecen ocultos hasta que se programe una entrevista.",
+    "seekerStep1Desc": "Agrega tus habilidades (con sugerencias automáticas), experiencia, educación y sube un CV. Tus datos personales permanecen ocultos hasta que se programe una entrevista.",
     "seekerStep2Title": "Postularte con confianza",
-    "seekerStep2Desc": "Explora y postúlate a roles. Los empleadores solo ven tus habilidades y experiencia — no tu nombre, foto ni trayectoria.",
+    "seekerStep2Desc": "Haz clic en cualquier empleo para ver los detalles. Selecciona tu CV, agrega una carta de presentación opcional y envía. Los empleadores solo ven tus habilidades — nunca tu nombre ni foto.",
     "seekerStep3Title": "Ser seleccionado por mérito",
-    "seekerStep3Desc": "Cuando un empleador está interesado, programa una entrevista y tu identidad se revela — de forma justa y transparente.",
+    "seekerStep3Desc": "Cuando un empleador está interesado, programa una entrevista y tu identidad se revela. Se guarda una instantánea de tu candidatura para que siempre sepas exactamente qué se compartió.",
     "faq1Q": "¿Cómo funciona el proceso de contratación anónima?",
     "faq1A": "Cuando un candidato postula, sus datos personales (nombre, foto, nombres de escuelas, empresas y fechas de empleo) se ocultan automáticamente. Los empleadores solo ven habilidades, nivel de experiencia y calificaciones.",
     "faq2Q": "¿Cuándo se revelan los datos del candidato?",
@@ -513,7 +513,11 @@
     "faq8Q": "¿Qué idiomas admite la plataforma?",
     "faq8A": "Equalhires admite actualmente inglés, francés (Canadá) y español (México). Puedes cambiar de idioma en cualquier momento usando el selector de idioma en la barra de navegación. Tu preferencia se guarda automáticamente. Se planean más idiomas para futuras versiones.",
     "faq9Q": "¿Está disponible la autenticación de dos factores (2FA)?",
-    "faq9A": "Sí. Puedes activar la 2FA desde la configuración de tu cuenta. Admitimos aplicaciones de autenticación (TOTP) y códigos por correo electrónico. Se proporcionan códigos de respaldo al configurarla."
+    "faq9A": "Sí. Puedes activar la 2FA desde la configuración de tu cuenta. Admitimos aplicaciones de autenticación (TOTP) y códigos por correo electrónico. Se proporcionan códigos de respaldo al configurarla.",
+    "faq10Q": "¿Qué es una instantánea de candidatura?",
+    "faq10A": "Cuando te postulas, se captura una copia inmutable de tu perfil — tus habilidades, título, historial laboral, educación y el CV seleccionado. Esta instantánea nunca cambia, aunque actualices tu perfil posteriormente. Puedes verla desde tu panel haciendo clic en 'Ver candidatura' junto a cada solicitud.",
+    "faq11Q": "¿Qué necesito para poder postularme?",
+    "faq11A": "Se requieren tres cosas: (1) al menos una habilidad en tu perfil, (2) al menos una experiencia laboral, y (3) al menos un CV subido. Si algo falta, aparece una lista de verificación guiada con enlaces directos para completar cada elemento."
   },
 
   "notifications": {

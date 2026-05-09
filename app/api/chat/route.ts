@@ -48,6 +48,9 @@ function detectIntent(msg: string): string {
 
   if (/\binterview\b/.test(m)) return "interview";
 
+  if (/\b(snapshot|submission|submitted.*profile|what.*submitted|view.*application|application.*record|what.*recruiter.*see)\b/.test(m))
+    return "snapshot";
+
   if (/\b(resume|cv|curriculum vitae|upload.*resume|my resume|pdf)\b/.test(m)) return "resume";
 
   if (/\b(certification|certificate|cert|aws|pmp|google cert|add.*cert)\b/.test(m))
@@ -147,7 +150,7 @@ export async function POST(req: NextRequest) {
         if (userId && userRole === "JOB_SEEKER") {
           response = {
             reply:
-              "Here's how to get started as a job seeker:\n\n1. **Complete your profile** — add your skills, experience, and education\n2. **Browse jobs** — filter by type, location, or keyword\n3. **Apply** — one click; your identity stays masked until an interview is scheduled\n4. **Track progress** — check your dashboard for real-time status updates",
+              "Here's how to get started as a job seeker:\n\n1. **Complete your profile** — add skills (use auto-suggest!), work experience, and education\n2. **Upload a resume** — required to apply; you can store up to 3 resumes\n3. **Browse jobs** — filter by type, location, or keyword; click any listing for details\n4. **Apply** — select your resume, add an optional cover letter; your identity stays masked\n5. **Track progress** — dashboard shows real-time status; use **View Submission** to see your exact snapshot",
             suggestions: [
               "Update my profile",
               "Browse jobs",
@@ -222,7 +225,7 @@ export async function POST(req: NextRequest) {
         if (!userId) {
           response = {
             reply:
-              "To apply to jobs on Equalhires:\n\n1. **Create a free account** as a job seeker\n2. **Complete your profile** — add skills, experience, and education\n3. **Browse jobs** and click Apply on any listing\n4. Add an optional cover letter to stand out\n5. Your application is submitted anonymously — identity masked until an interview",
+              "To apply to jobs on Equalhires:\n\n1. **Create a free account** as a job seeker\n2. **Complete your profile** — add skills, work experience, and upload a resume (all required)\n3. **Browse jobs** and click a listing to open the details panel\n4. Click **Apply** — select your resume, add an optional cover letter\n5. Submit — your identity stays masked until an interview is scheduled\n\n📸 A snapshot of your profile is stored at submission so you can see exactly what the recruiter received.",
             suggestions: ["Create an account", "How does masking work?", "Browse jobs"],
             links: [
               { label: "Create Account", href: "/register?role=job-seeker" },
@@ -239,9 +242,12 @@ export async function POST(req: NextRequest) {
         } else {
           response = {
             reply:
-              "To apply to a job:\n\n1. Go to **Browse Jobs**\n2. Click on any job to view details\n3. Click **Apply** and add an optional cover letter\n4. Submit — your identity stays hidden until an interview is scheduled\n\nYour profile (skills, experience, education) is what employers see — make sure it's complete!",
-            suggestions: ["Browse jobs", "Update my profile", "Track my applications"],
-            links: [{ label: "Browse Jobs", href: "/jobs" }],
+              "To apply to a job:\n\n1. Go to **Browse Jobs** and click a listing\n2. Click **Apply** — the platform checks your profile is ready\n3. **Select your resume** from your saved resumes (up to 3 stored)\n4. Add an optional **cover letter** to personalize your application\n5. Submit — your identity stays hidden until an interview is scheduled\n\n⚠️ **Before you can apply** you need: skills added, at least one work experience, and at least one resume uploaded. If anything is missing, you'll see a guided checklist with direct links to fix it.\n\n📸 A profile snapshot is captured at submission — view it anytime from your dashboard.",
+            suggestions: ["Browse jobs", "Update my profile", "Upload a resume", "View my submissions"],
+            links: [
+              { label: "Browse Jobs", href: "/jobs" },
+              { label: "Edit Profile", href: "/profile" },
+            ],
           };
         }
         break;
@@ -370,7 +376,7 @@ export async function POST(req: NextRequest) {
         if (!userId) {
           response = {
             reply:
-              "You can store up to **3 resumes** (PDF format, max 5 MB each) in your Equalhires account.\n\nResumes are managed from your profile — they supplement your anonymous profile when employers reveal your identity after scheduling an interview.",
+              "You can store up to **3 resumes** (PDF format, max 5 MB each) in your Equalhires account.\n\n📎 **Resume is required to apply** — without at least one resume uploaded you won't be able to submit an application.\n\nWhen applying, you choose which of your saved resumes to send. This lets you tailor your application for each role.",
             suggestions: ["Create an account", "Browse jobs", "How does it work?"],
             links: [{ label: "Create Account", href: "/register?role=job-seeker" }],
           };
@@ -379,10 +385,10 @@ export async function POST(req: NextRequest) {
           response = {
             reply:
               resumeCount > 0
-                ? `You have **${resumeCount} resume${resumeCount !== 1 ? "s" : ""}** saved (max 3 allowed).\n\nYour resumes are shared with employers when your identity is revealed after an interview is scheduled.`
-                : "You haven't uploaded any resumes yet. Resumes can be added from your profile — they're shared with employers after an interview is scheduled.",
-            suggestions: ["Update my profile", "Browse jobs", "Track my applications"],
-            links: [{ label: "Edit Profile", href: "/profile" }],
+                ? `You have **${resumeCount} resume${resumeCount !== 1 ? "s" : ""}** saved (max 3 allowed).\n\nWhen you apply to a job, you'll be prompted to **select which resume to send** from your saved list. The selected resume is recorded in your application snapshot and shared with the employer once your identity is revealed after an interview is scheduled.`
+                : "⚠️ You haven't uploaded any resumes yet — and **a resume is required to apply**.\n\nYou can upload up to 3 PDFs (max 5 MB each) from your profile page. When applying, you'll choose which one to send per application.",
+            suggestions: ["Edit my profile", "Browse jobs", "Track my applications"],
+            links: [{ label: "Upload Resume", href: "/profile#resumes" }],
           };
         } else {
           response = {
@@ -398,22 +404,44 @@ export async function POST(req: NextRequest) {
         if (!userId) {
           response = {
             reply:
-              "Your profile on Equalhires includes:\n\n• **Skills & experience** — always visible to employers\n• **Work history** — role duration shown, company names masked\n• **Education** — degree shown, institution masked\n• **Personal details** — hidden until an interview is scheduled\n\nA complete profile helps you get shortlisted faster!",
+              "Your profile on Equalhires includes:\n\n• **Skills & experience** — always visible to employers\n• **Work history** — role duration shown, company names masked\n• **Education** — degree shown, institution masked\n• **Personal details** — hidden until an interview is scheduled\n\nA complete profile is required to apply — skills, work experience, and a resume must all be present.\n\n💡 **Skills auto-suggest**: as you type in the skills field, suggestions from a 100+ skill taxonomy appear to help you pick the right terms.",
             suggestions: ["Create an account", "How does masking work?"],
             links: [{ label: "Create Account", href: "/register?role=job-seeker" }],
           };
         } else if (userRole === "JOB_SEEKER") {
           response = {
             reply:
-              "A strong profile increases your chances of being shortlisted.\n\nProfile checklist:\n✅ Clear professional headline\n✅ Key skills listed\n✅ Work experience added (company names are masked automatically)\n✅ Education history included\n✅ Years of experience filled in",
-            suggestions: ["Edit my profile", "Browse jobs", "Track my applications"],
-            links: [{ label: "Edit Profile", href: "/profile" }],
+              "A strong profile is required before applying.\n\n**Required to apply:**\n✅ At least one skill added\n✅ Work experience added\n✅ Resume uploaded\n\n**Boosts your chances:**\n⭐ Professional headline\n⭐ Career summary\n⭐ Education history\n⭐ Certifications\n\n💡 **Tip:** The skills field has **auto-suggest** — start typing any skill and a dropdown shows matching options from 100+ common skills.\n\n⚠️ If anything required is missing, you'll see a guided checklist with direct links when you click Apply.",
+            suggestions: ["Edit my profile", "Upload a resume", "Browse jobs", "What is a profile snapshot?"],
+            links: [
+              { label: "Edit Profile", href: "/profile" },
+              { label: "Upload Resume", href: "/profile#resumes" },
+            ],
           };
         } else {
           response = {
             reply:
               "Your company profile helps job seekers understand who they're applying to. Keep it updated with your company description, industry, and location.",
             suggestions: ["Post a job", "View my applicants"],
+          };
+        }
+        break;
+      }
+
+      case "snapshot": {
+        if (!userId || userRole !== "JOB_SEEKER") {
+          response = {
+            reply:
+              "📸 **Application Snapshots** are a transparency feature on Equalhires.\n\nWhen you submit an application, an immutable copy of your profile is captured — your skills, headline, work history, education, and which resume you selected. This never changes, even if you later update your profile.\n\nAs a job seeker, you can view the exact snapshot from your Dashboard using the **View Submission** link on each application.",
+            suggestions: ["How do I apply?", "Create an account", "Browse jobs"],
+            links: [{ label: "Learn More", href: "/register?role=job-seeker" }],
+          };
+        } else {
+          response = {
+            reply:
+              "📸 **Your application snapshots** show exactly what each employer received when you applied.\n\nEvery application captures:\n• Skills at time of submission\n• Professional headline & summary\n• Work experience and education\n• Which resume was selected\n• Timestamp of submission\n\nYour snapshot is **immutable** — it won't change if you later update your profile. This builds trust and transparency with employers.\n\nTo view any snapshot, go to your **Dashboard** and click **View Submission** next to an application.",
+            suggestions: ["View my dashboard", "Browse jobs", "Update my profile"],
+            links: [{ label: "Go to Dashboard", href: "/dashboard" }],
           };
         }
         break;
@@ -551,7 +579,7 @@ export async function POST(req: NextRequest) {
         let navMap: string;
         if (userId && userRole === "JOB_SEEKER") {
           navMap =
-            "• **Dashboard** → /dashboard — track your applications\n• **Browse Jobs** → /jobs — find and apply\n• **Profile** → /profile — manage your profile\n• **Company Reviews** → /reviews — read and write company reviews\n• **Notifications** → /notifications — application updates\n• **Settings** → /settings — account preferences";
+            "• **Dashboard** → /dashboard — track your applications + view submission links\n• **Browse Jobs** → /jobs — find and apply; click any card to open detail panel\n• **Profile** → /profile — manage skills (auto-suggest), experience, education, resumes\n• **Submission View** → /applications/[id] — immutable snapshot of each submitted application\n• **Company Reviews** → /reviews — read and write company reviews\n• **Notifications** → /notifications — application updates\n• **Settings** → /settings — account preferences";
         } else if (userId && userRole === "EMPLOYER") {
           navMap =
             "• **Dashboard** → /employer/dashboard — your hiring overview\n• **Post a Job** → /employer/post-job — create a listing\n• **Applicants** → /employer/applicants — review candidates\n• **Company Reviews** → /reviews — see what candidates say about companies\n• **Notifications** → /employer/notifications — new application alerts";

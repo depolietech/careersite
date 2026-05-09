@@ -28,7 +28,13 @@ export async function GET(req: Request) {
       },
       orderBy: { createdAt: "desc" },
     });
-    return NextResponse.json(applications);
+    // Parse profileSnapshot from string to object before returning
+    return NextResponse.json(
+      applications.map((a) => ({
+        ...a,
+        profileSnapshot: a.profileSnapshot ? JSON.parse(a.profileSnapshot) : null,
+      }))
+    );
   }
 
   if (role === "EMPLOYER" && jobId) {
@@ -113,12 +119,36 @@ export async function POST(req: Request) {
     }
 
     // Validate resume belongs to this user (if provided)
+    let resumeName: string | null = null;
     if (resumeId) {
       const resume = await db.resume.findUnique({ where: { id: resumeId } });
       if (!resume || resume.userId !== userId) {
         return NextResponse.json({ error: "Invalid resume" }, { status: 400 });
       }
+      resumeName = resume.name;
     }
+
+    // Fetch work experience for snapshot
+    const workExperiences = await db.workExperience.findMany({
+      where: { profileId: profile.id },
+      select: { title: true, company: true, startDate: true, endDate: true, current: true },
+    });
+    const educations = await db.education.findMany({
+      where: { profileId: profile.id },
+      select: { degree: true, institution: true, startYear: true, endYear: true },
+    });
+
+    const profileSnapshot = JSON.stringify({
+      skills,
+      headline: profile.headline,
+      summary: profile.summary,
+      yearsExperience: profile.yearsExperience,
+      jobType: profile.jobType,
+      workExperiences,
+      educations,
+      resumeName,
+      snapshotAt: new Date().toISOString(),
+    });
 
     const application = await db.application.create({
       data: {
@@ -127,6 +157,7 @@ export async function POST(req: Request) {
         profileId: profile.id,
         coverLetter,
         resumeId: resumeId ?? null,
+        profileSnapshot,
       },
       include: {
         job: { select: { title: true, postedById: true } },

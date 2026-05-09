@@ -166,7 +166,7 @@ export function HomePageClient({ recentJobs }: { recentJobs: RecentJob[] }) {
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {recentJobs.map((job) => (
-                  <Link key={job.id} href="/jobs" className="card p-5 flex flex-col gap-3 hover:shadow-card-hover transition-shadow group">
+                  <Link key={job.id} href={`/jobs?job=${job.id}`} className="card p-5 flex flex-col gap-3 hover:shadow-card-hover transition-shadow group">
                     <div>
                       <p className="font-semibold text-gray-900 group-hover:text-brand-600 transition-colors">{job.title}</p>
                       <p className="text-sm text-gray-500 mt-0.5">{job.employerProfile?.industry ?? "Company"}</p>

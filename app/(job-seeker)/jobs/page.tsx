@@ -1,11 +1,13 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search, MapPin, Briefcase, Clock, DollarSign, ArrowRight,
   CheckSquare, Square, CheckCircle2, XCircle, Loader2, Lock, Flag, X,
+  FileText, AlertCircle, User,
 } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatSalary, timeAgo, locationToCurrency } from "@/lib/utils";
@@ -28,10 +30,21 @@ type Job = {
 
 type ApplyResult = { jobId: string; status: "ok" | "duplicate" | "error"; message?: string };
 
-export default function JobsPage() {
+type Resume = { id: string; name: string; fileName: string; isDefault: boolean };
+
+type ProfileStatus = {
+  hasSkills: boolean;
+  hasExperience: boolean;
+  hasEducation: boolean;
+  hasResume: boolean;
+};
+
+function JobsPageInner() {
   const { status: authStatus } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useI18n();
+  const preselectedJobId = searchParams.get("job");
 
   const JOB_TYPE_LABELS: Record<string, string> = {
     "full-time": t("jobs.fullTime"),
@@ -73,6 +86,12 @@ export default function JobsPage() {
   const [reportDesc, setReportDesc]   = useState("");
   const [reportLoading, setReportLoading] = useState(false);
 
+  // Profile completion + resume selection
+  const [resumes, setResumes]               = useState<Resume[]>([]);
+  const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
+  const [profileStatus, setProfileStatus]   = useState<ProfileStatus | null>(null);
+  const [profileCheckLoading, setProfileCheckLoading] = useState(false);
+
   const isLoggedIn = authStatus === "authenticated";
 
   const fetchJobs = useCallback(async () => {
@@ -91,6 +110,14 @@ export default function JobsPage() {
     const timer = setTimeout(fetchJobs, 300);
     return () => clearTimeout(timer);
   }, [fetchJobs]);
+
+  // Auto-select a job when arriving from landing page via ?job=ID
+  useEffect(() => {
+    if (preselectedJobId && jobs.length > 0 && !selectedJob) {
+      const found = jobs.find((j) => j.id === preselectedJobId);
+      if (found) setSelectedJob(found);
+    }
+  }, [preselectedJobId, jobs, selectedJob]);
 
   function parseSkills(s: string): string[] {
     try { return JSON.parse(s); } catch { return []; }
@@ -112,17 +139,53 @@ export default function JobsPage() {
     }
   }
 
-  function handleApplyClick() {
+  async function handleApplyClick() {
     if (!isLoggedIn) {
-      router.push("/login?callbackUrl=/jobs");
+      const jobParam = selectedJob ? `?job=${selectedJob.id}` : "";
+      router.push(`/login?callbackUrl=/jobs${jobParam}`);
       return;
     }
-    setApplying(true);
+    setProfileCheckLoading(true);
+    try {
+      const [profileRes, resumesRes] = await Promise.all([
+        fetch("/api/profile"),
+        fetch("/api/resumes"),
+      ]);
+      const profile = await profileRes.json();
+      const resumeList: Resume[] = resumesRes.ok ? await resumesRes.json() : [];
+
+      const parsedSkills: string[] = (() => {
+        try { return JSON.parse(profile.skills ?? "[]"); } catch { return []; }
+      })();
+
+      const status: ProfileStatus = {
+        hasSkills: parsedSkills.length > 0,
+        hasExperience: (profile.workExperiences ?? []).length > 0,
+        hasEducation: (profile.educations ?? []).length > 0,
+        hasResume: resumeList.length > 0,
+      };
+
+      setProfileStatus(status);
+      setResumes(resumeList);
+
+      // Pre-select default resume
+      const defaultResume = resumeList.find((r) => r.isDefault) ?? resumeList[0];
+      if (defaultResume) setSelectedResumeId(defaultResume.id);
+
+      const allGood = status.hasSkills && status.hasExperience && status.hasResume;
+      setApplying(allGood);
+      if (!allGood) {
+        // Stay on the panel — guided onboarding is shown via profileStatus
+      }
+    } finally {
+      setProfileCheckLoading(false);
+    }
   }
 
   async function applyToJobs(jobIds: string[]) {
     if (!isLoggedIn) {
-      router.push("/login?callbackUrl=/jobs");
+      const jobParam = selectedJob ? `?job=${selectedJob.id}` : "";
+      router.push(`/login?callbackUrl=/jobs${jobParam}`);
       return;
     }
     setSubmitting(true);
@@ -136,6 +199,7 @@ export default function JobsPage() {
           body: JSON.stringify({
             jobId,
             coverLetter: coverLetter || null,
+            resumeId: selectedResumeId || null,
           }),
         });
         const data = await r.json();
@@ -324,7 +388,7 @@ export default function JobsPage() {
                   </button>
                 )}
                 <button
-                  onClick={() => { setSelectedJob(job); if (!bulkMode) setApplying(false); }}
+                  onClick={() => { setSelectedJob(job); if (!bulkMode) { setApplying(false); setProfileStatus(null); } }}
                   className={`card w-full text-left p-5 space-y-3 transition-all ${bulkMode ? "pl-10" : ""} ${
                     isSelected && !bulkMode ? "ring-2 ring-brand-500 shadow-card-hover" : ""
                   } ${isBulkSelected ? "ring-2 ring-brand-400 bg-brand-50/30" : ""}`}
@@ -415,15 +479,80 @@ export default function JobsPage() {
                       <strong>{t("jobs.identityProtected")}</strong> {t("jobs.identityProtectedDesc")}
                     </div>
 
+                    {/* Guided profile onboarding — shown when profile is incomplete */}
+                    {profileStatus && !applying && (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-3">
+                        <div className="flex items-center gap-2 text-amber-800">
+                          <AlertCircle size={16} className="shrink-0" />
+                          <p className="text-sm font-semibold">Complete your profile before applying</p>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          {[
+                            { ok: profileStatus.hasSkills,     label: "Skills",          href: "/profile#skills" },
+                            { ok: profileStatus.hasExperience, label: "Work Experience",  href: "/profile#experience" },
+                            { ok: profileStatus.hasEducation,  label: "Education",        href: "/profile#education" },
+                            { ok: profileStatus.hasResume,     label: "Resume",           href: "/profile#resumes" },
+                          ].map(({ ok, label, href }) => (
+                            <div key={label} className="flex items-center justify-between gap-2">
+                              <span className={`flex items-center gap-1.5 ${ok ? "text-green-700" : "text-red-600"}`}>
+                                {ok
+                                  ? <CheckCircle2 size={14} className="shrink-0" />
+                                  : <XCircle size={14} className="shrink-0" />}
+                                {label}
+                              </span>
+                              {!ok && (
+                                <Link
+                                  href={href}
+                                  className="text-xs font-medium text-brand-600 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded"
+                                >
+                                  Add {label} →
+                                </Link>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => setProfileStatus(null)}
+                          className="text-xs text-amber-600 hover:underline"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    )}
+
                     {applying ? (
                       <div className="space-y-4">
-                        <textarea
-                          className="input resize-none"
-                          rows={5}
-                          value={coverLetter}
-                          onChange={(e) => setCoverLetter(e.target.value)}
-                          placeholder={t("jobs.coverLetterPlaceholder")}
-                        />
+                        {/* Resume selection */}
+                        {resumes.length > 0 && (
+                          <div className="space-y-1.5">
+                            <label className="block text-sm font-medium text-gray-700 flex items-center gap-1.5">
+                              <FileText size={14} /> Resume
+                            </label>
+                            <select
+                              className="input w-full"
+                              value={selectedResumeId ?? ""}
+                              onChange={(e) => setSelectedResumeId(e.target.value || null)}
+                            >
+                              {resumes.map((r) => (
+                                <option key={r.id} value={r.id}>
+                                  {r.name}{r.isDefault ? " (default)" : ""}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                        <div className="space-y-1.5">
+                          <label className="block text-sm font-medium text-gray-700">
+                            {t("jobs.coverLetterLabel")} <span className="text-gray-400 font-normal text-xs">{t("jobs.coverLetterOptional")}</span>
+                          </label>
+                          <textarea
+                            className="input resize-none"
+                            rows={5}
+                            value={coverLetter}
+                            onChange={(e) => setCoverLetter(e.target.value)}
+                            placeholder={t("jobs.coverLetterPlaceholder")}
+                          />
+                        </div>
                         <div className="flex gap-3">
                           <Button
                             className="flex-1"
@@ -433,7 +562,7 @@ export default function JobsPage() {
                             {submitting ? <Loader2 size={14} className="animate-spin" /> : null}
                             {t("jobs.submitApplication")} <ArrowRight size={16} />
                           </Button>
-                          <Button variant="secondary" onClick={() => setApplying(false)}>{t("common.cancel")}</Button>
+                          <Button variant="secondary" onClick={() => { setApplying(false); setProfileStatus(null); }}>{t("common.cancel")}</Button>
                         </div>
                       </div>
                     ) : !isLoggedIn ? (
@@ -445,19 +574,21 @@ export default function JobsPage() {
                           </p>
                         </div>
                         <div className="flex gap-3">
-                          <Button size="lg" className="flex-1" onClick={() => router.push("/login?callbackUrl=/jobs")}>
+                          <Button size="lg" className="flex-1" onClick={() => router.push(`/login?callbackUrl=/jobs?job=${selectedJob.id}`)}>
                             {t("auth.signIn")}
                           </Button>
-                          <Button variant="secondary" size="lg" onClick={() => router.push("/register?role=job-seeker")}>
+                          <Button variant="secondary" size="lg" onClick={() => router.push(`/register?role=job-seeker&callbackUrl=/jobs?job=${selectedJob.id}`)}>
                             {t("auth.signUp")}
                           </Button>
                         </div>
                       </div>
-                    ) : (
-                      <Button size="lg" className="w-full" onClick={handleApplyClick}>
-                        {t("jobs.apply")} <ArrowRight size={16} />
+                    ) : !profileStatus ? (
+                      <Button size="lg" className="w-full" disabled={profileCheckLoading} onClick={handleApplyClick}>
+                        {profileCheckLoading ? <Loader2 size={16} className="animate-spin" /> : null}
+                        {profileCheckLoading ? "Checking profile…" : t("jobs.apply")}
+                        {!profileCheckLoading && <ArrowRight size={16} />}
                       </Button>
-                    )}
+                    ) : null}
 
                     {/* Report recruiter */}
                     {isLoggedIn && !applying && (
@@ -568,5 +699,13 @@ export default function JobsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function JobsPage() {
+  return (
+    <Suspense>
+      <JobsPageInner />
+    </Suspense>
   );
 }

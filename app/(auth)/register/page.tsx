@@ -56,7 +56,10 @@ function RegisterForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ role }),
     });
-    const dest = role === "EMPLOYER" ? "/employer/dashboard" : "/dashboard";
+    const paramCallback = params.get("callbackUrl");
+    const dest = (paramCallback && paramCallback !== "/")
+      ? paramCallback
+      : role === "EMPLOYER" ? "/employer/dashboard" : "/dashboard";
     await signIn(provider, { callbackUrl: dest });
   }
 

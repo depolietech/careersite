@@ -325,9 +325,10 @@ model Application {
   resumeId  String?
   resume    Resume?          @relation(fields: [resumeId], references: [id])
 
-  status      String  @default("PENDING") // "PENDING" | "REVIEWING" | "SHORTLISTED" | "FORWARDED" | "INTERVIEW_SCHEDULED" | "REJECTED" | "OFFER_MADE" | "HIRED"
-  coverLetter String?
-  revealed    Boolean @default(false)    // true once interview is scheduled
+  status          String  @default("PENDING") // "PENDING" | "REVIEWING" | "SHORTLISTED" | "FORWARDED" | "INTERVIEW_SCHEDULED" | "REJECTED" | "OFFER_MADE" | "HIRED"
+  coverLetter     String?
+  revealed        Boolean @default(false)    // true once interview is scheduled
+  profileSnapshot String?                    // immutable JSON snapshot of profile at submission time
 
   interview    Interview?
   conversation Conversation?
