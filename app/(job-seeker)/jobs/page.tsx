@@ -141,8 +141,8 @@ function JobsPageInner() {
 
   async function handleApplyClick() {
     if (!isLoggedIn) {
-      const jobParam = selectedJob ? `?job=${selectedJob.id}` : "";
-      router.push(`/login?callbackUrl=/jobs${jobParam}`);
+      const dest = selectedJob ? `/jobs?job=${selectedJob.id}` : "/jobs";
+      router.push(`/login?callbackUrl=${encodeURIComponent(dest)}`);
       return;
     }
     setProfileCheckLoading(true);
@@ -315,14 +315,41 @@ function JobsPageInner() {
                 {selected.size === jobs.length ? t("jobs.deselectAll") : t("jobs.selectAll")}
               </button>
               <Button
-                disabled={selected.size === 0 || submitting}
-                onClick={() => applyToJobs(jobsToApply)}
+                disabled={selected.size === 0 || submitting || profileCheckLoading}
+                onClick={async () => {
+                  // Ensure profile is complete before bulk submitting
+                  setProfileCheckLoading(true);
+                  try {
+                    const [profileRes, resumesRes] = await Promise.all([
+                      fetch("/api/profile"),
+                      fetch("/api/resumes"),
+                    ]);
+                    const profile = await profileRes.json();
+                    const resumeList: Resume[] = resumesRes.ok ? await resumesRes.json() : [];
+                    const parsedSkills: string[] = (() => {
+                      try { return JSON.parse(profile?.skills ?? "[]"); } catch { return []; }
+                    })();
+                    const hasExp = (profile?.workExperiences ?? []).length > 0 || (profile?.yearsExperience ?? 0) > 0;
+                    if (!parsedSkills.length || !hasExp || !resumeList.length) {
+                      setToast({ message: "Complete your profile (skills, work experience & a resume) before applying.", ok: false });
+                      setTimeout(() => setToast(null), 6000);
+                      return;
+                    }
+                    if (!selectedResumeId) {
+                      const def = resumeList.find((r) => r.isDefault) ?? resumeList[0];
+                      if (def) setSelectedResumeId(def.id);
+                    }
+                  } finally {
+                    setProfileCheckLoading(false);
+                  }
+                  applyToJobs(jobsToApply);
+                }}
                 size="sm"
               >
-                {submitting ? <Loader2 size={14} className="animate-spin" /> : null}
+                {submitting || profileCheckLoading ? <Loader2 size={14} className="animate-spin" /> : null}
                 {t("jobs.applyToSelected")} ({selected.size})
               </Button>
-              <Button variant="secondary" size="sm" onClick={() => { setBulkMode(false); setSelected(new Set()); }}>
+              <Button variant="secondary" size="sm" onClick={() => { setBulkMode(false); setSelected(new Set()); setProfileStatus(null); }}>
                 {t("common.cancel")}
               </Button>
             </>
@@ -574,10 +601,10 @@ function JobsPageInner() {
                           </p>
                         </div>
                         <div className="flex gap-3">
-                          <Button size="lg" className="flex-1" onClick={() => router.push(`/login?callbackUrl=/jobs?job=${selectedJob.id}`)}>
+                          <Button size="lg" className="flex-1" onClick={() => router.push(`/login?callbackUrl=${encodeURIComponent(`/jobs?job=${selectedJob.id}`)}`)}>
                             {t("auth.signIn")}
                           </Button>
-                          <Button variant="secondary" size="lg" onClick={() => router.push(`/register?role=job-seeker&callbackUrl=/jobs?job=${selectedJob.id}`)}>
+                          <Button variant="secondary" size="lg" onClick={() => router.push(`/register?role=job-seeker&callbackUrl=${encodeURIComponent(`/jobs?job=${selectedJob.id}`)}`)}>
                             {t("auth.signUp")}
                           </Button>
                         </div>

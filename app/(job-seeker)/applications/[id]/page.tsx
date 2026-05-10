@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Briefcase, GraduationCap, Award, FileText, Clock, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Briefcase, GraduationCap, FileText, Clock, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const STATUS_LABEL: Record<string, string> = {
