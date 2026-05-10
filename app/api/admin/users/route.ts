@@ -16,12 +16,14 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url);
-  const role   = searchParams.get("role") ?? "";
-  const q      = searchParams.get("q") ?? "";
-  const status = searchParams.get("status") ?? ""; // "active" | "blocked"
+  const role    = searchParams.get("role") ?? "";
+  const q       = searchParams.get("q") ?? "";
+  const status  = searchParams.get("status") ?? ""; // "active" | "blocked"
+  const deleted = searchParams.get("deleted") === "true";
 
   const users = await db.user.findMany({
     where: {
+      deletedAt: deleted ? { not: null } : null,
       ...(role && { role }),
       ...(q && {
         OR: [
@@ -35,6 +37,7 @@ export async function GET(req: Request) {
       email: true,
       role: true,
       createdAt: true,
+      deletedAt: true,
       emailVerified: true,
       jobSeekerProfile: { select: { firstName: true, lastName: true, headline: true } },
       employerProfile: {

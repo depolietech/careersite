@@ -112,13 +112,21 @@ export async function POST(req: Request) {
       const workCount = await db.workExperience.count({ where: { profileId: profile.id } });
       if (workCount === 0) {
         return NextResponse.json(
-          { error: "Please add your years of experience or work history to your profile before applying." },
+          { error: "Please add your years of experience or at least one work history entry to your profile before applying." },
           { status: 400 }
         );
       }
     }
 
-    // Validate resume belongs to this user (if provided)
+    const eduCount = await db.education.count({ where: { profileId: profile.id } });
+    if (eduCount === 0) {
+      return NextResponse.json(
+        { error: "Please add at least one education entry to your profile before applying." },
+        { status: 400 }
+      );
+    }
+
+    // Validate resume belongs to this user (if provided — resume is optional)
     let resumeName: string | null = null;
     if (resumeId) {
       const resume = await db.resume.findUnique({ where: { id: resumeId } });

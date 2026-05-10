@@ -103,7 +103,7 @@ function WorkExpForm({
   onCancel,
 }: {
   initial?: typeof EMPTY_WORK_EXP;
-  onSave: (data: typeof EMPTY_WORK_EXP) => Promise<void>;
+  onSave: (data: typeof EMPTY_WORK_EXP) => Promise<string | null>;
   onCancel: () => void;
 }) {
   const { t } = useI18n();
@@ -121,6 +121,7 @@ function WorkExpForm({
   const [form, setForm] = useState(initial ?? EMPTY_WORK_EXP);
   const [skillInput, setSkillInput] = useState("");
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   function field(k: keyof typeof EMPTY_WORK_EXP) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -136,7 +137,9 @@ function WorkExpForm({
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    await onSave(form);
+    setFormError(null);
+    const err = await onSave(form);
+    if (err) setFormError(err);
     setSaving(false);
   }
 
@@ -218,6 +221,9 @@ function WorkExpForm({
         </div>
       </div>
 
+      {formError && (
+        <div className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-xs text-red-700">{formError}</div>
+      )}
       <div className="flex gap-2 pt-1">
         <Button type="submit" size="sm" loading={saving}>{t("profile.saveEntry")}</Button>
         <Button type="button" variant="secondary" size="sm" onClick={onCancel}>{t("common.cancel")}</Button>
@@ -234,7 +240,7 @@ function EduForm({
   onCancel,
 }: {
   initial?: typeof EMPTY_EDU;
-  onSave: (data: typeof EMPTY_EDU) => Promise<void>;
+  onSave: (data: typeof EMPTY_EDU) => Promise<string | null>;
   onCancel: () => void;
 }) {
   const { t } = useI18n();
@@ -250,6 +256,7 @@ function EduForm({
 
   const [form, setForm] = useState(initial ?? EMPTY_EDU);
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   function field(k: keyof typeof EMPTY_EDU) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -259,7 +266,9 @@ function EduForm({
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    await onSave(form);
+    setFormError(null);
+    const err = await onSave(form);
+    if (err) setFormError(err);
     setSaving(false);
   }
 
@@ -304,6 +313,9 @@ function EduForm({
         {t("profile.currentlyStudying")}
       </label>
 
+      {formError && (
+        <div className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-xs text-red-700">{formError}</div>
+      )}
       <div className="flex gap-2 pt-1">
         <Button type="submit" size="sm" loading={saving}>{t("profile.saveEntry")}</Button>
         <Button type="button" variant="secondary" size="sm" onClick={onCancel}>{t("common.cancel")}</Button>
@@ -320,12 +332,13 @@ function CertForm({
   onCancel,
 }: {
   initial?: typeof EMPTY_CERT;
-  onSave: (data: typeof EMPTY_CERT) => Promise<void>;
+  onSave: (data: typeof EMPTY_CERT) => Promise<string | null>;
   onCancel: () => void;
 }) {
   const { t } = useI18n();
   const [form, setForm] = useState(initial ?? EMPTY_CERT);
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   function field(k: keyof typeof EMPTY_CERT) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -335,7 +348,9 @@ function CertForm({
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    await onSave(form);
+    setFormError(null);
+    const err = await onSave(form);
+    if (err) setFormError(err);
     setSaving(false);
   }
 
@@ -355,6 +370,9 @@ function CertForm({
           <input type="month" className="input" value={form.expiryDate} onChange={(e) => setForm((f) => ({ ...f, expiryDate: e.target.value }))} />
         </div>
       </div>
+      {formError && (
+        <div className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-xs text-red-700">{formError}</div>
+      )}
       <div className="flex gap-2 pt-1">
         <Button type="submit" size="sm" loading={saving}>{t("profile.saveEntry")}</Button>
         <Button type="button" variant="secondary" size="sm" onClick={onCancel}>{t("common.cancel")}</Button>
@@ -499,7 +517,7 @@ export default function ProfilePage() {
 
   // ─── Work experience handlers ──────────────────────────────────────────────
 
-  async function saveNewWorkExp(form: typeof EMPTY_WORK_EXP) {
+  async function saveNewWorkExp(form: typeof EMPTY_WORK_EXP): Promise<string | null> {
     const res = await fetch("/api/profile/work-experience", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -509,10 +527,13 @@ export default function ProfilePage() {
       const created = await res.json();
       setWorkExps((prev) => [...prev, { ...created, skills: form.skills }]);
       setAddingWorkExp(false);
+      return null;
     }
+    const d = await res.json();
+    return d.error ?? "Failed to save work experience";
   }
 
-  async function updateWorkExp(id: string, form: typeof EMPTY_WORK_EXP) {
+  async function updateWorkExp(id: string, form: typeof EMPTY_WORK_EXP): Promise<string | null> {
     const res = await fetch(`/api/profile/work-experience/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -521,7 +542,10 @@ export default function ProfilePage() {
     if (res.ok) {
       setWorkExps((prev) => prev.map((w) => w.id === id ? { ...w, ...form } : w));
       setEditingWorkExpId(null);
+      return null;
     }
+    const d = await res.json();
+    return d.error ?? "Failed to update work experience";
   }
 
   async function deleteWorkExp(id: string) {
@@ -531,7 +555,7 @@ export default function ProfilePage() {
 
   // ─── Education handlers ────────────────────────────────────────────────────
 
-  async function saveNewEdu(form: typeof EMPTY_EDU) {
+  async function saveNewEdu(form: typeof EMPTY_EDU): Promise<string | null> {
     const res = await fetch("/api/profile/education", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -547,10 +571,13 @@ export default function ProfilePage() {
       const created = await res.json();
       setEducations((prev) => [...prev, created]);
       setAddingEdu(false);
+      return null;
     }
+    const d = await res.json();
+    return d.error ?? "Failed to save education";
   }
 
-  async function updateEdu(id: string, form: typeof EMPTY_EDU) {
+  async function updateEdu(id: string, form: typeof EMPTY_EDU): Promise<string | null> {
     const res = await fetch(`/api/profile/education/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -571,7 +598,10 @@ export default function ProfilePage() {
         )
       );
       setEditingEduId(null);
+      return null;
     }
+    const d = await res.json();
+    return d.error ?? "Failed to update education";
   }
 
   async function deleteEdu(id: string) {
@@ -581,7 +611,7 @@ export default function ProfilePage() {
 
   // ─── Certification handlers ────────────────────────────────────────────────
 
-  async function saveNewCert(form: typeof EMPTY_CERT) {
+  async function saveNewCert(form: typeof EMPTY_CERT): Promise<string | null> {
     const res = await fetch("/api/profile/certifications", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -596,10 +626,13 @@ export default function ProfilePage() {
       const created = await res.json();
       setCertifications((prev) => [...prev, created]);
       setAddingCert(false);
+      return null;
     }
+    const d = await res.json();
+    return d.error ?? "Failed to save certification";
   }
 
-  async function updateCert(id: string, form: typeof EMPTY_CERT) {
+  async function updateCert(id: string, form: typeof EMPTY_CERT): Promise<string | null> {
     const res = await fetch(`/api/profile/certifications/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -615,7 +648,10 @@ export default function ProfilePage() {
         prev.map((c) => c.id === id ? { ...c, ...form, dateObtained: form.dateObtained || null, expiryDate: form.expiryDate || null } : c)
       );
       setEditingCertId(null);
+      return null;
     }
+    const d = await res.json();
+    return d.error ?? "Failed to update certification";
   }
 
   async function deleteCert(id: string) {
@@ -772,9 +808,6 @@ export default function ProfilePage() {
           <Input label={t("profile.yearsOfExperience")} type="number" placeholder="5" value={profile.yearsExperience} onChange={set("yearsExperience")} />
         </div>
 
-        {error && (
-          <div className="rounded-lg bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">{error}</div>
-        )}
       </form>
 
       {/* ─── Work Experience ──────────────────────────────────────────────────── */}
@@ -994,6 +1027,12 @@ export default function ProfilePage() {
       </div>
 
       {/* ─── Save — bottom of page ─────────────────────────────────────────────── */}
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 flex items-center gap-2">
+          <Info size={14} className="shrink-0 text-red-500" />
+          {error}
+        </div>
+      )}
       {isDirty && !saving && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-center gap-2">
           <Info size={14} className="shrink-0" />

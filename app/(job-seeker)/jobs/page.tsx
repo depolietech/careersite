@@ -36,7 +36,6 @@ type ProfileStatus = {
   hasSkills: boolean;
   hasExperience: boolean;
   hasEducation: boolean;
-  hasResume: boolean;
 };
 
 function JobsPageInner() {
@@ -162,17 +161,16 @@ function JobsPageInner() {
         hasSkills: parsedSkills.length > 0,
         hasExperience: (profile.workExperiences ?? []).length > 0,
         hasEducation: (profile.educations ?? []).length > 0,
-        hasResume: resumeList.length > 0,
       };
 
       setProfileStatus(status);
       setResumes(resumeList);
 
-      // Pre-select default resume
+      // Pre-select default resume if available
       const defaultResume = resumeList.find((r) => r.isDefault) ?? resumeList[0];
       if (defaultResume) setSelectedResumeId(defaultResume.id);
 
-      const allGood = status.hasSkills && status.hasExperience && status.hasResume;
+      const allGood = status.hasSkills && status.hasExperience && status.hasEducation;
       setApplying(allGood);
       if (!allGood) {
         // Stay on the panel — guided onboarding is shown via profileStatus
@@ -330,8 +328,9 @@ function JobsPageInner() {
                       try { return JSON.parse(profile?.skills ?? "[]"); } catch { return []; }
                     })();
                     const hasExp = (profile?.workExperiences ?? []).length > 0 || (profile?.yearsExperience ?? 0) > 0;
-                    if (!parsedSkills.length || !hasExp || !resumeList.length) {
-                      setToast({ message: "Complete your profile (skills, work experience & a resume) before applying.", ok: false });
+                    const hasEdu = (profile?.educations ?? []).length > 0;
+                    if (!parsedSkills.length || !hasExp || !hasEdu) {
+                      setToast({ message: "Complete your profile (skills, work experience & education) before applying.", ok: false });
                       setTimeout(() => setToast(null), 6000);
                       return;
                     }
@@ -515,10 +514,9 @@ function JobsPageInner() {
                         </div>
                         <div className="space-y-2 text-sm">
                           {[
-                            { ok: profileStatus.hasSkills,     label: "Skills",          href: "/profile#skills" },
-                            { ok: profileStatus.hasExperience, label: "Work Experience",  href: "/profile#experience" },
-                            { ok: profileStatus.hasEducation,  label: "Education",        href: "/profile#education" },
-                            { ok: profileStatus.hasResume,     label: "Resume",           href: "/profile#resumes" },
+                            { ok: profileStatus.hasSkills,     label: "Skills",         href: "/profile#skills" },
+                            { ok: profileStatus.hasExperience, label: "Work Experience", href: "/profile#experience" },
+                            { ok: profileStatus.hasEducation,  label: "Education",       href: "/profile#education" },
                           ].map(({ ok, label, href }) => (
                             <div key={label} className="flex items-center justify-between gap-2">
                               <span className={`flex items-center gap-1.5 ${ok ? "text-green-700" : "text-red-600"}`}>
@@ -549,11 +547,11 @@ function JobsPageInner() {
 
                     {applying ? (
                       <div className="space-y-4">
-                        {/* Resume selection */}
+                        {/* Resume selection — optional */}
                         {resumes.length > 0 && (
                           <div className="space-y-1.5">
                             <label className="block text-sm font-medium text-gray-700 flex items-center gap-1.5">
-                              <FileText size={14} /> Resume
+                              <FileText size={14} /> Resume <span className="text-gray-400 font-normal text-xs">(optional)</span>
                             </label>
                             <select
                               className="input w-full"

@@ -38,8 +38,23 @@ export async function POST(req: Request) {
     const existing = await db.user.findUnique({ where: { email } });
     if (existing) {
       if (existing.deletedAt) {
+        // Notify all admin users so they can track recovery attempts
+        const admins = await db.user.findMany({
+          where: { role: "ADMIN", deletedAt: null },
+          select: { id: true },
+        });
+        if (admins.length > 0) {
+          await db.notification.createMany({
+            data: admins.map((a) => ({
+              userId: a.id,
+              type: "DELETED_USER_SIGNUP",
+              title: "Deleted user attempted signup",
+              body: `${email} attempted to register a new account. Their previous account was soft-deleted.`,
+            })),
+          });
+        }
         return NextResponse.json(
-          { error: "This email has been previously used on the platform. Please contact support or an admin for account reactivation." },
+          { code: "ACCOUNT_DELETED", error: "This email was previously associated with an Equalhires account." },
           { status: 409 }
         );
       }

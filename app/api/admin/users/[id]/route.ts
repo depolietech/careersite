@@ -49,6 +49,24 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       data: { emailVerified: new Date() },
     });
     result = { approved: true };
+  } else if (action === "reinstate") {
+    await db.user.update({
+      where: { id },
+      data: { deletedAt: null, emailVerified: null },
+    });
+    result = { reinstated: true };
+  } else if (action === "purge") {
+    await db.adminLog.create({
+      data: {
+        adminId: session.user.id,
+        action: "PURGE_USER",
+        targetId: id,
+        targetType: "USER",
+        note: note ?? "Admin hard-deleted deleted user",
+      },
+    });
+    await db.user.delete({ where: { id } });
+    return NextResponse.json({ purged: true });
   } else {
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   }
@@ -66,7 +84,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   return NextResponse.json(result);
 }
 
-// DELETE /api/admin/users/[id] — delete account
+// DELETE /api/admin/users/[id] — soft-delete account
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user || !isAdmin(session.user.role)) {
@@ -81,17 +99,23 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     return NextResponse.json({ error: "Cannot delete your own admin account" }, { status: 400 });
   }
 
+  const user = await db.user.findUnique({ where: { id } });
+  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  await db.user.update({
+    where: { id },
+    data: { deletedAt: new Date() },
+  });
+
   await db.adminLog.create({
     data: {
       adminId: session.user.id,
       action: "DELETE_USER",
       targetId: id,
       targetType: "USER",
-      note: note || "Admin deleted user",
+      note: note || "Admin soft-deleted user",
     },
   });
-
-  await db.user.delete({ where: { id } });
 
   return NextResponse.json({ ok: true });
 }

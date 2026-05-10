@@ -76,6 +76,9 @@ function RegisterForm() {
   const [recruiterType, setRecruiterType] = useState<RecruiterType>("COMPANY");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deletedAccountEmail, setDeletedAccountEmail] = useState<string | null>(null);
+  const [recoverLoading, setRecoverLoading] = useState(false);
+  const [recoverDone, setRecoverDone] = useState<"restored" | "freed" | null>(null);
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [agreedPrivacy, setAgreedPrivacy] = useState(false);
   const [agreedRecruiterTerms, setAgreedRecruiterTerms] = useState(false);
@@ -126,13 +129,110 @@ function RegisterForm() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Registration failed");
+      if (!res.ok) {
+        if (res.status === 409 && data.code === "ACCOUNT_DELETED") {
+          setDeletedAccountEmail(form.email);
+          return;
+        }
+        throw new Error(data.error ?? "Registration failed");
+      }
       router.push(`/check-email?email=${encodeURIComponent(form.email)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleRecover(action: "restore" | "new") {
+    if (!deletedAccountEmail) return;
+    setRecoverLoading(true);
+    try {
+      const res = await fetch("/api/auth/recover-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: deletedAccountEmail, action }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Recovery failed"); return; }
+      if (action === "restore") {
+        setRecoverDone("restored");
+        setTimeout(() => router.push(`/check-email?email=${encodeURIComponent(deletedAccountEmail)}`), 2500);
+      } else {
+        setRecoverDone("freed");
+      }
+    } finally {
+      setRecoverLoading(false);
+    }
+  }
+
+  // ── Deleted-account recovery view ─────────────────────────────────────────
+  if (deletedAccountEmail) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md card p-8 space-y-6">
+          <div className="text-center space-y-2">
+            <div className="mx-auto h-14 w-14 rounded-2xl bg-amber-100 flex items-center justify-center">
+              <ShieldCheck size={26} className="text-amber-600" />
+            </div>
+            <h1 className="text-xl font-bold text-gray-900">Previous account found</h1>
+            <p className="text-sm text-gray-500">
+              <strong className="text-gray-700">{deletedAccountEmail}</strong> was previously associated with an Equalhires account that was deleted. What would you like to do?
+            </p>
+          </div>
+
+          {recoverDone === "restored" && (
+            <div className="rounded-xl bg-green-50 border border-green-100 px-4 py-3 text-sm text-green-700 text-center">
+              Account restored! Sending a verification email… redirecting shortly.
+            </div>
+          )}
+          {recoverDone === "freed" && (
+            <div className="rounded-xl bg-green-50 border border-green-100 px-4 py-3 text-sm text-green-700 text-center">
+              Previous data cleared. You can now complete your registration below.
+            </div>
+          )}
+          {error && (
+            <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">{error}</div>
+          )}
+
+          {!recoverDone && (
+            <div className="space-y-3">
+              <button
+                onClick={() => handleRecover("restore")}
+                disabled={recoverLoading}
+                className="w-full rounded-xl border-2 border-brand-500 bg-brand-50 p-4 text-left hover:bg-brand-100 transition-colors disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              >
+                <p className="font-semibold text-brand-700">Restore my previous account</p>
+                <p className="text-xs text-brand-600 mt-0.5">Reactivate your profile, applications and history. You will need to re-verify your email.</p>
+              </button>
+              <button
+                onClick={() => handleRecover("new")}
+                disabled={recoverLoading}
+                className="w-full rounded-xl border-2 border-gray-200 bg-white p-4 text-left hover:border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              >
+                <p className="font-semibold text-gray-800">Start fresh with a new account</p>
+                <p className="text-xs text-gray-500 mt-0.5">Permanently clear your previous data and create a brand-new account using this email.</p>
+              </button>
+              <button
+                onClick={() => setDeletedAccountEmail(null)}
+                className="w-full text-sm text-gray-400 hover:text-gray-600 text-center"
+              >
+                {t("common.back")}
+              </button>
+            </div>
+          )}
+
+          {recoverDone === "freed" && (
+            <button
+              onClick={() => { setDeletedAccountEmail(null); setRecoverDone(null); }}
+              className="w-full rounded-lg bg-brand-500 py-3 text-sm font-semibold text-white hover:bg-brand-600 transition-colors"
+            >
+              Continue registration
+            </button>
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (
