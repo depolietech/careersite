@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server";
-import crypto from "crypto";
 import { db } from "@/lib/db";
-import { sendVerificationEmail } from "@/lib/email";
 
 // POST /api/auth/recover-account
-// body: { email: string; action: "restore" | "new" }
+// body: { email: string; action: "request" | "new" }
 //
-// restore — reactivates the soft-deleted account, clears emailVerified so the
-//           user must re-verify before logging in, then sends a verification email.
+// request — marks the account with reinstateRequestedAt so admin can approve.
+//            The account stays deleted; admin sends the verification email upon approval.
 //
 // new     — anonymises the deleted account's email address so the same email can
-//           be used to register a completely fresh account.
+//            be used to register a completely fresh account.
 
 export async function POST(req: Request) {
   try {
@@ -19,8 +17,8 @@ export async function POST(req: Request) {
     if (!email || !action) {
       return NextResponse.json({ error: "email and action are required" }, { status: 400 });
     }
-    if (action !== "restore" && action !== "new") {
-      return NextResponse.json({ error: "action must be 'restore' or 'new'" }, { status: 400 });
+    if (action !== "request" && action !== "new") {
+      return NextResponse.json({ error: "action must be 'request' or 'new'" }, { status: 400 });
     }
 
     const user = await db.user.findFirst({
@@ -31,42 +29,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No deleted account found for this email" }, { status: 404 });
     }
 
-    if (action === "restore") {
-      // Reactivate — force email re-verification for security
-      await db.user.update({
-        where: { id: user.id },
-        data: { deletedAt: null, emailVerified: null },
-      });
-
-      // Create a verification token (link-based)
-      const token = crypto.randomBytes(32).toString("hex");
-      await db.verificationToken.create({
-        data: {
-          identifier: email,
-          token,
-          expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        },
-      });
-
-      // Create a 6-digit OTP code as well (some email templates use this)
-      const verifyCode = String(Math.floor(100000 + crypto.randomInt(900000)));
-      const codeHash = crypto.createHash("sha256").update(verifyCode).digest("hex");
-      await db.otpCode.create({
-        data: {
-          userId: user.id,
-          codeHash,
-          type: "email_verify",
-          expires: new Date(Date.now() + 15 * 60 * 1000),
-        },
-      });
-
-      try {
-        await sendVerificationEmail(email, token, verifyCode);
-      } catch {
-        // Don't block recovery if email fails — user can resend from check-email page
+    if (action === "request") {
+      // Already has a pending request — don't spam admins
+      if (user.reinstateRequestedAt) {
+        return NextResponse.json({ ok: true, alreadyPending: true });
       }
 
-      // Notify admins about the reinstatement
+      await db.user.update({
+        where: { id: user.id },
+        data: { reinstateRequestedAt: new Date() },
+      });
+
+      // Notify all admins
       const admins = await db.user.findMany({
         where: { role: "ADMIN", deletedAt: null },
         select: { id: true },
@@ -75,17 +49,14 @@ export async function POST(req: Request) {
         await db.notification.createMany({
           data: admins.map((a) => ({
             userId: a.id,
-            type: "ACCOUNT_REINSTATED",
-            title: "Account reinstated by user",
-            body: `${email} self-reinstated their deleted account and will re-verify their email.`,
+            type: "REINSTATE_REQUESTED",
+            title: "Reinstatement request",
+            body: `${email} is requesting to reinstate their deleted Equalhires account. Review in the admin panel → Deleted Users.`,
           })),
         });
       }
 
-      return NextResponse.json({
-        ok: true,
-        redirectTo: `/check-email?email=${encodeURIComponent(email)}`,
-      });
+      return NextResponse.json({ ok: true });
     }
 
     // action === "new": free the email for a fresh registration

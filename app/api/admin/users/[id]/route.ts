@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { sendVerificationEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -50,11 +52,45 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     });
     result = { approved: true };
   } else if (action === "reinstate") {
+    // Reactivate — force email re-verification for security
     await db.user.update({
       where: { id },
-      data: { deletedAt: null, emailVerified: null },
+      data: { deletedAt: null, emailVerified: null, reinstateRequestedAt: null },
     });
+
+    // Create a verification token + OTP and send email
+    const token = crypto.randomBytes(32).toString("hex");
+    await db.verificationToken.create({
+      data: {
+        identifier: user.email,
+        token,
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    });
+    const verifyCode = String(Math.floor(100000 + crypto.randomInt(900000)));
+    const codeHash = crypto.createHash("sha256").update(verifyCode).digest("hex");
+    await db.otpCode.create({
+      data: {
+        userId: user.id,
+        codeHash,
+        type: "email_verify",
+        expires: new Date(Date.now() + 15 * 60 * 1000),
+      },
+    });
+    try {
+      await sendVerificationEmail(user.email, token, verifyCode);
+    } catch {
+      // Don't block reinstatement if email fails
+    }
+
     result = { reinstated: true };
+  } else if (action === "reject_reinstate") {
+    // Dismiss the request — account stays deleted
+    await db.user.update({
+      where: { id },
+      data: { reinstateRequestedAt: null },
+    });
+    result = { rejected: true };
   } else if (action === "purge") {
     await db.adminLog.create({
       data: {

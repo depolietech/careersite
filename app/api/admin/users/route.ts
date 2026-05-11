@@ -38,6 +38,7 @@ export async function GET(req: Request) {
       role: true,
       createdAt: true,
       deletedAt: true,
+      reinstateRequestedAt: true,
       emailVerified: true,
       jobSeekerProfile: { select: { firstName: true, lastName: true, headline: true } },
       employerProfile: {
@@ -50,7 +51,9 @@ export async function GET(req: Request) {
         select: { applications: true, postedJobs: true },
       },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: deleted
+      ? [{ reinstateRequestedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }]
+      : [{ createdAt: "desc" }],
     take: 100,
   });
 

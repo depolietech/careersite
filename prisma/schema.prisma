@@ -57,7 +57,8 @@ model User {
   isPublicEmail Boolean   @default(false) // true if gmail/yahoo/hotmail etc.
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime? // soft delete — set instead of destroying the row
+  deletedAt              DateTime? // soft delete — set instead of destroying the row
+  reinstateRequestedAt  DateTime? // set when user requests admin reinstatement of deleted account
 
   // Two-Factor Authentication
   twoFactorEnabled Boolean @default(false)

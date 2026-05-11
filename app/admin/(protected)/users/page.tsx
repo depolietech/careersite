@@ -10,6 +10,7 @@ type UserRecord = {
   role: string;
   createdAt: string;
   deletedAt: string | null;
+  reinstateRequestedAt: string | null;
   emailVerified: string | null;
   jobSeekerProfile: { firstName: string; lastName: string; headline: string | null } | null;
   employerProfile: {
@@ -52,7 +53,7 @@ export default function AdminUsersPage() {
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
-  async function doAction(userId: string, action: "block" | "unblock" | "approve" | "reinstate") {
+  async function doAction(userId: string, action: "block" | "unblock" | "approve" | "reinstate" | "reject_reinstate") {
     setActionLoading(userId + action);
     await fetch(`/api/admin/users/${userId}`, {
       method: "PATCH",
@@ -154,12 +155,13 @@ export default function AdminUsersPage() {
                 const isBlocked = u.employerProfile?.isBlocked ?? false;
                 const isVerified = !!u.emailVerified;
                 const isDeleted = !!u.deletedAt;
+                const hasPendingRequest = !!u.reinstateRequestedAt;
                 const displayName = u.jobSeekerProfile
                   ? `${u.jobSeekerProfile.firstName} ${u.jobSeekerProfile.lastName}`.trim() || u.email
                   : u.employerProfile?.companyName || u.email;
 
                 return (
-                  <tr key={u.id} className={`hover:bg-gray-50 transition-colors ${isDeleted ? "opacity-75" : ""}`}>
+                  <tr key={u.id} className={`hover:bg-gray-50 transition-colors ${isDeleted && !hasPendingRequest ? "opacity-75" : ""}`}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
@@ -170,6 +172,9 @@ export default function AdminUsersPage() {
                           <p className="text-xs text-gray-400">{u.email}</p>
                           {isDeleted && u.deletedAt && (
                             <p className="text-xs text-red-400">Deleted {new Date(u.deletedAt).toLocaleDateString()}</p>
+                          )}
+                          {hasPendingRequest && u.reinstateRequestedAt && (
+                            <p className="text-xs font-medium text-amber-600">Requested {new Date(u.reinstateRequestedAt).toLocaleDateString()}</p>
                           )}
                         </div>
                       </div>
@@ -197,9 +202,16 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3">
                       <div className="flex flex-col gap-1">
                         {isDeleted ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
-                            <Trash2 size={10} /> Deleted
-                          </span>
+                          <div className="flex flex-col gap-1">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+                              <Trash2 size={10} /> Deleted
+                            </span>
+                            {hasPendingRequest && (
+                              <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+                                <RotateCcw size={10} /> Reinstate pending
+                              </span>
+                            )}
+                          </div>
                         ) : (
                           <>
                             {isBlocked && (
@@ -225,15 +237,36 @@ export default function AdminUsersPage() {
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {isDeleted ? (
                           <>
-                            {/* Reinstate */}
-                            <button
-                              onClick={() => doAction(u.id, "reinstate")}
-                              disabled={!!actionLoading}
-                              className="inline-flex items-center gap-1 rounded-lg border border-green-200 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-50 disabled:opacity-50"
-                            >
-                              <RotateCcw size={11} /> Reinstate
-                            </button>
-                            {/* Purge (hard delete) */}
+                            {hasPendingRequest ? (
+                              <>
+                                {/* Approve reinstatement request */}
+                                <button
+                                  onClick={() => doAction(u.id, "reinstate")}
+                                  disabled={!!actionLoading}
+                                  className="inline-flex items-center gap-1 rounded-lg border border-green-300 bg-green-50 px-2 py-1 text-xs font-semibold text-green-700 hover:bg-green-100 disabled:opacity-50"
+                                >
+                                  <CheckCircle size={11} /> Approve
+                                </button>
+                                {/* Reject reinstatement request */}
+                                <button
+                                  onClick={() => doAction(u.id, "reject_reinstate")}
+                                  disabled={!!actionLoading}
+                                  className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                                >
+                                  <ShieldOff size={11} /> Reject
+                                </button>
+                              </>
+                            ) : (
+                              /* No pending request — admin can still manually reinstate */
+                              <button
+                                onClick={() => doAction(u.id, "reinstate")}
+                                disabled={!!actionLoading}
+                                className="inline-flex items-center gap-1 rounded-lg border border-green-200 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-50 disabled:opacity-50"
+                              >
+                                <RotateCcw size={11} /> Reinstate
+                              </button>
+                            )}
+                            {/* Purge (permanent hard delete) */}
                             {confirmPurge === u.id ? (
                               <div className="flex gap-1">
                                 <button
