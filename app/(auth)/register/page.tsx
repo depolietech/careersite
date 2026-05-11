@@ -78,7 +78,7 @@ function RegisterForm() {
   const [error, setError] = useState<string | null>(null);
   const [deletedAccountEmail, setDeletedAccountEmail] = useState<string | null>(null);
   const [recoverLoading, setRecoverLoading] = useState(false);
-  const [recoverDone, setRecoverDone] = useState<"requested" | "freed" | null>(null);
+  const [recoverDone, setRecoverDone] = useState<"requested" | "new_requested" | "contacted" | null>(null);
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [agreedPrivacy, setAgreedPrivacy] = useState(false);
   const [agreedRecruiterTerms, setAgreedRecruiterTerms] = useState(false);
@@ -144,22 +144,25 @@ function RegisterForm() {
     }
   }
 
-  async function handleRecover(action: "request" | "new") {
-    if (!deletedAccountEmail) return;
+  async function handleRecover(action: "request" | "new" | "contact") {
+    const email = action === "contact" ? (deletedAccountEmail ?? form.email) : deletedAccountEmail;
+    if (!email) return;
     setRecoverLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/auth/recover-account", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: deletedAccountEmail, action }),
+        body: JSON.stringify({ email, action }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Something went wrong. Please try again."); return; }
       if (action === "request") {
         setRecoverDone("requested");
+      } else if (action === "new") {
+        setRecoverDone("new_requested");
       } else {
-        setRecoverDone("freed");
+        setRecoverDone("contacted");
       }
     } finally {
       setRecoverLoading(false);
@@ -184,12 +187,19 @@ function RegisterForm() {
           {recoverDone === "requested" && (
             <div className="rounded-xl bg-green-50 border border-green-100 px-4 py-4 text-sm text-green-800 text-center space-y-1">
               <p className="font-semibold">Reinstatement request submitted</p>
-              <p className="text-green-700">An admin will review your request and send you a verification email if approved. This usually takes 1–2 business days.</p>
+              <p className="text-green-700">An admin has been notified and will review your request. You will receive an email once approved — usually within 1–2 business days.</p>
             </div>
           )}
-          {recoverDone === "freed" && (
-            <div className="rounded-xl bg-green-50 border border-green-100 px-4 py-3 text-sm text-green-700 text-center">
-              Previous data cleared. You can now complete your registration below.
+          {recoverDone === "new_requested" && (
+            <div className="rounded-xl bg-green-50 border border-green-100 px-4 py-4 text-sm text-green-800 text-center space-y-1">
+              <p className="font-semibold">Request submitted — pending admin approval</p>
+              <p className="text-green-700">An admin has been notified. Once approved, your previous data will be permanently deleted and you will receive an email with a link to register your new account.</p>
+            </div>
+          )}
+          {recoverDone === "contacted" && (
+            <div className="rounded-xl bg-green-50 border border-green-100 px-4 py-4 text-sm text-green-800 text-center space-y-1">
+              <p className="font-semibold">Support team notified</p>
+              <p className="text-green-700">Our admin team has been alerted and will review your account manually. You will be contacted if further action is needed.</p>
             </div>
           )}
           {error && (
@@ -198,34 +208,35 @@ function RegisterForm() {
 
           {!recoverDone && (
             <div className="space-y-3">
-              {/* Option 1: Request reinstatement (needs admin approval) */}
+              {/* Option 1: Restore old account — admin approval required */}
               <button
                 onClick={() => handleRecover("request")}
                 disabled={recoverLoading}
                 className="w-full rounded-xl border-2 border-brand-500 bg-brand-50 p-4 text-left hover:bg-brand-100 transition-colors disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               >
                 <p className="font-semibold text-brand-700">Request account reinstatement</p>
-                <p className="text-xs text-brand-600 mt-0.5">Ask an admin to restore your profile, applications and history. You will be notified once reviewed — usually within 1–2 business days.</p>
+                <p className="text-xs text-brand-600 mt-0.5">Ask an admin to restore your profile, applications and history. Admin approval required — you will be notified by email once reviewed.</p>
               </button>
 
-              {/* Option 2: Purge data and start fresh */}
+              {/* Option 2: Purge data + request new account — admin approval required */}
               <button
                 onClick={() => handleRecover("new")}
                 disabled={recoverLoading}
                 className="w-full rounded-xl border-2 border-gray-200 bg-white p-4 text-left hover:border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               >
-                <p className="font-semibold text-gray-800">Permanently delete my data &amp; start fresh</p>
-                <p className="text-xs text-gray-500 mt-0.5">Remove all previous data immediately and create a brand-new account with this email. This cannot be undone.</p>
+                <p className="font-semibold text-gray-800">Permanently delete my data &amp; request a new account</p>
+                <p className="text-xs text-gray-500 mt-0.5">Request admin approval to permanently remove all previous data. Once approved, you will receive an email with a link to create a fresh account — you cannot register immediately.</p>
               </button>
 
-              {/* Option 3: Contact support */}
-              <a
-                href="mailto:support@equalhires.com?subject=Account%20recovery%20for%20%2B&body=Hi%2C%20I%20need%20help%20with%20my%20deleted%20account."
-                className="w-full block rounded-xl border-2 border-gray-200 bg-white p-4 text-left hover:border-gray-300 hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              {/* Option 3: Contact support — notifies admin */}
+              <button
+                onClick={() => handleRecover("contact")}
+                disabled={recoverLoading}
+                className="w-full rounded-xl border-2 border-gray-200 bg-white p-4 text-left hover:border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               >
                 <p className="font-semibold text-gray-800">Contact support</p>
-                <p className="text-xs text-gray-500 mt-0.5">Email our team for manual review, appeals, or if you believe your account was deleted in error.</p>
-              </a>
+                <p className="text-xs text-gray-500 mt-0.5">Notify our admin team for manual review, appeals, or if you believe your account was deleted in error.</p>
+              </button>
 
               <button
                 onClick={() => setDeletedAccountEmail(null)}
@@ -236,16 +247,7 @@ function RegisterForm() {
             </div>
           )}
 
-          {recoverDone === "freed" && (
-            <button
-              onClick={() => { setDeletedAccountEmail(null); setRecoverDone(null); }}
-              className="w-full rounded-lg bg-brand-500 py-3 text-sm font-semibold text-white hover:bg-brand-600 transition-colors"
-            >
-              Continue registration
-            </button>
-          )}
-
-          {recoverDone === "requested" && (
+          {recoverDone && (
             <button
               onClick={() => { setDeletedAccountEmail(null); setRecoverDone(null); }}
               className="w-full text-sm text-gray-400 hover:text-gray-600 text-center"

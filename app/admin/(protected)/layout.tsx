@@ -1,18 +1,19 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Users, FileText, Shield, LogOut, Briefcase, ShieldCheck, Flag, User, Home } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Shield, Briefcase, ShieldCheck, Flag, User, Home, Inbox } from "lucide-react";
 import { AdminSignOut } from "@/components/admin/AdminSignOut";
+import { db } from "@/lib/db";
 
-const NAV = [
-  { href: "/admin",                label: "Dashboard",     icon: LayoutDashboard },
-  { href: "/admin/users",          label: "All Users",     icon: Users },
-  { href: "/admin/job-seekers",    label: "Job Seekers",   icon: User },
-  { href: "/admin/recruiters",     label: "Recruiters",    icon: Briefcase },
-  { href: "/admin/jobs",           label: "Jobs",          icon: Briefcase },
-  { href: "/admin/verifications",  label: "Verifications", icon: ShieldCheck },
-  { href: "/admin/reports",        label: "Reports",       icon: Flag },
-  { href: "/admin/logs",           label: "Audit Logs",    icon: FileText },
+const BASE_NAV = [
+  { href: "/admin",                     label: "Dashboard",        icon: LayoutDashboard },
+  { href: "/admin/users",               label: "All Users",        icon: Users },
+  { href: "/admin/job-seekers",         label: "Job Seekers",      icon: User },
+  { href: "/admin/recruiters",          label: "Recruiters",       icon: Briefcase },
+  { href: "/admin/jobs",                label: "Jobs",             icon: Briefcase },
+  { href: "/admin/verifications",       label: "Verifications",    icon: ShieldCheck },
+  { href: "/admin/reports",             label: "Reports",          icon: Flag },
+  { href: "/admin/logs",                label: "Audit Logs",       icon: FileText },
 ];
 
 export default async function AdminProtectedLayout({ children }: { children: React.ReactNode }) {
@@ -20,6 +21,10 @@ export default async function AdminProtectedLayout({ children }: { children: Rea
   if (!session?.user || session.user.role !== "ADMIN") {
     redirect("/admin/login");
   }
+
+  const pendingCount = await db.user.count({
+    where: { deletedAt: { not: null }, reinstateRequestedAt: { not: null } },
+  }).catch(() => 0);
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -34,7 +39,7 @@ export default async function AdminProtectedLayout({ children }: { children: Rea
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {NAV.map(({ href, label, icon: Icon }) => (
+          {BASE_NAV.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}
@@ -44,6 +49,18 @@ export default async function AdminProtectedLayout({ children }: { children: Rea
               {label}
             </Link>
           ))}
+          <Link
+            href="/admin/account-requests"
+            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            <Inbox size={16} />
+            <span className="flex-1">Account Requests</span>
+            {pendingCount > 0 && (
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
+                {pendingCount}
+              </span>
+            )}
+          </Link>
         </nav>
 
         <div className="px-3 py-4 border-t border-white/10 space-y-1">

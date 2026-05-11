@@ -169,6 +169,65 @@ export async function sendVerificationApprovedEmail(email: string, companyName: 
   await sendEmail(email, "Your Equalhires recruiter account is approved — you can now post jobs", html, `Your recruiter account for ${companyName} has been approved. Sign in at ${APP_URL}/login to start hiring.`);
 }
 
+export async function sendAdminAccountRequestEmail(
+  adminEmail: string,
+  userEmail: string,
+  requestType: "restore" | "new_account" | "contact"
+) {
+  const labels = {
+    restore:     "Account Reinstatement Request",
+    new_account: "New Account Request (after data purge)",
+    contact:     "Support Contact from Deleted Account",
+  };
+  const bodies = {
+    restore:     `<strong>${escapeEmailText(userEmail)}</strong> is requesting to reinstate their deleted Equalhires account. Their profile, applications and history would be restored upon approval.`,
+    new_account: `<strong>${escapeEmailText(userEmail)}</strong> wants to permanently delete their old account data and start fresh with a new account. They cannot register until you approve this request.`,
+    contact:     `<strong>${escapeEmailText(userEmail)}</strong> contacted support about their deleted Equalhires account and is requesting manual review.`,
+  };
+  const label = labels[requestType];
+  const body  = bodies[requestType];
+
+  const html = baseTemplate(`Admin: ${label}`, `
+    <h2 style="margin:0 0 16px;color:#1e293b;font-size:22px;">${label}</h2>
+    <p style="margin:0 0 24px;color:#475569;line-height:1.6;">${body}</p>
+    <a href="${APP_URL}/admin/account-requests" style="display:inline-block;background:#1e3a2f;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:bold;font-size:15px;">
+      Review in Admin Panel
+    </a>
+    <p style="margin:24px 0 0;color:#94a3b8;font-size:13px;">
+      Go to Admin Panel → Account Requests to approve or reject this request.
+    </p>
+  `);
+
+  await sendEmail(
+    adminEmail,
+    `[Equalhires Admin] ${label} — ${userEmail}`,
+    html,
+    `${label}\n\nUser: ${userEmail}\n\nReview at ${APP_URL}/admin/account-requests`
+  );
+}
+
+export async function sendNewAccountApprovedEmail(email: string) {
+  const html = baseTemplate("You can now create a new account", `
+    <h2 style="margin:0 0 16px;color:#1e293b;font-size:22px;">Your request has been approved</h2>
+    <p style="margin:0 0 24px;color:#475569;line-height:1.6;">
+      An Equalhires administrator has reviewed your request. Your previous account data has been cleared and you can now register a new account using this email address.
+    </p>
+    <a href="${APP_URL}/register" style="display:inline-block;background:#1e3a2f;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:bold;font-size:15px;">
+      Create my new account
+    </a>
+    <p style="margin:24px 0 0;color:#94a3b8;font-size:13px;">
+      If you did not request this, please contact support.
+    </p>
+  `);
+
+  await sendEmail(
+    email,
+    "You can now create a new Equalhires account",
+    html,
+    `Your request has been approved. You can now register a new account at ${APP_URL}/register`
+  );
+}
+
 export async function sendPasswordChangedEmail(email: string) {
   const html = baseTemplate("Password changed", `
     <h2 style="margin:0 0 16px;color:#1e293b;font-size:22px;">Your password was changed</h2>

@@ -1,14 +1,46 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { sendAdminAccountRequestEmail } from "@/lib/email";
 
 // POST /api/auth/recover-account
-// body: { email: string; action: "request" | "new" }
+// body: { email: string; action: "request" | "new" | "contact" }
 //
-// request — marks the account with reinstateRequestedAt so admin can approve.
-//            The account stays deleted; admin sends the verification email upon approval.
+// request — marks account with reinstateRequestedAt + reinstateType="restore".
+//            Account stays deleted. Admin approves → reactivates + sends verification email.
 //
-// new     — anonymises the deleted account's email address so the same email can
-//            be used to register a completely fresh account.
+// new     — marks account with reinstateRequestedAt + reinstateType="new_account".
+//            Email is NOT freed yet. Admin approves → purges email + notifies user to register.
+//
+// contact — no account change. Creates admin notifications + sends admin email.
+
+async function notifyAdmins(
+  type: string,
+  title: string,
+  body: string,
+  email: string,
+  requestType: "restore" | "new_account" | "contact"
+) {
+  const admins = await db.user.findMany({
+    where: { role: "ADMIN", deletedAt: null },
+    select: { id: true, email: true },
+  });
+
+  if (admins.length > 0) {
+    await db.notification.createMany({
+      data: admins.map((a) => ({
+        userId: a.id,
+        type,
+        title,
+        body,
+      })),
+    });
+
+    // Send email to each admin (fire-and-forget, don't block the response)
+    for (const admin of admins) {
+      sendAdminAccountRequestEmail(admin.email, email, requestType).catch(() => {});
+    }
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -17,8 +49,20 @@ export async function POST(req: Request) {
     if (!email || !action) {
       return NextResponse.json({ error: "email and action are required" }, { status: 400 });
     }
-    if (action !== "request" && action !== "new") {
-      return NextResponse.json({ error: "action must be 'request' or 'new'" }, { status: 400 });
+    if (!["request", "new", "contact"].includes(action)) {
+      return NextResponse.json({ error: "invalid action" }, { status: 400 });
+    }
+
+    // "contact" doesn't need a deleted account — just notify admins
+    if (action === "contact") {
+      await notifyAdmins(
+        "CONTACT_REQUEST",
+        "Support contact from deleted account",
+        `${email} contacted support about their deleted Equalhires account and is requesting manual review.`,
+        email,
+        "contact"
+      );
+      return NextResponse.json({ ok: true });
     }
 
     const user = await db.user.findFirst({
@@ -37,33 +81,37 @@ export async function POST(req: Request) {
 
       await db.user.update({
         where: { id: user.id },
-        data: { reinstateRequestedAt: new Date() },
+        data: { reinstateRequestedAt: new Date(), reinstateType: "restore" },
       });
 
-      // Notify all admins
-      const admins = await db.user.findMany({
-        where: { role: "ADMIN", deletedAt: null },
-        select: { id: true },
-      });
-      if (admins.length > 0) {
-        await db.notification.createMany({
-          data: admins.map((a) => ({
-            userId: a.id,
-            type: "REINSTATE_REQUESTED",
-            title: "Reinstatement request",
-            body: `${email} is requesting to reinstate their deleted Equalhires account. Review in the admin panel → Deleted Users.`,
-          })),
-        });
-      }
+      await notifyAdmins(
+        "REINSTATE_REQUESTED",
+        "Account reinstatement request",
+        `${email} is requesting to reinstate their deleted Equalhires account. Review in Admin → Account Requests.`,
+        email,
+        "restore"
+      );
 
       return NextResponse.json({ ok: true });
     }
 
-    // action === "new": free the email for a fresh registration
+    // action === "new": request to purge data and start fresh — requires admin approval
+    if (user.reinstateRequestedAt) {
+      return NextResponse.json({ ok: true, alreadyPending: true });
+    }
+
     await db.user.update({
       where: { id: user.id },
-      data: { email: `purged-${user.id}@deleted.equalhires.internal` },
+      data: { reinstateRequestedAt: new Date(), reinstateType: "new_account" },
     });
+
+    await notifyAdmins(
+      "NEW_ACCOUNT_REQUESTED",
+      "New account request (after data purge)",
+      `${email} wants to permanently delete their old account data and start fresh with a new account. They cannot register until you approve. Review in Admin → Account Requests.`,
+      email,
+      "new_account"
+    );
 
     return NextResponse.json({ ok: true });
   } catch (err) {

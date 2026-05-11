@@ -19,11 +19,13 @@ export async function GET(req: Request) {
   const role    = searchParams.get("role") ?? "";
   const q       = searchParams.get("q") ?? "";
   const status  = searchParams.get("status") ?? ""; // "active" | "blocked"
-  const deleted = searchParams.get("deleted") === "true";
+  const deleted     = searchParams.get("deleted") === "true";
+  const pendingOnly = searchParams.get("pending") === "true";
 
   const users = await db.user.findMany({
     where: {
-      deletedAt: deleted ? { not: null } : null,
+      deletedAt: (deleted || pendingOnly) ? { not: null } : null,
+      ...(pendingOnly && { reinstateRequestedAt: { not: null } }),
       ...(role && { role }),
       ...(q && {
         OR: [
@@ -39,6 +41,7 @@ export async function GET(req: Request) {
       createdAt: true,
       deletedAt: true,
       reinstateRequestedAt: true,
+      reinstateType: true,
       emailVerified: true,
       jobSeekerProfile: { select: { firstName: true, lastName: true, headline: true } },
       employerProfile: {

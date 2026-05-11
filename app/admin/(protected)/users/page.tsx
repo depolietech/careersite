@@ -11,6 +11,7 @@ type UserRecord = {
   createdAt: string;
   deletedAt: string | null;
   reinstateRequestedAt: string | null;
+  reinstateType: string | null;
   emailVerified: string | null;
   jobSeekerProfile: { firstName: string; lastName: string; headline: string | null } | null;
   employerProfile: {
@@ -156,6 +157,7 @@ export default function AdminUsersPage() {
                 const isVerified = !!u.emailVerified;
                 const isDeleted = !!u.deletedAt;
                 const hasPendingRequest = !!u.reinstateRequestedAt;
+                const requestTypeLabel = u.reinstateType === "new_account" ? "New account" : u.reinstateType === "contact" ? "Support contact" : "Reinstate";
                 const displayName = u.jobSeekerProfile
                   ? `${u.jobSeekerProfile.firstName} ${u.jobSeekerProfile.lastName}`.trim() || u.email
                   : u.employerProfile?.companyName || u.email;
@@ -208,7 +210,7 @@ export default function AdminUsersPage() {
                             </span>
                             {hasPendingRequest && (
                               <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
-                                <RotateCcw size={10} /> Reinstate pending
+                                <RotateCcw size={10} /> {requestTypeLabel} pending
                               </span>
                             )}
                           </div>
