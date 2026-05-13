@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Profile not found — save your profile first" }, { status: 404 });
   }
 
-  const { name, issuer, dateObtained, expiryDate } = await req.json();
+  const { name, issuer, dateObtained, expiryDate, verificationUrl, proofFileUrl } = await req.json();
 
   if (!name || !issuer) {
     return NextResponse.json({ error: "name and issuer are required" }, { status: 400 });
@@ -30,11 +30,15 @@ export async function POST(req: Request) {
   if (expiryDate && !YYYYMM.test(expiryDate)) {
     return NextResponse.json({ error: "Expiry date must be in YYYY-MM format (e.g. 2025-06)" }, { status: 400 });
   }
-  if (dateObtained && expiryDate) {
-    if (expiryDate <= dateObtained) {
-      return NextResponse.json({ error: "Expiry date must be after the date obtained" }, { status: 400 });
-    }
+  if (dateObtained && expiryDate && expiryDate <= dateObtained) {
+    return NextResponse.json({ error: "Expiry date must be after the date obtained" }, { status: 400 });
   }
+
+  const verificationLevel = proofFileUrl
+    ? "UPLOADED_PROOF"
+    : verificationUrl
+    ? "EXTERNAL_VERIFIED"
+    : "SELF_REPORTED";
 
   const cert = await db.certification.create({
     data: {
@@ -43,6 +47,9 @@ export async function POST(req: Request) {
       issuer,
       dateObtained: dateObtained || null,
       expiryDate: expiryDate || null,
+      verificationUrl: verificationUrl || null,
+      proofFileUrl: proofFileUrl || null,
+      verificationLevel,
     },
   });
 

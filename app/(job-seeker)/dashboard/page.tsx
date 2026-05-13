@@ -1,4 +1,5 @@
 import { Briefcase, FileCheck, Calendar, Clock, ArrowRight, TrendingUp, CheckCircle2, XCircle, Eye } from "lucide-react";
+import { DashboardRefresher } from "@/components/shared/DashboardRefresher";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { auth } from "@/lib/auth";
@@ -68,7 +69,7 @@ export default async function JobSeekerDashboard({
       include: {
         job: {
           select: {
-            title: true, location: true, jobType: true, status: true,
+            title: true, location: true, jobType: true, status: true, pipelineStatus: true,
             employerProfile: { select: { industry: true } },
           },
         },
@@ -133,8 +134,17 @@ export default async function JobSeekerDashboard({
     { label: t("status.pending"),         value: counts.pending,     icon: Clock,      color: "text-gray-600 bg-gray-50",   status: "PENDING" },
   ];
 
+  const PIPELINE_LABELS: Record<string, string> = {
+    OPEN:            "Actively Hiring",
+    IN_REVIEW:       "Reviewing Applications",
+    INTERVIEW_STAGE: "Interview Stage",
+    FILLED:          "Position Filled",
+    CLOSED:          "Closed",
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
+      <DashboardRefresher />
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -244,6 +254,11 @@ export default async function JobSeekerDashboard({
                       <p className="text-sm text-gray-500">
                         {app.job.employerProfile?.industry ?? "Company"} · {app.job.location} · Applied {timeAgo(app.createdAt)}
                       </p>
+                      {app.job.pipelineStatus && app.job.pipelineStatus !== "OPEN" && (
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          Job stage: <span className="font-medium text-gray-600">{PIPELINE_LABELS[app.job.pipelineStatus] ?? app.job.pipelineStatus}</span>
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0 flex-wrap">

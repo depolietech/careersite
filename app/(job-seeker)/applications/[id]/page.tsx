@@ -6,6 +6,14 @@ import { ArrowLeft, Briefcase, GraduationCap, FileText, Clock, CheckCircle2, Awa
 import { Badge } from "@/components/ui/badge";
 import { RecruiterReviewForm } from "@/components/shared/RecruiterReviewForm";
 
+function formatYYYYMM(val: string | null | undefined): string {
+  if (!val) return "";
+  const [year, month] = val.split("-");
+  if (!month) return year;
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${months[parseInt(month, 10) - 1] ?? month} ${year}`;
+}
+
 const STATUS_LABEL: Record<string, string> = {
   PENDING: "Applied", REVIEWING: "Under Review", SHORTLISTED: "Shortlisted",
   FORWARDED: "Forwarded", INTERVIEW_SCHEDULED: "Interview Stage",
@@ -160,7 +168,7 @@ export default async function ApplicationDetailPage({
                   <p className="font-medium text-gray-900 text-sm">{w.title}</p>
                   <p className="text-sm text-gray-500">{w.company}</p>
                   <p className="text-xs text-gray-400">
-                    {new Date(w.startDate).getFullYear()} – {w.current ? "Present" : (w.endDate ? new Date(w.endDate).getFullYear() : "—")}
+                    {formatYYYYMM(w.startDate)} – {w.current ? "Present" : (w.endDate ? formatYYYYMM(w.endDate) : "—")}
                   </p>
                 </div>
               ))}
@@ -195,7 +203,7 @@ export default async function ApplicationDetailPage({
                   <p className="text-sm text-gray-500">{c.issuer}</p>
                   {c.dateObtained && (
                     <p className="text-xs text-gray-400">
-                      Issued {c.dateObtained}{c.expiryDate ? ` · Expires ${c.expiryDate}` : ""}
+                      Issued {formatYYYYMM(c.dateObtained)}{c.expiryDate ? ` · Expires ${formatYYYYMM(c.expiryDate)}` : ""}
                     </p>
                   )}
                 </div>

@@ -24,11 +24,22 @@ type Job = {
   skills: string;
   description: string;
   createdAt: string;
+  pipelineStatus: string;
+  shortlistedCount: number;
+  interviewCount: number;
   employerProfile: { companyName: string; industry: string | null; companySize: string | null } | null;
   _count: { applications: number };
 };
 
-type ApplyResult = { jobId: string; status: "ok" | "duplicate" | "error"; message?: string };
+type ApplyResult = { jobId: string; status: "ok" | "duplicate" | "error"; applicationId?: string; message?: string };
+
+const PIPELINE_LABELS: Record<string, { label: string; cls: string }> = {
+  OPEN:            { label: "Actively Hiring",          cls: "text-green-700 bg-green-50 border border-green-200" },
+  IN_REVIEW:       { label: "Reviewing Applications",   cls: "text-amber-700 bg-amber-50 border border-amber-200" },
+  INTERVIEW_STAGE: { label: "Interview Stage",          cls: "text-blue-700 bg-blue-50 border border-blue-200" },
+  FILLED:          { label: "Position Filled",          cls: "text-gray-600 bg-gray-50 border border-gray-200" },
+  CLOSED:          { label: "Closed",                   cls: "text-red-700 bg-red-50 border border-red-200" },
+};
 
 type Resume = { id: string; name: string; fileName: string; isDefault: boolean };
 
@@ -90,7 +101,7 @@ function JobsPageInner() {
   const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
   const [profileStatus, setProfileStatus]   = useState<ProfileStatus | null>(null);
   const [profileCheckLoading, setProfileCheckLoading] = useState(false);
-  const [appliedJobIds, setAppliedJobIds]   = useState<Set<string>>(new Set());
+  const [appliedAppIds, setAppliedAppIds]   = useState<Map<string, string>>(new Map()); // jobId → applicationId
 
   const isLoggedIn = authStatus === "authenticated";
 
@@ -202,7 +213,7 @@ function JobsPageInner() {
           }),
         });
         const data = await r.json();
-        if (r.status === 201) res.push({ jobId, status: "ok" });
+        if (r.status === 201) res.push({ jobId, status: "ok", applicationId: data.id });
         else if (r.status === 409) res.push({ jobId, status: "duplicate", message: "Already applied" });
         else res.push({ jobId, status: "error", message: data.error });
       } catch {
@@ -219,8 +230,11 @@ function JobsPageInner() {
     const okCount = res.filter((r) => r.status === "ok").length;
     const errCount = res.filter((r) => r.status === "error").length;
     if (okCount > 0) {
-      const newIds = new Set(res.filter((r) => r.status === "ok").map((r) => r.jobId));
-      setAppliedJobIds((prev) => new Set([...prev, ...newIds]));
+      setAppliedAppIds((prev) => {
+        const next = new Map(prev);
+        res.filter((r) => r.status === "ok" && r.applicationId).forEach((r) => next.set(r.jobId, r.applicationId!));
+        return next;
+      });
       setToast({
         message: okCount === 1
           ? "Application submitted successfully!"
@@ -505,19 +519,55 @@ function JobsPageInner() {
                       <p className="text-gray-600 leading-relaxed whitespace-pre-line">{selectedJob.description}</p>
                     </div>
 
+                    {/* Pipeline status badge */}
+                    {(() => {
+                      const pipe = PIPELINE_LABELS[selectedJob.pipelineStatus] ?? PIPELINE_LABELS["OPEN"];
+                      return (
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${pipe.cls}`}>
+                            {pipe.label}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            {selectedJob._count.applications} applicant{selectedJob._count.applications !== 1 ? "s" : ""}
+                            {selectedJob.shortlistedCount > 0 && ` · ${selectedJob.shortlistedCount} shortlisted`}
+                            {selectedJob.interviewCount > 0 && ` · ${selectedJob.interviewCount} in interview`}
+                          </span>
+                        </div>
+                      );
+                    })()}
+
                     {/* Success confirmation — shown after a successful application */}
-                    {selectedJob && appliedJobIds.has(selectedJob.id) ? (
-                      <div className="rounded-xl border border-green-200 bg-green-50 p-4 space-y-2">
+                    {selectedJob && appliedAppIds.has(selectedJob.id) ? (
+                      <div className="rounded-xl border border-green-200 bg-green-50 p-5 space-y-3">
                         <div className="flex items-center gap-2 text-green-800">
                           <CheckCircle2 size={16} className="shrink-0" />
-                          <p className="text-sm font-semibold">Application submitted successfully</p>
+                          <p className="text-sm font-semibold">Application Submitted Successfully</p>
                         </div>
-                        <p className="text-sm text-green-700">Your masked profile has been shared with the recruiter. Your personal details remain hidden until an interview is scheduled.</p>
-                        <div className="pt-1 space-y-1 text-xs text-green-700">
-                          <div className="flex items-center gap-1.5"><CheckCircle2 size={12} /> Skills shared</div>
-                          <div className="flex items-center gap-1.5"><CheckCircle2 size={12} /> Experience shared</div>
+                        <p className="text-sm text-green-700">Your masked profile has been shared. Your identity remains hidden until an interview is scheduled.</p>
+                        <div className="space-y-1 text-xs text-green-700">
+                          <div className="flex items-center gap-1.5"><CheckCircle2 size={12} /> Skills &amp; experience shared</div>
                           <div className="flex items-center gap-1.5"><CheckCircle2 size={12} /> Education shared</div>
                           <div className="flex items-center gap-1.5"><CheckCircle2 size={12} /> Identity masked</div>
+                        </div>
+                        <div className="flex gap-2 pt-1 flex-wrap">
+                          <Link
+                            href={`/applications/${appliedAppIds.get(selectedJob.id)}`}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 transition-colors"
+                          >
+                            View My Application <ArrowRight size={12} />
+                          </Link>
+                          <Link
+                            href="/dashboard"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-green-300 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors"
+                          >
+                            Track Status
+                          </Link>
+                          <button
+                            onClick={() => setSelectedJob(null)}
+                            className="text-xs text-green-600 hover:underline px-1"
+                          >
+                            Back to Jobs
+                          </button>
                         </div>
                       </div>
                     ) : (
@@ -568,7 +618,7 @@ function JobsPageInner() {
                       </>
                     )}
 
-                    {!appliedJobIds.has(selectedJob.id) && applying ? (
+                    {!appliedAppIds.has(selectedJob.id) && applying ? (
                       <div className="space-y-4">
                         {/* Resume selection — optional */}
                         {resumes.length > 0 && (
@@ -630,7 +680,7 @@ function JobsPageInner() {
                           </Button>
                         </div>
                       </div>
-                    ) : !appliedJobIds.has(selectedJob.id) && !profileStatus ? (
+                    ) : !appliedAppIds.has(selectedJob.id) && !profileStatus ? (
                       <Button size="lg" className="w-full" disabled={profileCheckLoading} onClick={handleApplyClick}>
                         {profileCheckLoading ? <Loader2 size={16} className="animate-spin" /> : null}
                         {profileCheckLoading ? "Checking profile…" : t("jobs.apply")}

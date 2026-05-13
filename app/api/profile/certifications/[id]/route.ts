@@ -23,7 +23,7 @@ export async function PUT(
   const cert = await getOwnedCert(id, session.user.id);
   if (!cert) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const { name, issuer, dateObtained, expiryDate } = await req.json();
+  const { name, issuer, dateObtained, expiryDate, verificationUrl, proofFileUrl } = await req.json();
 
   const YYYYMM = /^\d{4}-(0[1-9]|1[0-2])$/;
   if (dateObtained && !YYYYMM.test(dateObtained)) {
@@ -36,6 +36,12 @@ export async function PUT(
     return NextResponse.json({ error: "Expiry date must be after the date obtained" }, { status: 400 });
   }
 
+  const verificationLevel = proofFileUrl
+    ? "UPLOADED_PROOF"
+    : verificationUrl
+    ? "EXTERNAL_VERIFIED"
+    : "SELF_REPORTED";
+
   const updated = await db.certification.update({
     where: { id },
     data: {
@@ -43,6 +49,9 @@ export async function PUT(
       issuer,
       dateObtained: dateObtained || null,
       expiryDate: expiryDate || null,
+      verificationUrl: verificationUrl || null,
+      proofFileUrl: proofFileUrl || null,
+      verificationLevel,
     },
   });
 

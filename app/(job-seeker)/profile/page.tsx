@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, EyeOff, Linkedin, Github, Info, Loader2, Pencil, X, Building2, GraduationCap, Award, Camera } from "lucide-react";
+import { Plus, Trash2, EyeOff, Linkedin, Github, Info, Loader2, Pencil, X, Building2, GraduationCap, Award, Camera, BadgeCheck, FileCheck, ExternalLink, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, TextArea, Select } from "@/components/ui/input";
 import { COUNTRIES, STATES, buildLocation, parseLocation, CURRENCY_LABEL } from "@/lib/locations";
@@ -44,6 +44,10 @@ type CertEntry = {
   issuer: string;
   dateObtained: string | null;
   expiryDate: string | null;
+  verificationUrl: string | null;
+  proofFileUrl: string | null;
+  verificationLevel: string;
+  verified: boolean;
 };
 
 // Auto-format phone number: strips non-digits, then formats by detected country
@@ -86,7 +90,29 @@ const EMPTY_EDU = {
 
 const EMPTY_CERT = {
   name: "", issuer: "", dateObtained: "", expiryDate: "",
+  verificationUrl: "", proofFileUrl: "",
 };
+
+function formatYYYYMM(val: string | null | undefined): string {
+  if (!val) return "";
+  const [year, month] = val.split("-");
+  if (!month) return year;
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${months[parseInt(month, 10) - 1]} ${year}`;
+}
+
+function VerificationBadge({ level, verified }: { level: string; verified: boolean }) {
+  if (verified || level === "PLATFORM_VERIFIED") {
+    return <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium"><BadgeCheck size={11} /> Platform Verified</span>;
+  }
+  if (level === "UPLOADED_PROOF") {
+    return <span className="inline-flex items-center gap-1 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium"><FileCheck size={11} /> Proof Uploaded</span>;
+  }
+  if (level === "EXTERNAL_VERIFIED") {
+    return <span className="inline-flex items-center gap-1 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium"><ExternalLink size={11} /> Verification Link</span>;
+  }
+  return <span className="inline-flex items-center gap-1 text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Self-reported</span>;
+}
 
 // ─── Skills taxonomy for auto-suggest ────────────────────────────────────────
 
@@ -359,10 +385,32 @@ function CertForm({
   const [form, setForm] = useState(initial ?? EMPTY_CERT);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [proofUploading, setProofUploading] = useState(false);
+  const proofInputRef = useRef<HTMLInputElement>(null);
 
   function field(k: keyof typeof EMPTY_CERT) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((f) => ({ ...f, [k]: e.target.value }));
+  }
+
+  async function handleProofUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setProofUploading(true);
+    setFormError(null);
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const res = await fetch("/api/profile/certifications/proof", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) { setFormError(data.error ?? "Upload failed"); return; }
+      setForm((f) => ({ ...f, proofFileUrl: data.proofFileUrl }));
+    } catch {
+      setFormError("Network error — could not upload proof");
+    } finally {
+      setProofUploading(false);
+      if (proofInputRef.current) proofInputRef.current.value = "";
+    }
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -390,6 +438,44 @@ function CertForm({
           <input type="month" className="input" value={form.expiryDate} onChange={(e) => setForm((f) => ({ ...f, expiryDate: e.target.value }))} />
         </div>
       </div>
+
+      {/* Verification URL */}
+      <div className="space-y-1">
+        <label className="block text-sm font-medium text-gray-700">
+          Verification URL <span className="text-gray-400 font-normal text-xs">(optional — link to verify this credential)</span>
+        </label>
+        <Input
+          placeholder="https://www.credly.com/badges/..."
+          value={form.verificationUrl}
+          onChange={field("verificationUrl")}
+        />
+      </div>
+
+      {/* Proof upload */}
+      <div className="space-y-1">
+        <label className="block text-sm font-medium text-gray-700">
+          Certificate / Proof <span className="text-gray-400 font-normal text-xs">(optional — PDF, JPG, PNG · max 10 MB)</span>
+        </label>
+        {form.proofFileUrl ? (
+          <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2">
+            <FileCheck size={14} className="text-green-600 shrink-0" />
+            <span className="text-xs text-green-700 flex-1 truncate">Proof uploaded</span>
+            <button type="button" className="text-xs text-red-500 hover:underline" onClick={() => setForm((f) => ({ ...f, proofFileUrl: "" }))}>Remove</button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="btn-secondary text-sm flex items-center gap-1.5"
+            onClick={() => proofInputRef.current?.click()}
+            disabled={proofUploading}
+          >
+            {proofUploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+            {proofUploading ? "Uploading…" : "Upload proof"}
+          </button>
+        )}
+        <input ref={proofInputRef} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" onChange={handleProofUpload} />
+      </div>
+
       {formError && (
         <div className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-xs text-red-700">{formError}</div>
       )}
@@ -681,6 +767,8 @@ export default function ProfilePage() {
         issuer: form.issuer,
         dateObtained: form.dateObtained || null,
         expiryDate: form.expiryDate || null,
+        verificationUrl: form.verificationUrl || null,
+        proofFileUrl: form.proofFileUrl || null,
       }),
     });
     if (res.ok) {
@@ -702,12 +790,13 @@ export default function ProfilePage() {
         issuer: form.issuer,
         dateObtained: form.dateObtained || null,
         expiryDate: form.expiryDate || null,
+        verificationUrl: form.verificationUrl || null,
+        proofFileUrl: form.proofFileUrl || null,
       }),
     });
     if (res.ok) {
-      setCertifications((prev) =>
-        prev.map((c) => c.id === id ? { ...c, ...form, dateObtained: form.dateObtained || null, expiryDate: form.expiryDate || null } : c)
-      );
+      const updated = await res.json();
+      setCertifications((prev) => prev.map((c) => c.id === id ? { ...c, ...updated } : c));
       setEditingCertId(null);
       return null;
     }
@@ -968,7 +1057,7 @@ export default function ProfilePage() {
                   </p>
                   <p className="text-xs text-gray-400 flex items-center gap-1">
                     <EyeOff size={10} className="text-amber-400" />
-                    {w.startDate} – {w.current ? t("profile.present") : (w.endDate ?? "—")}
+                    {formatYYYYMM(w.startDate)} – {w.current ? t("profile.present") : (w.endDate ? formatYYYYMM(w.endDate) : "—")}
                   </p>
                   {w.skills.length > 0 && (
                     <div className="flex flex-wrap gap-1 pt-1">
@@ -1097,21 +1186,36 @@ export default function ProfilePage() {
                   issuer: c.issuer,
                   dateObtained: c.dateObtained ?? "",
                   expiryDate: c.expiryDate ?? "",
+                  verificationUrl: c.verificationUrl ?? "",
+                  proofFileUrl: c.proofFileUrl ?? "",
                 }}
                 onSave={(form) => updateCert(c.id, form)}
                 onCancel={() => setEditingCertId(null)}
               />
             ) : (
               <div key={c.id} className="flex items-start justify-between gap-4 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
-                <div className="space-y-0.5">
-                  <p className="font-medium text-gray-900">{c.name}</p>
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-medium text-gray-900">{c.name}</p>
+                    <VerificationBadge level={c.verificationLevel ?? "SELF_REPORTED"} verified={c.verified ?? false} />
+                  </div>
                   <p className="text-sm text-gray-500">{c.issuer}</p>
                   {(c.dateObtained || c.expiryDate) && (
                     <p className="text-xs text-gray-400">
-                      {c.dateObtained ? `${t("profile.obtained")} ${c.dateObtained}` : ""}
+                      {c.dateObtained ? `Issued ${formatYYYYMM(c.dateObtained)}` : ""}
                       {c.dateObtained && c.expiryDate ? " · " : ""}
-                      {c.expiryDate ? `${t("profile.expires")} ${c.expiryDate}` : ""}
+                      {c.expiryDate ? `Expires ${formatYYYYMM(c.expiryDate)}` : ""}
                     </p>
+                  )}
+                  {c.verificationUrl && (
+                    <a href={c.verificationUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                      <ExternalLink size={10} /> Verify credential
+                    </a>
+                  )}
+                  {c.proofFileUrl && (
+                    <a href={c.proofFileUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-amber-700 hover:underline flex items-center gap-1">
+                      <FileCheck size={10} /> View proof
+                    </a>
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">

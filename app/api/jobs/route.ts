@@ -24,12 +24,19 @@ export async function GET(req: Request) {
     include: {
       employerProfile: { select: { companyName: true, industry: true, companySize: true } },
       _count: { select: { applications: true } },
+      applications: { select: { status: true } },
     },
     orderBy: { createdAt: "desc" },
     take: 50,
   });
 
-  return NextResponse.json(jobs);
+  const result = jobs.map(({ applications, ...job }) => ({
+    ...job,
+    shortlistedCount: applications.filter((a) => ["SHORTLISTED", "FORWARDED"].includes(a.status)).length,
+    interviewCount:   applications.filter((a) => a.status === "INTERVIEW_SCHEDULED").length,
+  }));
+
+  return NextResponse.json(result);
 }
 
 export async function POST(req: Request) {

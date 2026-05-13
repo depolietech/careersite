@@ -1,0 +1,15 @@
+"use client";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+export function DashboardRefresher() {
+  const router = useRouter();
+
+  useEffect(() => {
+    function onFocus() { router.refresh(); }
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [router]);
+
+  return null;
+}
