@@ -58,6 +58,8 @@ export function Footer() {
               {[
                 { href: "/#how-it-works", label: t("footer.howItWorks") },
                 { href: "/#features",     label: t("footer.features") },
+                { href: "/faq",           label: "FAQ" },
+                { href: "/whats-new",     label: "What's New" },
                 { href: "/privacy",       label: t("footer.privacyPolicy") },
                 { href: "/terms",         label: t("footer.terms") },
               ].map((l) => (

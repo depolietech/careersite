@@ -7,8 +7,7 @@ import { Footer } from "@/components/shared/footer";
 import { Starburst } from "@/components/shared/Starburst";
 import { SectionHeader } from "@/components/home/SectionHeader";
 import { HowItWorksTabs } from "@/components/home/HowItWorksTabs";
-import { FaqAccordion } from "@/components/home/FaqAccordion";
-import { PlatformUpdates } from "@/components/home/PlatformUpdates";
+
 import { useI18n } from "@/lib/i18n";
 
 type RecentJob = {
@@ -206,16 +205,6 @@ export function HomePageClient({ recentJobs }: { recentJobs: RecentJob[] }) {
           </div>
         </section>
 
-        {/* ─── FAQ ─────────────────────────────────────────────────────────── */}
-        <section id="faq" className="bg-white py-20">
-          <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-10">
-              <SectionHeader label={t("home.faqLabel")} heading={<>{t("home.faqHeading1")}<br />{t("home.faqHeading2")}</>} display />
-            </div>
-            <FaqAccordion />
-          </div>
-        </section>
-
         {/* ─── Testimonials ────────────────────────────────────────────────── */}
         <section className="bg-[#EEF2EF] py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -238,9 +227,6 @@ export function HomePageClient({ recentJobs }: { recentJobs: RecentJob[] }) {
             </div>
           </div>
         </section>
-
-        {/* ─── Platform Updates ────────────────────────────────────────────── */}
-        <PlatformUpdates />
 
         {/* ─── CTA ─────────────────────────────────────────────────────────── */}
         <section className="bg-forest py-20">
