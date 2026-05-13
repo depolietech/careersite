@@ -324,7 +324,7 @@ export default function ReviewsPage() {
 
   return (
     <>
-      <Navbar variant="marketing" userRole={session?.user?.role ?? null} />
+      <Navbar variant={session?.user?.role ? "app" : "marketing"} userRole={session?.user?.role ?? null} unreadCount={0} />
 
       <main className="min-h-screen bg-gray-50">
         {/* Hero */}

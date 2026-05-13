@@ -14,7 +14,7 @@ const PUBLIC_EMAIL_DOMAINS = new Set([
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, password, role, recruiterType, firstName, lastName, companyName, agreedToTerms } = body;
+    const { email, password, role, recruiterType, firstName, lastName, companyName, agreedToTerms, emailMarketing } = body;
 
     if (!email || !password || !role) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -75,6 +75,7 @@ export async function POST(req: Request) {
         role,
         isPublicEmail,
         recruiterType: role === "EMPLOYER" ? (recruiterType ?? "COMPANY") : null,
+        emailMarketing: emailMarketing === true,
         ...(role === "JOB_SEEKER" && {
           jobSeekerProfile: {
             create: {

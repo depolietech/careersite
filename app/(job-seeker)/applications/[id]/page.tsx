@@ -2,8 +2,9 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Briefcase, GraduationCap, FileText, Clock, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Briefcase, GraduationCap, FileText, Clock, CheckCircle2, Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { RecruiterReviewForm } from "@/components/shared/RecruiterReviewForm";
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING: "Applied", REVIEWING: "Under Review", SHORTLISTED: "Shortlisted",
@@ -32,7 +33,7 @@ export default async function ApplicationDetailPage({
       job: {
         select: {
           title: true, location: true, jobType: true,
-          employerProfile: { select: { companyName: true, industry: true } },
+          employerProfile: { select: { id: true, companyName: true, industry: true } },
         },
       },
       resume: { select: { name: true, fileName: true } },
@@ -49,6 +50,7 @@ export default async function ApplicationDetailPage({
     jobType: string | null;
     workExperiences: { title: string; company: string; startDate: string; endDate: string | null; current: boolean }[];
     educations: { degree: string; institution: string; startYear: number; endYear: number | null }[];
+    certifications?: { name: string; issuer: string; dateObtained: string | null; expiryDate: string | null }[];
     resumeName: string | null;
     snapshotAt: string;
   } | null = null;
@@ -99,6 +101,16 @@ export default async function ApplicationDetailPage({
         <CheckCircle2 size={15} className="shrink-0" />
         This is an immutable snapshot of your profile <strong>exactly as submitted</strong>. Your identity remains masked until an interview is scheduled.
       </div>
+
+      {/* Recruiter review — show after interview/hired/rejected */}
+      {["INTERVIEW_SCHEDULED", "OFFER_MADE", "HIRED", "REJECTED"].includes(application.status) &&
+        application.job.employerProfile?.id && (
+          <RecruiterReviewForm
+            employerProfileId={application.job.employerProfile.id}
+            companyName={application.job.employerProfile.companyName}
+          />
+        )
+      }
 
       {!snapshot ? (
         <div className="card p-6 text-center text-gray-400 text-sm">
@@ -166,6 +178,26 @@ export default async function ApplicationDetailPage({
                   <p className="font-medium text-gray-900 text-sm">{e.degree}</p>
                   <p className="text-sm text-gray-500">{e.institution}</p>
                   <p className="text-xs text-gray-400">{e.startYear} – {e.endYear ?? "Present"}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Certifications */}
+          {snapshot.certifications && snapshot.certifications.length > 0 && (
+            <div className="card p-5 space-y-4">
+              <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+                <Award size={16} className="text-brand-500" /> Certifications
+              </h2>
+              {snapshot.certifications.map((c, i) => (
+                <div key={i} className="border-l-2 border-purple-200 pl-4 space-y-0.5">
+                  <p className="font-medium text-gray-900 text-sm">{c.name}</p>
+                  <p className="text-sm text-gray-500">{c.issuer}</p>
+                  {c.dateObtained && (
+                    <p className="text-xs text-gray-400">
+                      Issued {c.dateObtained}{c.expiryDate ? ` · Expires ${c.expiryDate}` : ""}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

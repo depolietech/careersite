@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { validatePasswordOrThrow } from "@/lib/password";
+import { sendPasswordChangedEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -38,6 +39,11 @@ export async function POST(req: Request) {
       where: { id: session.user.id },
       data: { passwordHash },
     });
+
+    // Security email (fire-and-forget)
+    if (user.email) {
+      sendPasswordChangedEmail(user.email).catch(() => {});
+    }
 
     return NextResponse.json({ ok: true });
   } catch {

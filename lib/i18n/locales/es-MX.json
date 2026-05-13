@@ -443,7 +443,7 @@
     "benefit4Title": "Gratis para candidatos",
     "benefit4Desc": "Crea un perfil completo y postúlate a empleos ilimitados — completamente gratis. Sin tarjeta de crédito.",
     "benefit5Title": "Solo reclutadores verificados",
-    "benefit5Desc": "Cada reclutador es verificado antes de publicar empleos. Un sistema de puntuación de confianza los responsabiliza por cancelaciones y reportes.",
+    "benefit5Desc": "Cada reclutador es verificado antes de publicar empleos. Un sistema de puntuación de confianza y reseñas de pares los responsabilizan — los candidatos pueden calificar comunicación, equidad y profesionalismo después de cada interacción.",
     "benefit6Title": "Identidad revelada de forma justa",
     "benefit6Desc": "Tus datos personales solo se comparten después de programar una entrevista — nunca antes.",
     "openPositions": "Posiciones abiertas",
@@ -517,7 +517,15 @@
     "faq10Q": "¿Qué es una instantánea de candidatura?",
     "faq10A": "Cuando te postulas, se captura una copia inmutable de tu perfil — tus habilidades, título, historial laboral, educación y el CV seleccionado. Esta instantánea nunca cambia, aunque actualices tu perfil posteriormente. Puedes verla desde tu panel haciendo clic en 'Ver candidatura' junto a cada solicitud.",
     "faq11Q": "¿Qué necesito para poder postularme?",
-    "faq11A": "Se requieren tres cosas: (1) al menos una habilidad en tu perfil, (2) al menos una experiencia laboral, y (3) al menos un CV subido. Si algo falta, aparece una lista de verificación guiada con enlaces directos para completar cada elemento."
+    "faq11A": "Se requieren tres cosas: (1) al menos una habilidad en tu perfil, (2) al menos una experiencia laboral, y (3) al menos un CV subido. Si algo falta, aparece una lista de verificación guiada con enlaces directos para completar cada elemento.",
+    "faq12Q": "¿Puedo calificar y reseñar a los reclutadores después de postularme?",
+    "faq12A": "Sí. Una vez que tu solicitud llegue a la etapa de entrevista, oferta o decisión, aparecerá un aviso 'Calificar a este reclutador' en la página de detalle de tu solicitud. Puedes calificar al reclutador en experiencia general, comunicación, profesionalismo, transparencia y equidad — cada uno en una escala de 1 a 5 estrellas. Las reseñas se envían de forma anónima de forma predeterminada.",
+    "faq13Q": "¿Cómo administro mis preferencias de correo electrónico?",
+    "faq13A": "Puedes gestionar tus preferencias en cualquier momento desde Configuración de cuenta → Preferencias de correo. Puedes activar o desactivar de forma independiente las actualizaciones de solicitudes, las alertas de empleo y los correos promocionales. Las notificaciones de seguridad (cambios de contraseña, alertas de 2FA) siempre se envían conforme a las leyes antispam aplicables (CAN-SPAM).",
+    "faq14Q": "¿Puedo agregar una foto de perfil? ¿La verán los reclutadores?",
+    "faq14A": "Sí, puedes subir una foto de perfil desde tu página de Perfil. Para proteger tu anonimato, tu foto nunca se comparte con los reclutadores de forma predeterminada — ni siquiera después de que se programe una entrevista. Un interruptor 'Compartir foto con reclutadores' en tu perfil te permite activarlo explícitamente si lo deseas.",
+    "faq15Q": "¿Qué sucede justo después de enviar una solicitud?",
+    "faq15A": "En cuanto te postulas: (1) se guarda una instantánea inmutable de tu perfil enmascarado, (2) el botón Postularme se reemplaza por un panel de confirmación verde que indica lo que se compartió, y (3) se envía un correo de confirmación a tu dirección registrada. El reclutador solo ve tu perfil enmascarado — tu nombre, foto y otros datos identificativos permanecen ocultos hasta que se programe una entrevista."
   },
 
   "notifications": {

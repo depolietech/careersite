@@ -5,9 +5,12 @@ import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { SectionHeader } from "@/components/home/SectionHeader";
 import { useI18n } from "@/lib/i18n";
+import { useSession } from "next-auth/react";
 
 export default function AboutPage() {
   const { t } = useI18n();
+  const { data: session } = useSession();
+  const userRole = (session?.user as { role?: string } | null)?.role ?? null;
 
   const STATS = [
     { value: "10,000+", label: t("about.stat1") },
@@ -37,7 +40,7 @@ export default function AboutPage() {
 
       {/* ─── Hero ──────────────────────────────────────────────────────────── */}
       <section className="bg-forest">
-        <Navbar variant="marketing" />
+        <Navbar variant={userRole ? "app" : "marketing"} userRole={userRole} unreadCount={0} />
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28 text-center">
           <span className="inline-block rounded-full bg-brand-500/20 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-brand-400 mb-6">
             {t("about.missionBadge")}

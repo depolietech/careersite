@@ -66,6 +66,12 @@ model User {
   twoFactorSecret  String? // TOTP secret (base32)
   twoFactorMethod  String? // "totp" | "email"
 
+  // Email Preferences (CAN-SPAM / CASL compliance)
+  emailMarketing     Boolean @default(true)  // promotional + product updates
+  emailJobAlerts     Boolean @default(true)  // new matching jobs
+  emailAppUpdates    Boolean @default(true)  // application status changes
+  // Security emails (password changed, 2FA) are ALWAYS sent — not toggleable
+
   accounts      Account[]
   sessions      Session[]
 
@@ -87,8 +93,9 @@ model User {
   otpCodes             OtpCode[]
 
   // Reports filed by this user against recruiters
-  reportsFiled   RecruiterReport[] @relation("ReporterReports")
-  companyReviews CompanyReview[]   @relation("ReviewerReviews")
+  reportsFiled     RecruiterReport[] @relation("ReporterReports")
+  companyReviews   CompanyReview[]   @relation("ReviewerReviews")
+  recruiterReviews RecruiterReview[] @relation("RecruiterReviewer")
 }
 
 model TwoFactorBackupCode {
@@ -133,6 +140,7 @@ model JobSeekerProfile {
   lastName    String
   phone       String?
   photoUrl    String?
+  photoSharingEnabled Boolean @default(false) // job seeker explicitly opts in to share photo with recruiters
   linkedinUrl String?
   githubUrl   String?
 
@@ -229,11 +237,12 @@ model EmployerProfile {
   trustScore           Float   @default(100)
   isBlocked            Boolean @default(false)
 
-  postedJobs     Job[]
-  reports        RecruiterReport[]
-  companyReviews CompanyReview[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  postedJobs       Job[]
+  reports          RecruiterReport[]
+  companyReviews   CompanyReview[]
+  recruiterReviews RecruiterReview[] @relation("RecruiterReviewsReceived")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model ContractorProfile {
@@ -429,4 +438,27 @@ model Message {
 
   body      String
   createdAt DateTime @default(now())
+}
+
+// ─── Recruiter Reviews ────────────────────────────────────────────────────────
+
+model RecruiterReview {
+  id                String          @id @default(cuid())
+  reviewerId        String
+  reviewer          User            @relation("RecruiterReviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  employerProfileId String
+  employerProfile   EmployerProfile @relation("RecruiterReviewsReceived", fields: [employerProfileId], references: [id], onDelete: Cascade)
+  applicationId     String?         // optional: link to specific application
+
+  rating            Int             // 1–5 overall
+  communication     Int             // 1–5
+  professionalism   Int             // 1–5
+  transparency      Int             // 1–5
+  fairness          Int             // 1–5
+  comment           String?
+
+  isAnonymous       Boolean @default(true)
+  createdAt         DateTime @default(now())
+
+  @@unique([reviewerId, employerProfileId])
 }

@@ -1,8 +1,17 @@
-import { Circle, Rocket } from "lucide-react";
+import { CheckCircle2, Circle, Rocket } from "lucide-react";
+
+const SHIPPED = [
+  "Recruiter Reviews & Ratings — rate communication, fairness, and professionalism",
+  "Email Preferences — opt-out of job alerts, app updates, and marketing (CAN-SPAM / CASL)",
+  "Profile Photo Upload — with full anonymity control; you choose if recruiters ever see it",
+  "Application Success Confirmation — clear submission panel with masked-profile checklist",
+  "Phone Auto-format — CA, US, and México (+52) formats applied automatically",
+  "LinkedIn URL Validation — ensures only valid profile links are accepted",
+  "Security Email Alerts — instant notifications for password changes and 2FA events",
+];
 
 const IN_PROGRESS = [
   "Mobile app — iOS & Android",
-  "Recruiter Reviews & Ratings",
   "Verified Skills & Certifications",
   "Fair Hiring Analytics",
 ];
@@ -12,7 +21,6 @@ const PLANNED = [
   "Indeed & job board integration",
   "Employer analytics dashboard",
   "Skill badges",
-  "Profile visibility controls",
   "Additional Language Support — Arabic, Portuguese, German, Mandarin, Hindi",
 ];
 
@@ -24,14 +32,32 @@ export function PlatformUpdates() {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-brand-600 mb-4">
-            <Rocket size={12} /> What&apos;s Coming
+            <Rocket size={12} /> What&apos;s New &amp; Coming
           </div>
           <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
             Platform Roadmap
           </h2>
           <p className="mt-3 text-gray-500 max-w-xl mx-auto text-sm">
-            We ship continuously. Here&apos;s what&apos;s in progress and what&apos;s on the horizon.
+            We ship continuously. Here&apos;s what just launched, what&apos;s in progress, and what&apos;s on the horizon.
           </p>
+        </div>
+
+        {/* Recently shipped — full width */}
+        <div className="rounded-2xl border border-green-100 bg-green-50/50 p-6 mb-6 max-w-4xl mx-auto">
+          <div className="flex items-center gap-2 mb-5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-green-500">
+              <CheckCircle2 size={14} className="text-white" />
+            </span>
+            <h3 className="font-semibold text-gray-900">Recently Shipped</h3>
+          </div>
+          <ul className="grid sm:grid-cols-2 gap-x-8 gap-y-3">
+            {SHIPPED.map((item) => (
+              <li key={item} className="flex items-start gap-2.5 text-sm text-gray-700">
+                <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-green-500" />
+                {item}
+              </li>
+            ))}
+          </ul>
         </div>
 
         {/* 2-column grid */}

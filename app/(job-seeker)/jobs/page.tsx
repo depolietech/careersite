@@ -90,6 +90,7 @@ function JobsPageInner() {
   const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
   const [profileStatus, setProfileStatus]   = useState<ProfileStatus | null>(null);
   const [profileCheckLoading, setProfileCheckLoading] = useState(false);
+  const [appliedJobIds, setAppliedJobIds]   = useState<Set<string>>(new Set());
 
   const isLoggedIn = authStatus === "authenticated";
 
@@ -211,12 +212,15 @@ function JobsPageInner() {
     setResults(res);
     setSubmitting(false);
     setApplying(false);
+    setProfileStatus(null);
     setBulkMode(false);
     setSelected(new Set());
 
     const okCount = res.filter((r) => r.status === "ok").length;
     const errCount = res.filter((r) => r.status === "error").length;
     if (okCount > 0) {
+      const newIds = new Set(res.filter((r) => r.status === "ok").map((r) => r.jobId));
+      setAppliedJobIds((prev) => new Set([...prev, ...newIds]));
       setToast({
         message: okCount === 1
           ? "Application submitted successfully!"
@@ -501,51 +505,70 @@ function JobsPageInner() {
                       <p className="text-gray-600 leading-relaxed whitespace-pre-line">{selectedJob.description}</p>
                     </div>
 
-                    <div className="rounded-xl bg-brand-50 border border-brand-100 p-4 text-sm text-brand-800">
-                      <strong>{t("jobs.identityProtected")}</strong> {t("jobs.identityProtectedDesc")}
-                    </div>
-
-                    {/* Guided profile onboarding — shown when profile is incomplete */}
-                    {profileStatus && !applying && (
-                      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-3">
-                        <div className="flex items-center gap-2 text-amber-800">
-                          <AlertCircle size={16} className="shrink-0" />
-                          <p className="text-sm font-semibold">Complete your profile before applying</p>
+                    {/* Success confirmation — shown after a successful application */}
+                    {selectedJob && appliedJobIds.has(selectedJob.id) ? (
+                      <div className="rounded-xl border border-green-200 bg-green-50 p-4 space-y-2">
+                        <div className="flex items-center gap-2 text-green-800">
+                          <CheckCircle2 size={16} className="shrink-0" />
+                          <p className="text-sm font-semibold">Application submitted successfully</p>
                         </div>
-                        <div className="space-y-2 text-sm">
-                          {[
-                            { ok: profileStatus.hasSkills,     label: "Skills",         href: "/profile#skills" },
-                            { ok: profileStatus.hasExperience, label: "Work Experience", href: "/profile#experience" },
-                            { ok: profileStatus.hasEducation,  label: "Education",       href: "/profile#education" },
-                          ].map(({ ok, label, href }) => (
-                            <div key={label} className="flex items-center justify-between gap-2">
-                              <span className={`flex items-center gap-1.5 ${ok ? "text-green-700" : "text-red-600"}`}>
-                                {ok
-                                  ? <CheckCircle2 size={14} className="shrink-0" />
-                                  : <XCircle size={14} className="shrink-0" />}
-                                {label}
-                              </span>
-                              {!ok && (
-                                <Link
-                                  href={href}
-                                  className="text-xs font-medium text-brand-600 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded"
-                                >
-                                  Add {label} →
-                                </Link>
-                              )}
-                            </div>
-                          ))}
+                        <p className="text-sm text-green-700">Your masked profile has been shared with the recruiter. Your personal details remain hidden until an interview is scheduled.</p>
+                        <div className="pt-1 space-y-1 text-xs text-green-700">
+                          <div className="flex items-center gap-1.5"><CheckCircle2 size={12} /> Skills shared</div>
+                          <div className="flex items-center gap-1.5"><CheckCircle2 size={12} /> Experience shared</div>
+                          <div className="flex items-center gap-1.5"><CheckCircle2 size={12} /> Education shared</div>
+                          <div className="flex items-center gap-1.5"><CheckCircle2 size={12} /> Identity masked</div>
                         </div>
-                        <button
-                          onClick={() => setProfileStatus(null)}
-                          className="text-xs text-amber-600 hover:underline"
-                        >
-                          Dismiss
-                        </button>
                       </div>
+                    ) : (
+                      <>
+                        <div className="rounded-xl bg-brand-50 border border-brand-100 p-4 text-sm text-brand-800">
+                          <strong>{t("jobs.identityProtected")}</strong> {t("jobs.identityProtectedDesc")}
+                        </div>
+
+                        {/* Guided profile onboarding — shown when profile is incomplete */}
+                        {profileStatus && !applying && (
+                          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-3">
+                            <div className="flex items-center gap-2 text-amber-800">
+                              <AlertCircle size={16} className="shrink-0" />
+                              <p className="text-sm font-semibold">Complete your profile to apply</p>
+                            </div>
+                            <div className="space-y-2 text-sm">
+                              {[
+                                { ok: profileStatus.hasSkills,     label: "Skills",         href: "/profile#skills" },
+                                { ok: profileStatus.hasExperience, label: "Work Experience", href: "/profile#experience" },
+                                { ok: profileStatus.hasEducation,  label: "Education",       href: "/profile#education" },
+                              ].map(({ ok, label, href }) => (
+                                <div key={label} className="flex items-center justify-between gap-2">
+                                  <span className={`flex items-center gap-1.5 ${ok ? "text-green-700" : "text-red-600"}`}>
+                                    {ok
+                                      ? <CheckCircle2 size={14} className="shrink-0" />
+                                      : <XCircle size={14} className="shrink-0" />}
+                                    {label}
+                                  </span>
+                                  {!ok && (
+                                    <Link
+                                      href={href}
+                                      className="text-xs font-medium text-brand-600 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded"
+                                    >
+                                      Add {label} →
+                                    </Link>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                            <button
+                              onClick={() => setProfileStatus(null)}
+                              className="text-xs text-amber-600 hover:underline"
+                            >
+                              Dismiss
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
 
-                    {applying ? (
+                    {!appliedJobIds.has(selectedJob.id) && applying ? (
                       <div className="space-y-4">
                         {/* Resume selection — optional */}
                         {resumes.length > 0 && (
@@ -607,7 +630,7 @@ function JobsPageInner() {
                           </Button>
                         </div>
                       </div>
-                    ) : !profileStatus ? (
+                    ) : !appliedJobIds.has(selectedJob.id) && !profileStatus ? (
                       <Button size="lg" className="w-full" disabled={profileCheckLoading} onClick={handleApplyClick}>
                         {profileCheckLoading ? <Loader2 size={16} className="animate-spin" /> : null}
                         {profileCheckLoading ? "Checking profile…" : t("jobs.apply")}

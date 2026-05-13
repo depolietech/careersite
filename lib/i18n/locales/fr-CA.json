@@ -443,7 +443,7 @@
     "benefit4Title": "Gratuit pour les chercheurs d'emploi",
     "benefit4Desc": "Créez un profil complet et postulez à des emplois illimités — complètement gratuit. Aucune carte de crédit requise.",
     "benefit5Title": "Recruteurs vérifiés uniquement",
-    "benefit5Desc": "Chaque recruteur est vérifié avant de pouvoir publier des offres. Un système de score de confiance les responsabilise pour les annulations et signalements.",
+    "benefit5Desc": "Chaque recruteur est vérifié avant de pouvoir publier des offres. Un système de score de confiance et des avis de pairs les responsabilisent — les chercheurs d'emploi peuvent évaluer la communication, l'équité et le professionnalisme après chaque interaction.",
     "benefit6Title": "Identité révélée équitablement",
     "benefit6Desc": "Vos informations personnelles ne sont partagées qu'après la planification d'une entrevue — jamais avant.",
     "openPositions": "Postes ouverts",
@@ -517,7 +517,15 @@
     "faq10Q": "Qu'est-ce qu'un instantané de candidature?",
     "faq10A": "Lorsque vous postulez, une copie immuable de votre profil est capturée — vos compétences, titre, historique de travail, formation et le CV sélectionné. Cet instantané ne change jamais, même si vous mettez à jour votre profil ultérieurement. Consultez-le depuis votre tableau de bord en cliquant sur 'Voir la candidature'.",
     "faq11Q": "De quoi ai-je besoin pour pouvoir postuler?",
-    "faq11A": "Trois éléments sont requis : (1) au moins une compétence dans votre profil, (2) au moins une expérience professionnelle, et (3) au moins un CV téléversé. Si quelque chose manque, une liste de vérification guidée s'affiche avec des liens directs pour compléter chaque élément."
+    "faq11A": "Trois éléments sont requis : (1) au moins une compétence dans votre profil, (2) au moins une expérience professionnelle, et (3) au moins un CV téléversé. Si quelque chose manque, une liste de vérification guidée s'affiche avec des liens directs pour compléter chaque élément.",
+    "faq12Q": "Puis-je évaluer les recruteurs après avoir postulé?",
+    "faq12A": "Oui. Une fois votre candidature parvenue à l'étape d'entrevue, d'offre ou de décision, une invite 'Évaluer ce recruteur' apparaît sur la page de détail de votre candidature. Vous pouvez noter le recruteur sur l'expérience globale, la communication, le professionnalisme, la transparence et l'équité — chacun sur une échelle de 1 à 5 étoiles. Les avis sont soumis anonymement par défaut.",
+    "faq13Q": "Comment gérer mes préférences de courriels?",
+    "faq13A": "Vous pouvez gérer vos préférences à tout moment depuis Paramètres du compte → Préférences de courriels. Vous pouvez activer ou désactiver séparément les mises à jour de candidatures, les alertes d'emploi et les courriels promotionnels. Les notifications de sécurité (changements de mot de passe, alertes 2FA) sont toujours envoyées, conformément à la LCAP et aux lois anti-pourriel applicables.",
+    "faq14Q": "Puis-je ajouter une photo de profil? Les recruteurs la verront-ils?",
+    "faq14A": "Oui, vous pouvez téléverser une photo de profil depuis votre page Profil. Pour protéger votre anonymat, votre photo n'est jamais partagée avec les recruteurs par défaut — même après qu'une entrevue est planifiée. Un bouton 'Partager ma photo avec les recruteurs' dans votre profil vous permet de choisir explicitement de l'activer.",
+    "faq15Q": "Que se passe-t-il juste après avoir soumis une candidature?",
+    "faq15A": "Dès que vous postulez : (1) un instantané immuable de votre profil masqué est sauvegardé, (2) le bouton Postuler est remplacé par un panneau de confirmation vert indiquant ce qui a été partagé, et (3) un courriel de confirmation est envoyé à votre adresse. Le recruteur voit uniquement votre profil masqué — votre nom, photo et autres détails identificateurs restent cachés jusqu'à la planification d'une entrevue."
   },
 
   "notifications": {

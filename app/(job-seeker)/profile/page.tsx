@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, EyeOff, Linkedin, Github, Info, Loader2, Pencil, X, Building2, GraduationCap, Award } from "lucide-react";
+import { Plus, Trash2, EyeOff, Linkedin, Github, Info, Loader2, Pencil, X, Building2, GraduationCap, Award, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, TextArea, Select } from "@/components/ui/input";
 import { COUNTRIES, STATES, buildLocation, parseLocation, CURRENCY_LABEL } from "@/lib/locations";
@@ -45,6 +45,26 @@ type CertEntry = {
   dateObtained: string | null;
   expiryDate: string | null;
 };
+
+// Auto-format phone number: strips non-digits, then formats by detected country
+function formatPhoneNumber(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length === 0) return "";
+  // Mexico +52 prefix
+  if (digits.startsWith("52") && digits.length >= 10) {
+    const local = digits.slice(2);
+    if (local.length <= 2) return `+52 ${local}`;
+    if (local.length <= 4) return `+52 ${local.slice(0, 2)} ${local.slice(2)}`;
+    if (local.length <= 8) return `+52 ${local.slice(0, 2)} ${local.slice(2, 4)} ${local.slice(4)}`;
+    return `+52 ${local.slice(0, 2)} ${local.slice(2, 6)} ${local.slice(6, 10)}`;
+  }
+  // CA/US: 10 digits (or 11 with leading 1)
+  const ca = digits.startsWith("1") ? digits.slice(1) : digits;
+  if (ca.length <= 3) return `(${ca}`;
+  if (ca.length <= 6) return `(${ca.slice(0, 3)}) ${ca.slice(3)}`;
+  if (ca.length <= 10) return `(${ca.slice(0, 3)}) ${ca.slice(3, 6)}-${ca.slice(6)}`;
+  return raw; // return raw if doesn't match any pattern
+}
 
 const EMPTY_PROFILE: ProfileData = {
   firstName: "", lastName: "", phone: "",
@@ -406,10 +426,13 @@ export default function ProfilePage() {
         (s) => s.toLowerCase().includes(skillInput.toLowerCase()) && !skills.includes(s)
       ).slice(0, 6)
     : [];
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving]   = useState(false);
-  const [saved, setSaved]     = useState(false);
-  const [error, setError]     = useState<string | null>(null);
+  const [loading, setLoading]         = useState(true);
+  const [saving, setSaving]           = useState(false);
+  const [saved, setSaved]             = useState(false);
+  const [error, setError]             = useState<string | null>(null);
+  const [photoUrl, setPhotoUrl]       = useState<string | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const photoInputRef                 = useRef<HTMLInputElement>(null);
 
   const [workExps, setWorkExps] = useState<WorkExpEntry[]>([]);
   const [educations, setEducations] = useState<EducationEntry[]>([]);
@@ -447,6 +470,7 @@ export default function ProfilePage() {
           setStateProvince(s);
           try { setSkills(JSON.parse(data.skills ?? "[]")); } catch { setSkills([]); }
 
+          setPhotoUrl(data.photoUrl ?? null);
           setWorkExps(
             (data.workExperiences ?? []).map((w: WorkExpEntry & { skills: string }) => ({
               ...w,
@@ -490,10 +514,25 @@ export default function ProfilePage() {
     setIsDirty(true);
   }
 
+  const LINKEDIN_RE = /^https:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9\-_%]+\/?$/;
+  const GITHUB_RE   = /^https:\/\/(www\.)?github\.com\/[a-zA-Z0-9\-_.]+\/?$/;
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     setError(null);
+
+    if (profile.linkedinUrl?.trim() && !LINKEDIN_RE.test(profile.linkedinUrl.trim())) {
+      setError("LinkedIn URL must be in the format: https://www.linkedin.com/in/username");
+      setSaving(false);
+      return;
+    }
+    if (profile.githubUrl?.trim() && !GITHUB_RE.test(profile.githubUrl.trim())) {
+      setError("GitHub URL must be in the format: https://github.com/username");
+      setSaving(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/profile", {
         method: "PUT",
@@ -512,6 +551,28 @@ export default function ProfilePage() {
       setError("Network error — please try again");
     } finally {
       setSaving(false);
+    }
+  }
+
+  // ─── Photo upload ─────────────────────────────────────────────────────────
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoUploading(true);
+    setError(null);
+    const form = new FormData();
+    form.append("file", file);
+    try {
+      const res = await fetch("/api/profile/photo", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Photo upload failed"); return; }
+      setPhotoUrl(data.photoUrl);
+    } catch {
+      setError("Network error — could not upload photo");
+    } finally {
+      setPhotoUploading(false);
+      if (photoInputRef.current) photoInputRef.current.value = "";
     }
   }
 
@@ -691,14 +752,52 @@ export default function ProfilePage() {
             <Input label={t("profile.firstName")} required placeholder="Alex" value={profile.firstName} onChange={set("firstName")} />
             <Input label={t("profile.lastName")} required placeholder="Smith" value={profile.lastName} onChange={set("lastName")} />
           </div>
-          <Input label={t("profile.phone")} type="tel" placeholder="+1 (555) 000-0000" value={profile.phone} onChange={set("phone")} />
+          <Input
+            label={t("profile.phone")}
+            type="tel"
+            placeholder="+1 (555) 000-0000"
+            value={profile.phone}
+            onChange={(e) => {
+              const formatted = formatPhoneNumber(e.target.value);
+              setProfile((p) => ({ ...p, phone: formatted }));
+              setIsDirty(true);
+            }}
+          />
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">{t("profile.photo")} <span className="text-gray-400 font-normal">({t("profile.hidden")})</span></label>
+            <label className="block text-sm font-medium text-gray-700">
+              {t("profile.photo")} <span className="text-gray-400 font-normal">({t("profile.hidden")})</span>
+            </label>
             <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-2xl font-bold">
-                {profile.firstName ? profile.firstName[0].toUpperCase() : "?"}
+              {photoUrl ? (
+                <img
+                  src={photoUrl}
+                  alt="Profile photo"
+                  className="h-16 w-16 rounded-full object-cover border border-gray-200"
+                />
+              ) : (
+                <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-2xl font-bold">
+                  {profile.firstName ? profile.firstName[0].toUpperCase() : "?"}
+                </div>
+              )}
+              <div className="space-y-1">
+                <button
+                  type="button"
+                  className="btn-secondary text-sm flex items-center gap-1.5"
+                  onClick={() => photoInputRef.current?.click()}
+                  disabled={photoUploading}
+                >
+                  {photoUploading ? <Loader2 size={13} className="animate-spin" /> : <Camera size={13} />}
+                  {photoUploading ? "Uploading…" : t("profile.uploadPhoto")}
+                </button>
+                <p className="text-xs text-gray-400">JPG, PNG or WebP · max 5 MB · stays hidden from recruiters</p>
               </div>
-              <button type="button" className="btn-secondary text-sm">{t("profile.uploadPhoto")}</button>
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={handlePhotoUpload}
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -706,7 +805,10 @@ export default function ProfilePage() {
               <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
                 <Linkedin size={13} className="text-blue-600" /> LinkedIn
               </label>
-              <Input placeholder="linkedin.com/in/alexsmith" value={profile.linkedinUrl} onChange={set("linkedinUrl")} />
+              <Input placeholder="https://www.linkedin.com/in/alexsmith" value={profile.linkedinUrl} onChange={set("linkedinUrl")} />
+              {profile.linkedinUrl?.trim() && !LINKEDIN_RE.test(profile.linkedinUrl.trim()) && (
+                <p className="text-xs text-red-500">Must be: https://www.linkedin.com/in/username</p>
+              )}
             </div>
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">

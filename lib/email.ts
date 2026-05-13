@@ -241,3 +241,91 @@ export async function sendPasswordChangedEmail(email: string) {
 
   await sendEmail(email, "Your Equalhires password was changed", html, "Your password was changed. If you did not do this, contact support.");
 }
+
+export async function sendApplicationSubmittedEmail(email: string, jobTitle: string) {
+  const html = baseTemplate("Application submitted", `
+    <h2 style="margin:0 0 16px;color:#1e293b;font-size:22px;">Application submitted successfully</h2>
+    <p style="margin:0 0 16px;color:#475569;line-height:1.6;">
+      Your application for <strong>${escapeEmailText(jobTitle)}</strong> has been submitted.
+      Your identity is masked — the recruiter can only see your skills, experience, and education until an interview is scheduled.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+      <tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;font-size:14px;color:#475569;">✅ Skills shared with recruiter</td></tr>
+      <tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;font-size:14px;color:#475569;">✅ Experience shared (dates masked)</td></tr>
+      <tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;font-size:14px;color:#475569;">✅ Education shared (institution masked)</td></tr>
+      <tr><td style="padding:8px 0;font-size:14px;color:#475569;">🔒 Name, photo &amp; contact details hidden</td></tr>
+    </table>
+    <a href="${APP_URL}/dashboard" style="display:inline-block;background:#1e3a2f;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:bold;font-size:15px;">
+      View my applications
+    </a>
+    <p style="margin:24px 0 0;color:#94a3b8;font-size:13px;">
+      You will be notified if the recruiter schedules an interview.
+    </p>
+  `);
+
+  await sendEmail(
+    email,
+    `Application submitted — ${jobTitle}`,
+    html,
+    `Your application for "${jobTitle}" was submitted. Your identity is masked until an interview is scheduled. View your applications at ${APP_URL}/dashboard`
+  );
+}
+
+export async function sendInterviewScheduledEmail(
+  email: string,
+  jobTitle: string,
+  scheduledAt: Date,
+  interviewType: string,
+  meetingLink: string | null
+) {
+  const dateStr = scheduledAt.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  const timeStr = scheduledAt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+  const typeLabel = interviewType === "video" ? "Video Call" : interviewType === "phone" ? "Phone Call" : "In Person";
+  const meetingSection = meetingLink
+    ? `<p style="margin:16px 0 0;"><a href="${escapeEmailText(meetingLink)}" style="display:inline-block;background:#1e3a2f;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;font-size:14px;">Join Meeting</a></p>`
+    : "";
+
+  const html = baseTemplate("Interview scheduled", `
+    <h2 style="margin:0 0 16px;color:#1e293b;font-size:22px;">Interview scheduled</h2>
+    <p style="margin:0 0 24px;color:#475569;line-height:1.6;">
+      A recruiter has scheduled an interview for the <strong>${escapeEmailText(jobTitle)}</strong> position.
+    </p>
+    <div style="background:#f1f5f9;border-radius:12px;padding:20px;margin:0 0 24px;">
+      <p style="margin:0 0 8px;font-size:14px;color:#475569;"><strong>Date:</strong> ${dateStr}</p>
+      <p style="margin:0 0 8px;font-size:14px;color:#475569;"><strong>Time:</strong> ${timeStr}</p>
+      <p style="margin:0;font-size:14px;color:#475569;"><strong>Type:</strong> ${typeLabel}</p>
+    </div>
+    <p style="margin:0 0 8px;color:#475569;font-size:14px;">
+      Your full identity will be revealed to the recruiter once you accept the interview.
+    </p>
+    ${meetingSection}
+    <p style="margin:24px 0 0;"><a href="${APP_URL}/calendar" style="display:inline-block;background:#1e3a2f;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:bold;font-size:15px;">View in Calendar</a></p>
+  `);
+
+  await sendEmail(
+    email,
+    `Interview scheduled — ${jobTitle}`,
+    html,
+    `Interview scheduled for "${jobTitle}" on ${dateStr} at ${timeStr} (${typeLabel}). View at ${APP_URL}/calendar`
+  );
+}
+
+export async function send2FAChangedEmail(email: string, action: "enabled" | "disabled") {
+  const title = action === "enabled" ? "Two-factor authentication enabled" : "Two-factor authentication disabled";
+  const body = action === "enabled"
+    ? "Two-factor authentication has been <strong>enabled</strong> on your Equalhires account. Your account is now more secure."
+    : "Two-factor authentication has been <strong>disabled</strong> on your Equalhires account. If you did not do this, please secure your account immediately.";
+
+  const html = baseTemplate(title, `
+    <h2 style="margin:0 0 16px;color:#1e293b;font-size:22px;">${title}</h2>
+    <p style="margin:0 0 24px;color:#475569;line-height:1.6;">${body}</p>
+    <a href="${APP_URL}/settings" style="display:inline-block;background:#1e3a2f;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:bold;font-size:15px;">
+      Go to Security Settings
+    </a>
+    <p style="margin:24px 0 0;color:#94a3b8;font-size:13px;">
+      If you did not make this change, contact support immediately.
+    </p>
+  `);
+
+  await sendEmail(email, `[Equalhires Security] ${title}`, html, `${title}. If you did not do this, contact support.`);
+}

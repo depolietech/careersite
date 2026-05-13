@@ -19,6 +19,10 @@ export function FaqAccordion() {
     { q: t("home.faq9Q"), a: t("home.faq9A") },
     { q: t("home.faq10Q"), a: t("home.faq10A") },
     { q: t("home.faq11Q"), a: t("home.faq11A") },
+    { q: t("home.faq12Q"), a: t("home.faq12A") },
+    { q: t("home.faq13Q"), a: t("home.faq13A") },
+    { q: t("home.faq14Q"), a: t("home.faq14A") },
+    { q: t("home.faq15Q"), a: t("home.faq15A") },
   ];
 
   return (

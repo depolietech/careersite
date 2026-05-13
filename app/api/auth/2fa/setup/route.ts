@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { send2FAChangedEmail } from "@/lib/email";
 
 const TOTP_OPTIONS = { algorithm: "sha1" as const, digits: 6, period: 30 };
 
@@ -93,6 +94,11 @@ export async function POST(req: Request) {
         },
       }),
     ]);
+
+    // Security email (fire-and-forget)
+    if (user.email) {
+      send2FAChangedEmail(user.email, "enabled").catch(() => {});
+    }
 
     return NextResponse.json({ ok: true, backupCodes: rawCodes });
   } catch {

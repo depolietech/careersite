@@ -82,6 +82,7 @@ function RegisterForm() {
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [agreedPrivacy, setAgreedPrivacy] = useState(false);
   const [agreedRecruiterTerms, setAgreedRecruiterTerms] = useState(false);
+  const [emailMarketing, setEmailMarketing] = useState(false);
 
   const [form, setForm] = useState({
     email: "",
@@ -126,6 +127,7 @@ function RegisterForm() {
           role,
           recruiterType: role === "EMPLOYER" ? recruiterType : undefined,
           agreedToTerms: true,
+          emailMarketing,
         }),
       });
       const data = await res.json();
@@ -512,6 +514,20 @@ function RegisterForm() {
                       </span>
                     </label>
                   )}
+                  <div className="pt-1 border-t border-gray-200">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={emailMarketing}
+                        onChange={(e) => setEmailMarketing(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 accent-brand-500"
+                      />
+                      <span className="text-sm text-gray-500">
+                        <span className="font-medium text-gray-700">Optional:</span> I want to receive product updates, tips, and promotional emails. You can unsubscribe at any time in Settings.
+                      </span>
+                    </label>
+                    <p className="mt-1.5 text-xs text-gray-400 pl-7">Security emails (password changes, 2FA alerts) are always sent regardless of this preference.</p>
+                  </div>
                 </div>
 
                 {error && (

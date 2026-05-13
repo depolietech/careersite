@@ -7,6 +7,7 @@ import { Footer } from "@/components/shared/footer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
+import { useSession } from "next-auth/react";
 
 const TOPIC_VALUES = [
   "General enquiry",
@@ -19,6 +20,8 @@ const TOPIC_VALUES = [
 
 export default function ContactPage() {
   const { t } = useI18n();
+  const { data: session } = useSession();
+  const userRole = (session?.user as { role?: string } | null)?.role ?? null;
 
   const CONTACT_DETAILS = [
     { icon: Mail,    label: t("contact.emailLabel"), value: "info@equalhires.com",         sub: t("contact.emailSub") },
@@ -57,7 +60,7 @@ export default function ContactPage() {
 
       {/* ─── Hero ──────────────────────────────────────────────────────────── */}
       <section className="bg-forest">
-        <Navbar variant="marketing" />
+        <Navbar variant={userRole ? "app" : "marketing"} userRole={userRole} unreadCount={0} />
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 text-center">
           <span className="inline-block rounded-full bg-brand-500/20 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-brand-400 mb-6">
             {t("contact.badge")}

@@ -529,7 +529,7 @@
     "benefit4Title": "Free for Job Seekers",
     "benefit4Desc": "Create a full profile and apply to unlimited jobs — completely free. No credit card required.",
     "benefit5Title": "Verified Recruiters Only",
-    "benefit5Desc": "Every recruiter is identity-verified before posting jobs. A trust score system holds them accountable for cancellations and community reports.",
+    "benefit5Desc": "Every recruiter is identity-verified before posting jobs. A trust score system and peer reviews hold them accountable — job seekers can rate communication, fairness, and professionalism after each interaction.",
     "benefit6Title": "Identity Revealed Fairly",
     "benefit6Desc": "Your personal details are only shared after an interview is scheduled — never before.",
     "openPositions": "Open Positions",
@@ -603,7 +603,15 @@
     "faq10Q": "What is an application snapshot?",
     "faq10A": "When you apply to a job, an immutable copy of your profile is captured — your skills, headline, work history, education, and which resume you selected. This snapshot never changes even if you later update your profile. You can view it anytime from your Dashboard by clicking 'View Submission' next to any application. This gives you full transparency into exactly what each employer received.",
     "faq11Q": "What do I need before I can apply?",
-    "faq11A": "Three things are required: (1) at least one skill added to your profile, (2) at least one work experience entry, and (3) at least one resume uploaded. If anything is missing when you click Apply, a guided checklist appears showing exactly which items are incomplete — with direct links to add each one."
+    "faq11A": "Three things are required: (1) at least one skill added to your profile, (2) at least one work experience entry, and (3) at least one resume uploaded. If anything is missing when you click Apply, a guided checklist appears showing exactly which items are incomplete — with direct links to add each one.",
+    "faq12Q": "Can I rate and review recruiters after applying?",
+    "faq12A": "Yes. Once your application reaches the interview, offer, or decision stage, a 'Rate this recruiter' prompt appears on your application detail page. You can rate the recruiter on overall experience, communication, professionalism, transparency, and fairness — each on a 1–5 star scale. Reviews are submitted anonymously by default, and they help other job seekers make informed decisions about where to apply.",
+    "faq13Q": "How do I manage my email notification preferences?",
+    "faq13A": "You can manage your email preferences at any time from Account Settings → Email Preferences. You can opt in or out of application update emails, job alert emails, and promotional emails independently. Security notifications (password changes, 2FA alerts, suspicious logins) are always sent regardless of your preferences, as required by our terms of service and applicable anti-spam regulations (CAN-SPAM, CASL).",
+    "faq14Q": "Can I add a profile photo, and will recruiters see it?",
+    "faq14A": "Yes, you can upload a profile photo from your Profile page. To protect your anonymity during the hiring process, your photo is never shown to recruiters by default — not even after an interview is scheduled. You are always in control: a 'Share photo with recruiters' toggle in your profile lets you explicitly opt in if you choose to. If the toggle is off, your photo remains private throughout the entire hiring process.",
+    "faq15Q": "What happens right after I submit an application?",
+    "faq15A": "As soon as you apply, three things happen: (1) an immutable snapshot of your masked profile is saved so you always know exactly what was shared, (2) the Apply button is replaced with a green confirmation panel confirming the submission and listing everything that was included, and (3) a confirmation email is sent to your registered address. The recruiter sees only your masked profile — your name, photo, and other identifying details remain hidden until an interview is scheduled."
   },
 
   "profile": {

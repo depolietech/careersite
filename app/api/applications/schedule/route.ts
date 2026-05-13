@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { sendInterviewScheduledEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -22,7 +23,10 @@ export async function POST(req: Request) {
     // Verify the employer owns the job for this application
     const application = await db.application.findUnique({
       where: { id: applicationId },
-      include: { job: { select: { postedById: true } } },
+      include: {
+        job: { select: { postedById: true, title: true } },
+        user: { select: { email: true } },
+      },
     });
 
     if (!application) {
@@ -62,6 +66,17 @@ export async function POST(req: Request) {
       create: { applicationId },
       update: {},
     });
+
+    // Send interview notification email to job seeker (fire-and-forget)
+    if (application.user?.email) {
+      sendInterviewScheduledEmail(
+        application.user.email,
+        application.job.title,
+        new Date(scheduledAt),
+        type,
+        meetingLink || null
+      ).catch(() => {});
+    }
 
     return NextResponse.json({ application: updatedApp, interview }, { status: 201 });
   } catch (err) {

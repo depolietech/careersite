@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { send2FAChangedEmail } from "@/lib/email";
 
 // Disable 2FA — requires current password for confirmation
 export async function POST(req: Request) {
@@ -30,6 +31,11 @@ export async function POST(req: Request) {
         },
       }),
     ]);
+
+    // Security email (fire-and-forget)
+    if (user.email) {
+      send2FAChangedEmail(user.email, "disabled").catch(() => {});
+    }
 
     return NextResponse.json({ ok: true });
   } catch {

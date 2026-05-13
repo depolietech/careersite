@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-const LINKEDIN_RE = /^https:\/\/(www\.)?linkedin\.com\/(in|company)\/[a-zA-Z0-9\-_%]+\/?$/;
+const LINKEDIN_RE = /^https:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9\-_%]+\/?$/;
 const GITHUB_RE   = /^https:\/\/(www\.)?github\.com\/[a-zA-Z0-9\-_.]+\/?$/;
 
 export async function GET() {
@@ -36,7 +36,7 @@ export async function PUT(req: Request) {
 
   if (linkedinUrl?.trim() && !LINKEDIN_RE.test(linkedinUrl.trim())) {
     return NextResponse.json(
-      { error: "LinkedIn URL must be https://www.linkedin.com/in/username or /company/name" },
+      { error: "LinkedIn URL must be in the format: https://www.linkedin.com/in/username" },
       { status: 400 }
     );
   }

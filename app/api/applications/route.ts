@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { maskProfile, revealProfile } from "@/lib/masking";
+import { sendApplicationSubmittedEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -136,7 +137,7 @@ export async function POST(req: Request) {
       resumeName = resume.name;
     }
 
-    // Fetch work experience for snapshot
+    // Fetch work experience, education, and certifications for snapshot
     const workExperiences = await db.workExperience.findMany({
       where: { profileId: profile.id },
       select: { title: true, company: true, startDate: true, endDate: true, current: true },
@@ -144,6 +145,10 @@ export async function POST(req: Request) {
     const educations = await db.education.findMany({
       where: { profileId: profile.id },
       select: { degree: true, institution: true, startYear: true, endYear: true },
+    });
+    const certifications = await db.certification.findMany({
+      where: { profileId: profile.id },
+      select: { name: true, issuer: true, dateObtained: true, expiryDate: true },
     });
 
     const profileSnapshot = JSON.stringify({
@@ -154,6 +159,7 @@ export async function POST(req: Request) {
       jobType: profile.jobType,
       workExperiences,
       educations,
+      certifications,
       resumeName,
       snapshotAt: new Date().toISOString(),
     });
@@ -192,6 +198,12 @@ export async function POST(req: Request) {
           body: `A new candidate applied for "${application.job.title}".`,
         },
       });
+    }
+
+    // Send confirmation email (fire-and-forget — don't block response)
+    const userRecord = await db.user.findUnique({ where: { id: userId }, select: { email: true } });
+    if (userRecord?.email) {
+      sendApplicationSubmittedEmail(userRecord.email, application.job.title).catch(() => {});
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

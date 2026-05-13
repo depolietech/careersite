@@ -1,8 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, Trash2, X, AlertTriangle, Globe } from "lucide-react";
+import { ShieldCheck, Trash2, X, AlertTriangle, Globe, Bell } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { TwoFactorSettings } from "@/components/shared/TwoFactorSettings";
 import { PasswordStrengthMeter } from "@/components/shared/PasswordStrengthMeter";
@@ -107,6 +107,43 @@ export default function SettingsPage() {
   const [pwError, setPwError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  // Email preferences
+  const [emailPrefs, setEmailPrefs] = useState({
+    emailMarketing: true,
+    emailJobAlerts: true,
+    emailAppUpdates: true,
+  });
+  const [prefsSaving, setPrefsSaving] = useState(false);
+  const [prefsSaved, setPrefsSaved] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/user/email-preferences")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d) setEmailPrefs({
+          emailMarketing:  d.emailMarketing  ?? true,
+          emailJobAlerts:  d.emailJobAlerts  ?? true,
+          emailAppUpdates: d.emailAppUpdates ?? true,
+        });
+      })
+      .catch(() => {});
+  }, []);
+
+  async function saveEmailPrefs() {
+    setPrefsSaving(true);
+    try {
+      await fetch("/api/user/email-preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailPrefs),
+      });
+      setPrefsSaved(true);
+      setTimeout(() => setPrefsSaved(false), 2500);
+    } finally {
+      setPrefsSaving(false);
+    }
+  }
+
   function pwField(k: keyof typeof pwForm) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
       setPwForm((f) => ({ ...f, [k]: e.target.value }));
@@ -177,6 +214,52 @@ export default function SettingsPage() {
 
         {/* Two-factor authentication */}
         <TwoFactorSettings />
+
+        {/* Email preferences */}
+        <div className="card p-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-teal-100 flex items-center justify-center" aria-hidden="true">
+              <Bell size={16} className="text-teal-600" />
+            </div>
+            <h2 className="font-semibold text-gray-900">Email Preferences</h2>
+          </div>
+          <p className="text-sm text-gray-500">Choose which emails you want to receive. Security notifications are always sent.</p>
+
+          <div className="space-y-3">
+            {[
+              { key: "emailAppUpdates" as const, label: "Application updates", desc: "Status changes, interview notifications, and recruiter messages" },
+              { key: "emailJobAlerts" as const, label: "Job alerts", desc: "New matching jobs based on your profile and preferences" },
+              { key: "emailMarketing" as const, label: "Promotional &amp; product updates", desc: "Platform announcements, tips, and feature releases" },
+            ].map(({ key, label, desc }) => (
+              <label key={key} className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={emailPrefs[key]}
+                  onChange={(e) => setEmailPrefs((p) => ({ ...p, [key]: e.target.checked }))}
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 accent-brand-500"
+                />
+                <div>
+                  <p className="text-sm font-medium text-gray-900" dangerouslySetInnerHTML={{ __html: label }} />
+                  <p className="text-xs text-gray-500">{desc}</p>
+                </div>
+              </label>
+            ))}
+
+            <div className="rounded-lg bg-gray-50 border border-gray-100 px-3 py-2.5 flex items-start gap-2">
+              <ShieldCheck size={14} className="text-gray-400 mt-0.5 shrink-0" />
+              <p className="text-xs text-gray-500">
+                <strong className="text-gray-700">Security emails</strong> (password changes, 2FA alerts, suspicious logins) are always sent regardless of these preferences.
+              </p>
+            </div>
+          </div>
+
+          {prefsSaved && (
+            <p className="text-sm text-green-600">Preferences saved.</p>
+          )}
+          <Button size="sm" loading={prefsSaving} onClick={saveEmailPrefs}>
+            Save preferences
+          </Button>
+        </div>
 
         {/* Change password */}
         <div className="card p-6 space-y-5">
