@@ -419,7 +419,16 @@
     "privacyPolicy": "Politique de confidentialité",
     "terms": "Conditions d'utilisation",
     "allRightsReserved": "Tous droits réservés.",
-    "fairerHiring": "Conçu pour rendre le recrutement plus équitable pour tous."
+    "fairerHiring": "Conçu pour rendre le recrutement plus équitable pour tous.",
+    "legal": "Mentions légales",
+    "cookiePolicy": "Politique des cookies",
+    "accessibility": "Déclaration d'accessibilité",
+    "securityPolicy": "Politique de sécurité",
+    "dataRetention": "Politique de conservation des données",
+    "jobSeekerAgreement": "Accord du chercheur d'emploi",
+    "about": "À propos",
+    "whatsNew": "Quoi de neuf",
+    "faq": "FAQ"
   },
 
   "home": {

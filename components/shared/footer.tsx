@@ -24,7 +24,7 @@ export function Footer() {
                 { href: "/jobs",                     label: t("footer.browseJobs") },
                 { href: "/register?role=job-seeker", label: t("footer.createProfile") },
                 { href: "/login",                    label: t("footer.signIn") },
-                { href: "/job-seeker-agreement",     label: "Job Seeker Agreement" },
+                { href: "/job-seeker-agreement",     label: t("footer.jobSeekerAgreement") },
               ].map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
@@ -57,9 +57,9 @@ export function Footer() {
             <h3 className="text-sm font-semibold text-gray-900">{t("footer.company")}</h3>
             <ul className="mt-4 space-y-2">
               {[
-                { href: "/about",      label: "About" },
-                { href: "/whats-new",  label: "What's New" },
-                { href: "/faq",        label: "FAQ" },
+                { href: "/about",      label: t("footer.about") },
+                { href: "/whats-new",  label: t("footer.whatsNew") },
+                { href: "/faq",        label: t("footer.faq") },
               ].map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
@@ -71,16 +71,15 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">Legal</h3>
+            <h3 className="text-sm font-semibold text-gray-900">{t("footer.legal")}</h3>
             <ul className="mt-4 space-y-2">
               {[
-                { href: "/terms",                label: t("footer.terms") },
-                { href: "/privacy",              label: t("footer.privacyPolicy") },
-                { href: "/cookie-policy",        label: "Cookie Policy" },
-                { href: "/accessibility",        label: "Accessibility Statement" },
-                { href: "/security-policy",      label: "Security Policy" },
-                { href: "/data-retention",       label: "Data Retention Policy" },
-                { href: "/job-seeker-agreement", label: "Job Seeker Agreement" },
+                { href: "/terms",           label: t("footer.terms") },
+                { href: "/privacy",         label: t("footer.privacyPolicy") },
+                { href: "/cookie-policy",   label: t("footer.cookiePolicy") },
+                { href: "/accessibility",   label: t("footer.accessibility") },
+                { href: "/security-policy", label: t("footer.securityPolicy") },
+                { href: "/data-retention",  label: t("footer.dataRetention") },
               ].map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">

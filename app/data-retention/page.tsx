@@ -64,7 +64,7 @@ export default function DataRetentionPage() {
 
         <section>
           <h2 className="text-xl font-semibold text-gray-900 mb-3">6. Deletion requests</h2>
-          <p>Users may request deletion of personal data by deleting their account from account settings or by contacting <a href="mailto:info@equalhires.com" className="text-brand-600 hover:underline">info@equalhires.com</a>. Deletion requests are subject to:</p>
+          <p>Users may request deletion of personal data by deleting their account from account settings or by contacting <a href="mailto:admin@equalhires.com" className="text-brand-600 hover:underline">admin@equalhires.com</a>. Deletion requests are subject to:</p>
           <ul className="list-disc pl-6 space-y-2">
             <li>Legal requirements that may mandate retention of certain records</li>
             <li>Operational needs such as outstanding disputes or pending applications</li>
@@ -108,7 +108,7 @@ export default function DataRetentionPage() {
           <h2 className="text-xl font-semibold text-gray-900 mb-3">11. Contact</h2>
           <p>
             Questions about data retention? Contact us at{" "}
-            <a href="mailto:info@equalhires.com" className="text-brand-600 hover:underline">info@equalhires.com</a>.
+            <a href="mailto:admin@equalhires.com" className="text-brand-600 hover:underline">admin@equalhires.com</a>.
           </p>
         </section>
 

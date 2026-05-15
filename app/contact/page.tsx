@@ -24,7 +24,7 @@ export default function ContactPage() {
   const userRole = (session?.user as { role?: string } | null)?.role ?? null;
 
   const CONTACT_DETAILS = [
-    { icon: Mail,    label: t("contact.emailLabel"), value: "info@equalhires.com",         sub: t("contact.emailSub") },
+    { icon: Mail,    label: t("contact.emailLabel"), value: "admin@equalhires.com",         sub: t("contact.emailSub") },
     { icon: MapPin,  label: t("contact.hqLabel"),    value: t("contact.hqValue"),           sub: t("contact.hqSub") },
     { icon: Clock,   label: t("contact.hoursLabel"), value: t("contact.hoursValue"),        sub: t("contact.hoursSub") },
   ];

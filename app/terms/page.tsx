@@ -74,7 +74,7 @@ export default function TermsPage() {
             <li><strong>Community reports:</strong> Job seekers may report recruiters for fraudulent, misleading, or abusive conduct. Accounts with multiple pending reports may be suspended while under review.</li>
             <li><strong>Trust score:</strong> Each recruiter has a trust score reflecting platform behaviour. A score below 40 will automatically restrict posting privileges. Scores decline with interview cancellations and validated reports.</li>
             <li><strong>Fraudulent listings:</strong> Any recruiter found posting fake or misleading job listings will have their account immediately suspended and may be permanently banned.</li>
-            <li><strong>Appeals:</strong> Suspended accounts may contact <a href="mailto:info@equalhires.com" className="text-brand-600 hover:underline">info@equalhires.com</a> to request review. We aim to respond within 5 business days.</li>
+            <li><strong>Appeals:</strong> Suspended accounts may contact <a href="mailto:admin@equalhires.com" className="text-brand-600 hover:underline">admin@equalhires.com</a> to request review. We aim to respond within 5 business days.</li>
           </ul>
         </section>
 
@@ -137,7 +137,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="text-xl font-semibold text-gray-900 mb-3">17. Contact</h2>
-          <p>Questions about these terms? Email <strong>info@equalhires.com</strong> or see our <Link href="/privacy" className="text-brand-600 hover:underline">Privacy Policy</Link>.</p>
+          <p>Questions about these terms? Email <strong>admin@equalhires.com</strong> or see our <Link href="/privacy" className="text-brand-600 hover:underline">Privacy Policy</Link>.</p>
         </section>
 
       </div>

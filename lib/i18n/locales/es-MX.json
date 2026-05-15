@@ -419,7 +419,16 @@
     "privacyPolicy": "Política de privacidad",
     "terms": "Términos de servicio",
     "allRightsReserved": "Todos los derechos reservados.",
-    "fairerHiring": "Construido para hacer la contratación más justa para todos."
+    "fairerHiring": "Construido para hacer la contratación más justa para todos.",
+    "legal": "Legal",
+    "cookiePolicy": "Política de cookies",
+    "accessibility": "Declaración de accesibilidad",
+    "securityPolicy": "Política de seguridad",
+    "dataRetention": "Política de retención de datos",
+    "jobSeekerAgreement": "Acuerdo del candidato",
+    "about": "Acerca de",
+    "whatsNew": "Novedades",
+    "faq": "Preguntas frecuentes"
   },
 
   "home": {

@@ -93,7 +93,7 @@ export default function ForgotPasswordPage() {
 
         <p className="text-center text-xs text-gray-400">
           Forgot which email you used?{" "}
-          <a href="mailto:info@equalhires.com" className="text-brand-600 hover:underline">
+          <a href="mailto:admin@equalhires.com" className="text-brand-600 hover:underline">
             Contact support
           </a>
         </p>

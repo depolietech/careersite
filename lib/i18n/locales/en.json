@@ -505,7 +505,16 @@
     "privacyPolicy": "Privacy Policy",
     "terms": "Terms of Service",
     "allRightsReserved": "All rights reserved.",
-    "fairerHiring": "Built to make hiring fairer for everyone."
+    "fairerHiring": "Built to make hiring fairer for everyone.",
+    "legal": "Legal",
+    "cookiePolicy": "Cookie Policy",
+    "accessibility": "Accessibility Statement",
+    "securityPolicy": "Security Policy",
+    "dataRetention": "Data Retention Policy",
+    "jobSeekerAgreement": "Job Seeker Agreement",
+    "about": "About",
+    "whatsNew": "What's New",
+    "faq": "FAQ"
   },
 
   "home": {

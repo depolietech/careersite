@@ -96,7 +96,7 @@ export default function CookiePolicyPage() {
           <h2 className="text-xl font-semibold text-gray-900 mb-3">9. Contact</h2>
           <p>
             Questions about our use of cookies? Contact us at{" "}
-            <a href="mailto:info@equalhires.com" className="text-brand-600 hover:underline">info@equalhires.com</a>{" "}
+            <a href="mailto:admin@equalhires.com" className="text-brand-600 hover:underline">admin@equalhires.com</a>{" "}
             or review our <Link href="/privacy" className="text-brand-600 hover:underline">Privacy Policy</Link>.
           </p>
         </section>

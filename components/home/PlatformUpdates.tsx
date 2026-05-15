@@ -102,8 +102,8 @@ export function PlatformUpdates() {
             </ul>
             <div className="mt-6 rounded-xl bg-sky-100 px-4 py-3 text-xs text-sky-800 leading-relaxed">
               Have a feature idea? We&apos;d love to hear from you at{" "}
-              <a href="mailto:info@equalhires.com" className="font-medium underline">
-                info@equalhires.com
+              <a href="mailto:admin@equalhires.com" className="font-medium underline">
+                admin@equalhires.com
               </a>
             </div>
           </div>

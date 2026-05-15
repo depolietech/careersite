@@ -68,7 +68,7 @@ export default function AccessibilityPage() {
           <h2 className="text-xl font-semibold text-gray-900 mb-3">7. Feedback and assistance</h2>
           <p>We welcome your feedback on the accessibility of EqualHires. If you experience any accessibility barriers while using the platform, or if you require assistance accessing any content or functionality, please contact us. We aim to respond to accessibility feedback within 5 business days.</p>
           <ul className="list-disc pl-6 space-y-2 mt-3">
-            <li>Email: <a href="mailto:info@equalhires.com" className="text-brand-600 hover:underline">info@equalhires.com</a></li>
+            <li>Email: <a href="mailto:admin@equalhires.com" className="text-brand-600 hover:underline">admin@equalhires.com</a></li>
             <li>Subject line: Accessibility Feedback</li>
           </ul>
           <p className="mt-3">When contacting us about an accessibility issue, please describe the barrier you encountered, the assistive technology or browser you are using, and the page or feature affected. This helps us investigate and address the issue effectively.</p>

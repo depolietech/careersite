@@ -73,7 +73,7 @@ export default function PrivacyPage() {
             <li>Opt out of marketing communications</li>
             <li>Data portability</li>
           </ul>
-          <p className="mt-3">To exercise these rights, contact us at <strong>info@equalhires.com</strong>. Requests are subject to legal and operational requirements.</p>
+          <p className="mt-3">To exercise these rights, contact us at <strong>admin@equalhires.com</strong>. Requests are subject to legal and operational requirements.</p>
         </section>
 
         <section>
@@ -105,7 +105,7 @@ export default function PrivacyPage() {
             <li>Submit a data access request to receive a copy of your personal data</li>
             <li>Withdraw an application at any time before a hiring decision is made</li>
           </ul>
-          <p className="mt-3">Requests are subject to legal, operational, and security limitations. Contact <strong>info@equalhires.com</strong> to submit a request.</p>
+          <p className="mt-3">Requests are subject to legal, operational, and security limitations. Contact <strong>admin@equalhires.com</strong> to submit a request.</p>
         </section>
 
         <section>
@@ -115,7 +115,7 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="text-xl font-semibold text-gray-900 mb-3">14. Contact</h2>
-          <p>Questions? Reach us at <strong>info@equalhires.com</strong> or through our <Link href="/about" className="text-brand-600 hover:underline">about page</Link>.</p>
+          <p>Questions? Reach us at <strong>admin@equalhires.com</strong> or through our <Link href="/about" className="text-brand-600 hover:underline">about page</Link>.</p>
         </section>
       </div>
     </div>

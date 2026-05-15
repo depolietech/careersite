@@ -71,7 +71,7 @@ export default function SecurityPolicyPage() {
             <li>Report the incident to relevant authorities as required</li>
             <li>Implement measures to prevent recurrence</li>
           </ul>
-          <p className="mt-3">If you believe your account has been compromised, contact us immediately at <a href="mailto:info@equalhires.com" className="text-brand-600 hover:underline">info@equalhires.com</a>.</p>
+          <p className="mt-3">If you believe your account has been compromised, contact us immediately at <a href="mailto:admin@equalhires.com" className="text-brand-600 hover:underline">admin@equalhires.com</a>.</p>
         </section>
 
         <section>
@@ -89,7 +89,7 @@ export default function SecurityPolicyPage() {
 
         <section>
           <h2 className="text-xl font-semibold text-gray-900 mb-3">8. Vulnerability disclosure</h2>
-          <p>If you discover a potential security vulnerability in the EqualHires platform, we encourage responsible disclosure. Please report it to us directly at <a href="mailto:info@equalhires.com" className="text-brand-600 hover:underline">info@equalhires.com</a> with the subject line &quot;Security Vulnerability&quot;. We ask that you:</p>
+          <p>If you discover a potential security vulnerability in the EqualHires platform, we encourage responsible disclosure. Please report it to us directly at <a href="mailto:admin@equalhires.com" className="text-brand-600 hover:underline">admin@equalhires.com</a> with the subject line &quot;Security Vulnerability&quot;. We ask that you:</p>
           <ul className="list-disc pl-6 space-y-2">
             <li>Give us reasonable time to investigate and address the issue before public disclosure</li>
             <li>Not exploit the vulnerability or access user data beyond what is necessary to demonstrate it</li>
@@ -122,7 +122,7 @@ export default function SecurityPolicyPage() {
           <h2 className="text-xl font-semibold text-gray-900 mb-3">12. Contact</h2>
           <p>
             Security questions or concerns? Contact us at{" "}
-            <a href="mailto:info@equalhires.com" className="text-brand-600 hover:underline">info@equalhires.com</a>.
+            <a href="mailto:admin@equalhires.com" className="text-brand-600 hover:underline">admin@equalhires.com</a>.
           </p>
         </section>
 

@@ -112,7 +112,7 @@ export default function JobSeekerAgreementPage() {
           <p>
             Your personal information is processed in accordance with the{" "}
             <Link href="/privacy" className="text-brand-600 hover:underline">EqualHires Privacy Policy</Link>.
-            By using the platform, you consent to the collection, use, and processing of your data as described in that policy. You may exercise your privacy rights, including requesting access to or deletion of your personal data, by contacting us at <a href="mailto:info@equalhires.com" className="text-brand-600 hover:underline">info@equalhires.com</a>.
+            By using the platform, you consent to the collection, use, and processing of your data as described in that policy. You may exercise your privacy rights, including requesting access to or deletion of your personal data, by contacting us at <a href="mailto:admin@equalhires.com" className="text-brand-600 hover:underline">admin@equalhires.com</a>.
           </p>
         </section>
 
@@ -126,7 +126,7 @@ export default function JobSeekerAgreementPage() {
             <li>Are associated with prohibited activities</li>
             <li>Fail to comply with applicable laws</li>
           </ul>
-          <p className="mt-3">You may also close your account at any time from your account settings. If you believe your account was suspended in error, contact <a href="mailto:info@equalhires.com" className="text-brand-600 hover:underline">info@equalhires.com</a> to request a review.</p>
+          <p className="mt-3">You may also close your account at any time from your account settings. If you believe your account was suspended in error, contact <a href="mailto:admin@equalhires.com" className="text-brand-600 hover:underline">admin@equalhires.com</a> to request a review.</p>
         </section>
 
         <section>
@@ -151,7 +151,7 @@ export default function JobSeekerAgreementPage() {
           <h2 className="text-xl font-semibold text-gray-900 mb-3">Contact</h2>
           <p>
             For questions about this Agreement, contact us at{" "}
-            <a href="mailto:info@equalhires.com" className="text-brand-600 hover:underline">info@equalhires.com</a>.
+            <a href="mailto:admin@equalhires.com" className="text-brand-600 hover:underline">admin@equalhires.com</a>.
           </p>
         </section>
 

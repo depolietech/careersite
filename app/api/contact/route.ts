@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     const safeTopic   = escapeHtml(topic);
     const safeMessage = escapeHtml(message);
 
-    const adminEmail = process.env.ADMIN_CONTACT_EMAIL ?? "info@equalhires.com";
+    const adminEmail = process.env.ADMIN_CONTACT_EMAIL ?? "admin@equalhires.com";
 
     await sendContactEmail(
       adminEmail,
