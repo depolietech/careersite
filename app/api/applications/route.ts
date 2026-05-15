@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { maskProfile, revealProfile } from "@/lib/masking";
-import { sendApplicationSubmittedEmail } from "@/lib/email";
+import { sendApplicationSubmittedEmail, sendNewApplicationReceivedEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -200,10 +200,21 @@ export async function POST(req: Request) {
       });
     }
 
-    // Send confirmation email (fire-and-forget — don't block response)
+    // Send confirmation email to job seeker (fire-and-forget)
     const userRecord = await db.user.findUnique({ where: { id: userId }, select: { email: true } });
     if (userRecord?.email) {
       sendApplicationSubmittedEmail(userRecord.email, application.job.title).catch(() => {});
+    }
+
+    // Send alert email to recruiter (fire-and-forget)
+    if (application.job.postedById) {
+      const recruiterRecord = await db.user.findUnique({
+        where: { id: application.job.postedById },
+        select: { email: true, emailAppUpdates: true },
+      });
+      if (recruiterRecord?.email && recruiterRecord.emailAppUpdates !== false) {
+        sendNewApplicationReceivedEmail(recruiterRecord.email, application.job.title).catch(() => {});
+      }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

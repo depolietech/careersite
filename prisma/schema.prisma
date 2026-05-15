@@ -230,11 +230,13 @@ model EmployerProfile {
   location                   String?
 
   // Verification (Layer 2 — admin must approve before jobs can be posted)
-  verificationStatus      String    @default("INCOMPLETE") // "INCOMPLETE" | "PENDING_REVIEW" | "APPROVED" | "REJECTED"
-  verificationSubmittedAt DateTime?
-  verificationNote        String?   // admin note (e.g. rejection reason)
-  websiteCheckPassed      Boolean?  // auto-checked: website is reachable
-  domainMatchPassed       Boolean?  // auto-checked: email domain matches website domain
+  verificationStatus         String    @default("INCOMPLETE") // "INCOMPLETE" | "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "MORE_INFO_REQUIRED"
+  verificationSubmittedAt    DateTime?
+  verificationNote           String?   // admin note (e.g. rejection reason)
+  verificationDeclineReasons String?   // JSON array of structured decline reason codes
+  requestedDocuments         String?   // JSON array of document type keys admin is requesting
+  websiteCheckPassed         Boolean?  // auto-checked: website is reachable
+  domainMatchPassed          Boolean?  // auto-checked: email domain matches website domain
 
   // Recruiter Audit — abuse detection
   interviewsScheduled  Int     @default(0)

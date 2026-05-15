@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { Search, Loader2, CheckCircle, XCircle, Globe, Linkedin, MapPin, ShieldCheck, ShieldAlert, Clock, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Loader2, CheckCircle, XCircle, Globe, Linkedin, MapPin, ShieldCheck, ShieldAlert, Clock, AlertTriangle, ChevronDown, ChevronUp, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -15,6 +15,8 @@ type EmployerRecord = {
   verificationStatus: string;
   verificationSubmittedAt: string | null;
   verificationNote: string | null;
+  verificationDeclineReasons: string | null;
+  requestedDocuments: string | null;
   websiteCheckPassed: boolean | null;
   domainMatchPassed: boolean | null;
   trustScore: number;
@@ -30,46 +32,178 @@ type EmployerRecord = {
   _count: { postedJobs: number; reports: number };
 };
 
+const DECLINE_REASONS = [
+  "Business email domain mismatch",
+  "Website recently created or unverifiable",
+  "Company cannot be verified (no public records)",
+  "Missing business registration documents",
+  "Suspicious activity detected",
+  "Incomplete application — missing required information",
+  "LinkedIn company page not found or mismatch",
+  "Other",
+];
+
+const DOCUMENT_TYPES = [
+  "Business registration certificate",
+  "Tax certificate or EIN/BN letter",
+  "Corporate website ownership proof",
+  "LinkedIn company page link",
+  "Government-issued business registration",
+  "Utility or business invoice (showing company address)",
+  "Corporate email verification",
+  "Incorporation documents",
+];
+
 const STATUS_OPTIONS = [
-  { value: "",               label: "All statuses" },
-  { value: "PENDING_REVIEW", label: "Pending Review" },
-  { value: "INCOMPLETE",     label: "Incomplete" },
-  { value: "APPROVED",       label: "Approved" },
-  { value: "REJECTED",       label: "Rejected" },
+  { value: "",                 label: "All statuses" },
+  { value: "PENDING_REVIEW",  label: "Pending Review" },
+  { value: "MORE_INFO_REQUIRED", label: "More Info Required" },
+  { value: "INCOMPLETE",      label: "Incomplete" },
+  { value: "APPROVED",        label: "Approved" },
+  { value: "REJECTED",        label: "Rejected" },
 ];
 
 const STATUS_BADGE: Record<string, string> = {
-  INCOMPLETE:     "bg-gray-100 text-gray-600",
-  PENDING_REVIEW: "bg-blue-100 text-blue-700",
-  APPROVED:       "bg-green-100 text-green-700",
-  REJECTED:       "bg-red-100 text-red-700",
+  INCOMPLETE:          "bg-gray-100 text-gray-600",
+  PENDING_REVIEW:      "bg-blue-100 text-blue-700",
+  APPROVED:            "bg-green-100 text-green-700",
+  REJECTED:            "bg-red-100 text-red-700",
+  MORE_INFO_REQUIRED:  "bg-amber-100 text-amber-700",
 };
 
 const STATUS_ICON: Record<string, React.ElementType> = {
-  INCOMPLETE:     ShieldAlert,
-  PENDING_REVIEW: Clock,
-  APPROVED:       ShieldCheck,
-  REJECTED:       XCircle,
+  INCOMPLETE:         ShieldAlert,
+  PENDING_REVIEW:     Clock,
+  APPROVED:           ShieldCheck,
+  REJECTED:           XCircle,
+  MORE_INFO_REQUIRED: FileText,
 };
 
-function RejectModal({ onConfirm, onCancel, loading }: { onConfirm: (note: string) => void; onCancel: () => void; loading: boolean }) {
+function RejectModal({
+  onConfirm,
+  onCancel,
+  loading,
+}: {
+  onConfirm: (reasons: string[], note: string) => void;
+  onCancel: () => void;
+  loading: boolean;
+}) {
   const [note, setNote] = useState("");
+  const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
+
+  function toggleReason(r: string) {
+    setSelectedReasons((prev) =>
+      prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-6 space-y-4">
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-bold text-gray-900">Reject Verification</h3>
-        <p className="text-sm text-gray-500">Provide a reason so the employer can fix their details and re-apply.</p>
-        <textarea
-          className="input resize-none"
-          rows={3}
-          placeholder="e.g. Website domain does not match email domain. Please use your company email."
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        />
+        <p className="text-sm text-gray-500">Select decline reason(s) and optionally add a note.</p>
+
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-gray-700">Decline reason(s):</p>
+          {DECLINE_REASONS.map((r) => (
+            <label key={r} className="flex items-start gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600"
+                checked={selectedReasons.includes(r)}
+                onChange={() => toggleReason(r)}
+              />
+              <span className="text-sm text-gray-700 group-hover:text-gray-900">{r}</span>
+            </label>
+          ))}
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold text-gray-700 mb-1">Additional note (optional):</p>
+          <textarea
+            className="input resize-none w-full"
+            rows={3}
+            placeholder="e.g. Website domain does not match email domain."
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+        </div>
+
         <div className="flex gap-3 justify-end">
           <Button variant="secondary" onClick={onCancel}>Cancel</Button>
-          <Button variant="danger" loading={loading} onClick={() => onConfirm(note)}>
+          <Button
+            variant="danger"
+            loading={loading}
+            onClick={() => onConfirm(selectedReasons, note)}
+          >
             Reject
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RequestDocsModal({
+  onConfirm,
+  onCancel,
+  loading,
+}: {
+  onConfirm: (documents: string[], note: string) => void;
+  onCancel: () => void;
+  loading: boolean;
+}) {
+  const [note, setNote] = useState("");
+  const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
+
+  function toggleDoc(d: string) {
+    setSelectedDocs((prev) =>
+      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+        <h3 className="text-lg font-bold text-gray-900">Request Additional Documents</h3>
+        <p className="text-sm text-gray-500">
+          The employer will be notified and their status set to &ldquo;More Info Required&rdquo;.
+        </p>
+
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-gray-700">Required documents:</p>
+          {DOCUMENT_TYPES.map((d) => (
+            <label key={d} className="flex items-start gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600"
+                checked={selectedDocs.includes(d)}
+                onChange={() => toggleDoc(d)}
+              />
+              <span className="text-sm text-gray-700 group-hover:text-gray-900">{d}</span>
+            </label>
+          ))}
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold text-gray-700 mb-1">Additional instructions (optional):</p>
+          <textarea
+            className="input resize-none w-full"
+            rows={3}
+            placeholder="e.g. Please ensure documents are dated within the last 3 months."
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+        </div>
+
+        <div className="flex gap-3 justify-end">
+          <Button variant="secondary" onClick={onCancel}>Cancel</Button>
+          <Button
+            loading={loading}
+            onClick={() => onConfirm(selectedDocs, note)}
+            disabled={selectedDocs.length === 0}
+          >
+            Send Request
           </Button>
         </div>
       </div>
@@ -81,6 +215,7 @@ function EmployerRow({ emp, onAction }: { emp: EmployerRecord; onAction: () => v
   const [expanded, setExpanded] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showRequestDocsModal, setShowRequestDocsModal] = useState(false);
   const StatusIcon = STATUS_ICON[emp.verificationStatus] ?? ShieldAlert;
 
   async function approve() {
@@ -90,17 +225,34 @@ function EmployerRow({ emp, onAction }: { emp: EmployerRecord; onAction: () => v
     onAction();
   }
 
-  async function reject(note: string) {
+  async function reject(reasons: string[], note: string) {
     setActionLoading("reject");
     await fetch(`/api/admin/employers/${emp.id}/reject`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ note }),
+      body: JSON.stringify({ reasons, note }),
     });
     setActionLoading(null);
     setShowRejectModal(false);
     onAction();
   }
+
+  async function requestDocs(documents: string[], note: string) {
+    setActionLoading("request-docs");
+    await fetch(`/api/admin/employers/${emp.id}/request-docs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ documents, note }),
+    });
+    setActionLoading(null);
+    setShowRequestDocsModal(false);
+    onAction();
+  }
+
+  let declineReasons: string[] = [];
+  let requestedDocuments: string[] = [];
+  try { declineReasons = emp.verificationDeclineReasons ? JSON.parse(emp.verificationDeclineReasons) : []; } catch { /* ignore */ }
+  try { requestedDocuments = emp.requestedDocuments ? JSON.parse(emp.requestedDocuments) : []; } catch { /* ignore */ }
 
   return (
     <>
@@ -111,6 +263,13 @@ function EmployerRow({ emp, onAction }: { emp: EmployerRecord; onAction: () => v
           loading={actionLoading === "reject"}
         />
       )}
+      {showRequestDocsModal && (
+        <RequestDocsModal
+          onConfirm={requestDocs}
+          onCancel={() => setShowRequestDocsModal(false)}
+          loading={actionLoading === "request-docs"}
+        />
+      )}
       <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
         {/* Summary row */}
         <div className="flex items-center gap-4 px-5 py-4">
@@ -119,7 +278,7 @@ function EmployerRow({ emp, onAction }: { emp: EmployerRecord; onAction: () => v
               <p className="font-semibold text-gray-900">{emp.companyName}</p>
               <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_BADGE[emp.verificationStatus] ?? "bg-gray-100 text-gray-600"}`}>
                 <StatusIcon size={11} />
-                {emp.verificationStatus.replace("_", " ")}
+                {emp.verificationStatus.replace(/_/g, " ")}
               </span>
               {emp.user.isPublicEmail && (
                 <span className="inline-flex rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-xs font-medium text-amber-700">
@@ -135,10 +294,11 @@ function EmployerRow({ emp, onAction }: { emp: EmployerRecord; onAction: () => v
             <p className="text-xs text-gray-400 mt-0.5">{emp.user.email} · Trust {emp.trustScore}%</p>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2">
-            {emp.verificationStatus === "PENDING_REVIEW" && (
+          <div className="hidden sm:flex items-center gap-2 flex-wrap">
+            {(emp.verificationStatus === "PENDING_REVIEW" || emp.verificationStatus === "MORE_INFO_REQUIRED") && (
               <>
                 <button
+                  type="button"
                   onClick={approve}
                   disabled={!!actionLoading}
                   className="inline-flex items-center gap-1 rounded-lg border border-green-200 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-50 disabled:opacity-50 transition-colors"
@@ -146,6 +306,15 @@ function EmployerRow({ emp, onAction }: { emp: EmployerRecord; onAction: () => v
                   <CheckCircle size={13} /> Approve
                 </button>
                 <button
+                  type="button"
+                  onClick={() => setShowRequestDocsModal(true)}
+                  disabled={!!actionLoading}
+                  className="inline-flex items-center gap-1 rounded-lg border border-amber-200 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-50 disabled:opacity-50 transition-colors"
+                >
+                  <FileText size={13} /> Request Docs
+                </button>
+                <button
+                  type="button"
                   onClick={() => setShowRejectModal(true)}
                   disabled={!!actionLoading}
                   className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
@@ -156,6 +325,7 @@ function EmployerRow({ emp, onAction }: { emp: EmployerRecord; onAction: () => v
             )}
             {emp.verificationStatus === "APPROVED" && (
               <button
+                type="button"
                 onClick={() => setShowRejectModal(true)}
                 disabled={!!actionLoading}
                 className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
@@ -165,6 +335,7 @@ function EmployerRow({ emp, onAction }: { emp: EmployerRecord; onAction: () => v
             )}
             {(emp.verificationStatus === "INCOMPLETE" || emp.verificationStatus === "REJECTED") && (
               <button
+                type="button"
                 onClick={approve}
                 disabled={!!actionLoading}
                 className="inline-flex items-center gap-1 rounded-lg border border-green-200 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-50 disabled:opacity-50 transition-colors"
@@ -175,6 +346,7 @@ function EmployerRow({ emp, onAction }: { emp: EmployerRecord; onAction: () => v
           </div>
 
           <button
+            type="button"
             onClick={() => setExpanded((p) => !p)}
             className="ml-1 text-gray-400 hover:text-gray-600 p-1"
             aria-label={expanded ? "Collapse" : "Expand"}
@@ -260,6 +432,26 @@ function EmployerRow({ emp, onAction }: { emp: EmployerRecord; onAction: () => v
                     </p>
                   </div>
                 )}
+                {declineReasons.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-400">Decline reasons</p>
+                    <ul className="mt-0.5 space-y-0.5">
+                      {declineReasons.map((r) => (
+                        <li key={r} className="text-xs text-red-600">• {r}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {requestedDocuments.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-400">Requested documents</p>
+                    <ul className="mt-0.5 space-y-0.5">
+                      {requestedDocuments.map((d) => (
+                        <li key={d} className="text-xs text-amber-700">• {d}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 {emp.verificationNote && (
                   <div>
                     <p className="text-xs text-gray-400">Admin note</p>
@@ -270,13 +462,16 @@ function EmployerRow({ emp, onAction }: { emp: EmployerRecord; onAction: () => v
             </div>
 
             {/* Mobile action buttons */}
-            <div className="flex sm:hidden gap-2 pt-1">
-              {emp.verificationStatus === "PENDING_REVIEW" && (
+            <div className="flex sm:hidden gap-2 pt-1 flex-wrap">
+              {(emp.verificationStatus === "PENDING_REVIEW" || emp.verificationStatus === "MORE_INFO_REQUIRED") && (
                 <>
-                  <button onClick={approve} disabled={!!actionLoading} className="flex-1 inline-flex justify-center items-center gap-1 rounded-lg border border-green-200 px-3 py-2 text-xs font-semibold text-green-700 hover:bg-green-50 disabled:opacity-50">
+                  <button type="button" onClick={approve} disabled={!!actionLoading} className="flex-1 inline-flex justify-center items-center gap-1 rounded-lg border border-green-200 px-3 py-2 text-xs font-semibold text-green-700 hover:bg-green-50 disabled:opacity-50">
                     <CheckCircle size={13} /> Approve
                   </button>
-                  <button onClick={() => setShowRejectModal(true)} disabled={!!actionLoading} className="flex-1 inline-flex justify-center items-center gap-1 rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50">
+                  <button type="button" onClick={() => setShowRequestDocsModal(true)} disabled={!!actionLoading} className="flex-1 inline-flex justify-center items-center gap-1 rounded-lg border border-amber-200 px-3 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50 disabled:opacity-50">
+                    <FileText size={13} /> Docs
+                  </button>
+                  <button type="button" onClick={() => setShowRejectModal(true)} disabled={!!actionLoading} className="flex-1 inline-flex justify-center items-center gap-1 rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50">
                     <XCircle size={13} /> Reject
                   </button>
                 </>
@@ -309,16 +504,22 @@ export default function AdminEmployersPage() {
   useEffect(() => { fetchEmployers(); }, [fetchEmployers]);
 
   const pendingCount = employers.filter((e) => e.verificationStatus === "PENDING_REVIEW").length;
+  const moreInfoCount = employers.filter((e) => e.verificationStatus === "MORE_INFO_REQUIRED").length;
 
   return (
     <div className="px-8 py-10 space-y-6 max-w-5xl">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Recruiter Verification</h1>
-        <p className="text-gray-500 mt-1">
+        <p className="text-gray-500 mt-1 flex items-center gap-2 flex-wrap">
           Review and approve employer accounts before they can post jobs.
           {pendingCount > 0 && (
-            <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 text-blue-700 text-xs font-semibold px-2.5 py-0.5">
+            <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 text-xs font-semibold px-2.5 py-0.5">
               {pendingCount} pending
+            </span>
+          )}
+          {moreInfoCount > 0 && (
+            <span className="inline-flex items-center rounded-full bg-amber-100 text-amber-700 text-xs font-semibold px-2.5 py-0.5">
+              {moreInfoCount} awaiting docs
             </span>
           )}
         </p>
@@ -334,7 +535,8 @@ export default function AdminEmployersPage() {
           />
         </div>
         <select
-          className="input w-48"
+          aria-label="Filter by verification status"
+          className="input w-52"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >

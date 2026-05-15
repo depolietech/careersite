@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import {
+  sendInterviewResponseToRecruiterEmail,
+  sendInterviewCancelledToSeekerEmail,
+  sendInterviewRescheduledToSeekerEmail,
+} from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +56,10 @@ export async function PATCH(req: Request) {
     where: { id: interviewId },
     include: {
       application: {
-        include: { job: { select: { postedById: true } }, user: { select: { id: true } } },
+        include: {
+          job: { select: { postedById: true, title: true } },
+          user: { select: { id: true, email: true } },
+        },
       },
     },
   });
@@ -67,15 +75,39 @@ export async function PATCH(req: Request) {
     const { scheduledAt, duration, type, meetingLink, notes } = body;
     if (!scheduledAt) return NextResponse.json({ error: "scheduledAt required" }, { status: 400 });
 
+    const newDate = new Date(scheduledAt);
+
     const updated = await db.interview.update({
       where: { id: interviewId },
       data: {
-        scheduledAt: new Date(scheduledAt),
+        scheduledAt: newDate,
         duration: duration ? Number(duration) : interview.duration,
         type: type ?? interview.type,
         meetingLink: meetingLink !== undefined ? (meetingLink || null) : interview.meetingLink,
         notes: notes !== undefined ? (notes || null) : interview.notes,
         seekerStatus: "PENDING", // reset seeker status on reschedule
+      },
+    });
+
+    // Notify job seeker of reschedule via email (fire-and-forget)
+    const seekerEmail = interview.application.user.email;
+    if (seekerEmail) {
+      sendInterviewRescheduledToSeekerEmail(
+        seekerEmail,
+        interview.application.job.title,
+        newDate,
+        type ?? interview.type,
+        meetingLink !== undefined ? (meetingLink || null) : interview.meetingLink
+      ).catch(() => {});
+    }
+
+    // In-app notification to job seeker
+    await db.notification.create({
+      data: {
+        userId: interview.application.user.id,
+        type: "STATUS_CHANGED",
+        title: "Interview rescheduled",
+        body: `Your interview for "${interview.application.job.title}" has been rescheduled.`,
       },
     });
 
@@ -106,6 +138,39 @@ export async function PATCH(req: Request) {
       },
     });
 
+    // Notify recruiter via email (fire-and-forget)
+    const recruiterId = interview.application.job.postedById;
+    if (recruiterId) {
+      const recruiter = await db.user.findUnique({ where: { id: recruiterId }, select: { email: true } });
+      if (recruiter?.email) {
+        const noteForRecruiter =
+          action === "REJECTED" ? rejectionReason :
+          action === "RESCHEDULE_REQUESTED" ? rescheduleNote :
+          null;
+        sendInterviewResponseToRecruiterEmail(
+          recruiter.email,
+          interview.application.job.title,
+          action as "ACCEPTED" | "REJECTED" | "RESCHEDULE_REQUESTED",
+          noteForRecruiter ?? null
+        ).catch(() => {});
+      }
+
+      // In-app notification to recruiter
+      const actionLabels: Record<string, string> = {
+        ACCEPTED: "accepted",
+        REJECTED: "declined",
+        RESCHEDULE_REQUESTED: "requested a reschedule for",
+      };
+      await db.notification.create({
+        data: {
+          userId: recruiterId,
+          type: "STATUS_CHANGED",
+          title: `Interview ${actionLabels[action] ?? action.toLowerCase()}`,
+          body: `A candidate has ${actionLabels[action] ?? action.toLowerCase()} the interview for "${interview.application.job.title}".`,
+        },
+      });
+    }
+
     return NextResponse.json(updated);
   }
 
@@ -127,7 +192,14 @@ export async function DELETE(req: Request) {
 
   const interview = await db.interview.findUnique({
     where: { id: interviewId },
-    include: { application: { include: { job: { select: { postedById: true } } } } },
+    include: {
+      application: {
+        include: {
+          job: { select: { postedById: true, title: true } },
+          user: { select: { id: true, email: true } },
+        },
+      },
+    },
   });
 
   if (!interview || interview.application.job.postedById !== session.user.id) {
@@ -146,6 +218,10 @@ export async function DELETE(req: Request) {
 
   const newCancelCount = (employerProfile?.interviewsCancelled ?? 0) + 1;
   const shouldBlock = newCancelCount >= 3;
+
+  const seekerUserId = interview.application.user.id;
+  const seekerEmail = interview.application.user.email;
+  const jobTitle = interview.application.job.title;
 
   await db.$transaction([
     db.interview.delete({ where: { id: interviewId } }),
@@ -170,6 +246,20 @@ export async function DELETE(req: Request) {
       },
     }),
   ]);
+
+  // Notify job seeker of cancellation
+  await db.notification.create({
+    data: {
+      userId: seekerUserId,
+      type: "STATUS_CHANGED",
+      title: "Interview cancelled",
+      body: `The recruiter cancelled the interview for "${jobTitle}".`,
+    },
+  });
+
+  if (seekerEmail) {
+    sendInterviewCancelledToSeekerEmail(seekerEmail, jobTitle, cancelReason).catch(() => {});
+  }
 
   // Notify admin if blocked
   if (shouldBlock) {

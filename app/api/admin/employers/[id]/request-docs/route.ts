@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { sendVerificationDeclinedEmail } from "@/lib/email";
+import { sendVerificationDocsRequestedEmail } from "@/lib/email";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -10,7 +10,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
 
   const { id } = await params;
-  const { note, reasons } = await req.json().catch(() => ({ note: "", reasons: [] }));
+  const { documents, note } = await req.json().catch(() => ({ documents: [], note: "" }));
 
   const profile = await db.employerProfile.findUnique({
     where: { id },
@@ -18,33 +18,33 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   });
   if (!profile) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const reasonsArray: string[] = Array.isArray(reasons) ? reasons : [];
+  const docsArray: string[] = Array.isArray(documents) ? documents : [];
 
   await db.employerProfile.update({
     where: { id },
     data: {
-      verificationStatus: "REJECTED",
+      verificationStatus: "MORE_INFO_REQUIRED",
       verificationNote: note?.trim() || null,
-      verificationDeclineReasons: reasonsArray.length > 0 ? JSON.stringify(reasonsArray) : null,
+      requestedDocuments: docsArray.length > 0 ? JSON.stringify(docsArray) : null,
     },
   });
 
   await db.adminLog.create({
     data: {
       adminId: session.user.id,
-      action: "REJECT_EMPLOYER",
+      action: "REQUEST_EMPLOYER_DOCS",
       targetId: profile.userId,
       targetType: "USER",
-      note: `Rejected employer: ${profile.companyName}${note ? ` — ${note}` : ""}${reasonsArray.length ? ` Reasons: ${reasonsArray.join(", ")}` : ""}`,
+      note: `Requested additional documents from ${profile.companyName}: ${docsArray.join(", ")}${note ? ` — ${note}` : ""}`,
     },
   });
 
-  sendVerificationDeclinedEmail(
+  sendVerificationDocsRequestedEmail(
     profile.user.email,
     profile.companyName,
-    reasonsArray,
+    docsArray,
     note?.trim() || null
-  ).catch((err) => console.error("[reject] email failed:", err));
+  ).catch((err) => console.error("[request-docs] email failed:", err));
 
-  return NextResponse.json({ verificationStatus: "REJECTED" });
+  return NextResponse.json({ verificationStatus: "MORE_INFO_REQUIRED" });
 }

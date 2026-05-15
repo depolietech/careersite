@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Users, Briefcase, MoreVertical, Plus, Calendar, Activity, ArrowRight, TrendingUp, ShieldAlert, Clock, XCircle } from "lucide-react";
+import { Users, Briefcase, MoreVertical, Plus, Calendar, Activity, ArrowRight, TrendingUp, ShieldAlert, Clock, XCircle, FileText } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
@@ -84,19 +84,26 @@ export default async function EmployerDashboard() {
       </div>
 
       {showVerificationBanner && (() => {
-        const isPending  = vStatus === "PENDING_REVIEW";
-        const isRejected = vStatus === "REJECTED";
-        const Icon = isPending ? Clock : isRejected ? XCircle : ShieldAlert;
+        const isPending      = vStatus === "PENDING_REVIEW";
+        const isRejected     = vStatus === "REJECTED";
+        const isMoreInfo     = vStatus === "MORE_INFO_REQUIRED";
+        const Icon = isPending ? Clock : isRejected ? XCircle : isMoreInfo ? FileText : ShieldAlert;
         const colors = isPending
           ? { bg: "bg-blue-50",   border: "border-blue-200",  text: "text-blue-700",   icon: "text-blue-500" }
           : isRejected
           ? { bg: "bg-red-50",    border: "border-red-200",   text: "text-red-700",    icon: "text-red-500" }
+          : isMoreInfo
+          ? { bg: "bg-amber-50",  border: "border-amber-200", text: "text-amber-700",  icon: "text-amber-600" }
           : { bg: "bg-amber-50",  border: "border-amber-200", text: "text-amber-700",  icon: "text-amber-500" };
         const message = isPending
           ? "Verification under review — you can post jobs once our team approves your account."
           : isRejected
-          ? `Verification rejected: ${employerProfile?.verificationNote ?? "please update your company details and re-submit."}`
+          ? `Verification declined: ${employerProfile?.verificationNote ?? "please update your company details and re-submit."}`
+          : isMoreInfo
+          ? `Additional documents required — ${employerProfile?.verificationNote ?? "check your email and upload the requested documents."}`
           : "Complete company verification to start posting jobs.";
+        const linkHref = isMoreInfo ? "/employer/verification" : "/employer/company/edit";
+        const linkLabel = isPending ? "View status" : isMoreInfo ? "Upload documents →" : "Complete now →";
         return (
           <div className={`rounded-2xl border ${colors.border} ${colors.bg} px-5 py-4 flex items-center justify-between gap-4`}>
             <div className="flex items-center gap-3">
@@ -104,10 +111,10 @@ export default async function EmployerDashboard() {
               <p className={`text-sm font-medium ${colors.text}`}>{message}</p>
             </div>
             <Link
-              href="/employer/company/edit"
+              href={linkHref}
               className={`shrink-0 text-xs font-semibold ${colors.text} underline underline-offset-2 hover:no-underline`}
             >
-              {isPending ? "View status" : "Complete now →"}
+              {linkLabel}
             </Link>
           </div>
         );

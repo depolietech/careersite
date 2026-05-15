@@ -56,7 +56,7 @@ export default async function JobSeekerDashboard({
   const params = await searchParams;
   const filterStatus = params.status ?? null;
 
-  const [allApps, filteredApps, profile, resumeCount] = await Promise.all([
+  const [allApps, filteredApps, profile, resumeCount, analyticsApps] = await Promise.all([
     db.application.findMany({
       where: { userId: session.user.id },
       select: { status: true },
@@ -83,6 +83,15 @@ export default async function JobSeekerDashboard({
       include: { workExperiences: true, educations: true },
     }),
     db.resume.count({ where: { userId: session.user.id } }),
+    db.application.findMany({
+      where: { userId: session.user.id },
+      select: {
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        job: { select: { skills: true } },
+      },
+    }),
   ]);
 
   // Weighted profile completion (sums to 100)
@@ -119,6 +128,35 @@ export default async function JobSeekerDashboard({
   }
 
   const completion = calcCompletion();
+
+  // Application analytics
+  const responded = analyticsApps.filter((a) =>
+    ["REVIEWING", "SHORTLISTED", "FORWARDED", "INTERVIEW_SCHEDULED", "REJECTED", "OFFER_MADE", "HIRED"].includes(a.status)
+  );
+  const responseRate = analyticsApps.length > 0
+    ? Math.round((responded.length / analyticsApps.length) * 100)
+    : 0;
+
+  const responseTimes = responded
+    .map((a) => {
+      const ms = new Date(a.updatedAt).getTime() - new Date(a.createdAt).getTime();
+      return Math.round(ms / 86400000); // convert to days
+    })
+    .filter((d) => d >= 0 && d < 365);
+  const avgResponseDays = responseTimes.length > 0
+    ? Math.round(responseTimes.reduce((s, d) => s + d, 0) / responseTimes.length)
+    : null;
+
+  const skillFreq: Record<string, number> = {};
+  for (const a of analyticsApps) {
+    let skills: string[] = [];
+    try { skills = JSON.parse(a.job.skills ?? "[]"); } catch { /* ignore */ }
+    for (const s of skills) skillFreq[s] = (skillFreq[s] ?? 0) + 1;
+  }
+  const topSkills = Object.entries(skillFreq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([s]) => s);
 
   const counts = {
     total:       allApps.length,
@@ -202,6 +240,41 @@ export default async function JobSeekerDashboard({
         </div>
         <p className="mt-2 text-sm text-gray-500">{completionHint()}</p>
       </div>
+
+      {/* Application Analytics */}
+      {analyticsApps.length > 0 && (
+        <div className="card p-6">
+          <h2 className="font-semibold text-gray-900 mb-4">Application Analytics</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="rounded-xl bg-brand-50 border border-brand-100 p-4">
+              <p className="text-xs text-gray-500 mb-1">Response rate</p>
+              <p className="text-2xl font-bold text-brand-700">{responseRate}%</p>
+              <p className="text-xs text-gray-400 mt-0.5">{responded.length} of {analyticsApps.length} applications got a reply</p>
+            </div>
+            <div className="rounded-xl bg-amber-50 border border-amber-100 p-4">
+              <p className="text-xs text-gray-500 mb-1">Avg. recruiter response</p>
+              <p className="text-2xl font-bold text-amber-700">
+                {avgResponseDays !== null ? `${avgResponseDays}d` : "—"}
+              </p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {avgResponseDays !== null ? "average days to first response" : "no responses yet"}
+              </p>
+            </div>
+            <div className="rounded-xl bg-green-50 border border-green-100 p-4">
+              <p className="text-xs text-gray-500 mb-2">Top skills in your matches</p>
+              {topSkills.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {topSkills.map((s) => (
+                    <span key={s} className="inline-flex rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">{s}</span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400">No skill data yet</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Application list */}
       <div className="space-y-4">

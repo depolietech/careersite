@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { sendRecruiterReviewReceivedEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -91,6 +92,31 @@ export async function POST(req: Request) {
         isAnonymous:       isAnonymous !== false,
       },
     });
+
+    // Notify recruiter of new review via email (fire-and-forget)
+    const employerProfile = await db.employerProfile.findUnique({
+      where: { id: employerProfileId },
+      include: { user: { select: { email: true } } },
+    });
+    if (employerProfile?.user?.email) {
+      sendRecruiterReviewReceivedEmail(
+        employerProfile.user.email,
+        employerProfile.companyName,
+        Number(rating)
+      ).catch(() => {});
+    }
+
+    // In-app notification to recruiter
+    if (employerProfile?.userId) {
+      await db.notification.create({
+        data: {
+          userId: employerProfile.userId,
+          type: "STATUS_CHANGED",
+          title: "New recruiter review received",
+          body: `A candidate left a ${Number(rating)}/5 star review for ${employerProfile.companyName}.`,
+        },
+      }).catch(() => {});
+    }
 
     return NextResponse.json(review, { status: 201 });
   } catch (err: unknown) {

@@ -310,6 +310,230 @@ export async function sendInterviewScheduledEmail(
   );
 }
 
+export async function sendVerificationDeclinedEmail(
+  email: string,
+  companyName: string,
+  reasons: string[],
+  note?: string | null
+) {
+  const reasonsList = reasons.length > 0
+    ? `<ul style="margin:0 0 16px;padding-left:20px;color:#dc2626;">${reasons.map((r) => `<li style="margin-bottom:4px;font-size:14px;">${escapeEmailText(r)}</li>`).join("")}</ul>`
+    : "";
+  const noteSection = note
+    ? `<p style="margin:0 0 24px;color:#475569;font-size:14px;"><strong>Admin note:</strong> ${escapeEmailText(note)}</p>`
+    : "";
+
+  const html = baseTemplate("Verification declined", `
+    <h2 style="margin:0 0 16px;color:#1e293b;font-size:22px;">Verification declined</h2>
+    <p style="margin:0 0 16px;color:#475569;line-height:1.6;">
+      Unfortunately, we were unable to verify <strong>${escapeEmailText(companyName)}</strong> at this time.
+    </p>
+    ${reasonsList.length ? `<p style="margin:0 0 8px;color:#475569;font-size:14px;font-weight:600;">Reason(s):</p>${reasonsList}` : ""}
+    ${noteSection}
+    <p style="margin:0 0 24px;color:#475569;line-height:1.6;font-size:14px;">
+      Please update your company details and re-submit for verification. If you believe this is an error, contact our support team.
+    </p>
+    <a href="${APP_URL}/employer/company/edit" style="display:inline-block;background:#1e3a2f;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:bold;font-size:15px;">
+      Update company details
+    </a>
+  `);
+
+  await sendEmail(
+    email,
+    `Your Equalhires verification was declined — ${companyName}`,
+    html,
+    `Verification for ${companyName} was declined.\nReasons: ${reasons.join(", ")}${note ? `\nAdmin note: ${note}` : ""}\nUpdate your details at ${APP_URL}/employer/company/edit`
+  );
+}
+
+export async function sendVerificationDocsRequestedEmail(
+  email: string,
+  companyName: string,
+  documents: string[],
+  note?: string | null
+) {
+  const docsList = documents.length > 0
+    ? `<ul style="margin:0 0 16px;padding-left:20px;color:#475569;">${documents.map((d) => `<li style="margin-bottom:4px;font-size:14px;">${escapeEmailText(d)}</li>`).join("")}</ul>`
+    : "";
+  const noteSection = note
+    ? `<p style="margin:0 0 24px;color:#475569;font-size:14px;"><strong>Admin note:</strong> ${escapeEmailText(note)}</p>`
+    : "";
+
+  const html = baseTemplate("Additional documents required", `
+    <h2 style="margin:0 0 16px;color:#1e293b;font-size:22px;">Additional documents required</h2>
+    <p style="margin:0 0 16px;color:#475569;line-height:1.6;">
+      We need a few more documents to complete verification for <strong>${escapeEmailText(companyName)}</strong>.
+    </p>
+    ${docsList.length ? `<p style="margin:0 0 8px;color:#475569;font-size:14px;font-weight:600;">Please upload the following:</p>${docsList}` : ""}
+    ${noteSection}
+    <p style="margin:0 0 24px;color:#475569;line-height:1.6;font-size:14px;">
+      Upload the required documents from your Verification Center. Your account will remain under review until documents are submitted.
+    </p>
+    <a href="${APP_URL}/employer/verification" style="display:inline-block;background:#1e3a2f;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:bold;font-size:15px;">
+      Go to Verification Center
+    </a>
+  `);
+
+  await sendEmail(
+    email,
+    `Additional documents required — ${companyName} verification`,
+    html,
+    `Additional documents required for ${companyName}.\nPlease upload: ${documents.join(", ")}${note ? `\nAdmin note: ${note}` : ""}\nUpload at ${APP_URL}/employer/verification`
+  );
+}
+
+export async function sendNewApplicationReceivedEmail(email: string, jobTitle: string) {
+  const html = baseTemplate("New application received", `
+    <h2 style="margin:0 0 16px;color:#1e293b;font-size:22px;">New application received</h2>
+    <p style="margin:0 0 24px;color:#475569;line-height:1.6;">
+      A new candidate has applied for <strong>${escapeEmailText(jobTitle)}</strong>.
+      Their identity is masked — you can see their skills, experience, and education on your applicants page.
+    </p>
+    <a href="${APP_URL}/employer/applicants" style="display:inline-block;background:#1e3a2f;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:bold;font-size:15px;">
+      Review applicants
+    </a>
+    <p style="margin:24px 0 0;color:#94a3b8;font-size:13px;">
+      Identity is revealed automatically once you schedule an interview and the candidate accepts.
+    </p>
+  `);
+
+  await sendEmail(
+    email,
+    `New application — ${jobTitle}`,
+    html,
+    `A new candidate applied for "${jobTitle}". Review at ${APP_URL}/employer/applicants`
+  );
+}
+
+export async function sendInterviewResponseToRecruiterEmail(
+  email: string,
+  jobTitle: string,
+  action: "ACCEPTED" | "REJECTED" | "RESCHEDULE_REQUESTED",
+  note?: string | null
+) {
+  const labels: Record<string, { subject: string; heading: string; body: string; color: string }> = {
+    ACCEPTED: {
+      subject: `Interview accepted — ${jobTitle}`,
+      heading: "Interview accepted",
+      body: `A candidate has <strong>accepted</strong> their interview for <strong>${escapeEmailText(jobTitle)}</strong>. Their full identity has been revealed — check your applicants page for their contact details.`,
+      color: "#16a34a",
+    },
+    REJECTED: {
+      subject: `Interview declined — ${jobTitle}`,
+      heading: "Interview declined",
+      body: `A candidate has <strong>declined</strong> the interview for <strong>${escapeEmailText(jobTitle)}</strong>.${note ? ` Their reason: <em>${escapeEmailText(note)}</em>` : ""}`,
+      color: "#dc2626",
+    },
+    RESCHEDULE_REQUESTED: {
+      subject: `Reschedule requested — ${jobTitle}`,
+      heading: "Reschedule requested",
+      body: `A candidate has requested to <strong>reschedule</strong> the interview for <strong>${escapeEmailText(jobTitle)}</strong>.${note ? ` Their note: <em>${escapeEmailText(note)}</em>` : ""} Please log in to review their proposed time.`,
+      color: "#d97706",
+    },
+  };
+  const cfg = labels[action] ?? labels.ACCEPTED;
+
+  const html = baseTemplate(cfg.heading, `
+    <h2 style="margin:0 0 16px;color:${cfg.color};font-size:22px;">${cfg.heading}</h2>
+    <p style="margin:0 0 24px;color:#475569;line-height:1.6;">${cfg.body}</p>
+    <a href="${APP_URL}/employer/calendar" style="display:inline-block;background:#1e3a2f;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:bold;font-size:15px;">
+      View calendar
+    </a>
+  `);
+
+  await sendEmail(email, cfg.subject, html, `${cfg.heading} for "${jobTitle}". View at ${APP_URL}/employer/calendar`);
+}
+
+export async function sendInterviewCancelledToSeekerEmail(
+  email: string,
+  jobTitle: string,
+  reason?: string | null
+) {
+  const html = baseTemplate("Interview cancelled", `
+    <h2 style="margin:0 0 16px;color:#dc2626;font-size:22px;">Interview cancelled</h2>
+    <p style="margin:0 0 16px;color:#475569;line-height:1.6;">
+      The recruiter has cancelled the interview for <strong>${escapeEmailText(jobTitle)}</strong>.
+      ${reason ? `Their reason: <em>${escapeEmailText(reason)}</em>` : ""}
+    </p>
+    <p style="margin:0 0 24px;color:#475569;line-height:1.6;font-size:14px;">
+      Your application remains active and the recruiter may reach out again. You can continue applying to other positions.
+    </p>
+    <a href="${APP_URL}/jobs" style="display:inline-block;background:#1e3a2f;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:bold;font-size:15px;">
+      Browse more jobs
+    </a>
+  `);
+
+  await sendEmail(
+    email,
+    `Interview cancelled — ${jobTitle}`,
+    html,
+    `The recruiter cancelled the interview for "${jobTitle}".${reason ? ` Reason: ${reason}` : ""}`
+  );
+}
+
+export async function sendInterviewRescheduledToSeekerEmail(
+  email: string,
+  jobTitle: string,
+  scheduledAt: Date,
+  interviewType: string,
+  meetingLink: string | null
+) {
+  const dateStr = scheduledAt.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  const timeStr = scheduledAt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+  const typeLabel = interviewType === "video" ? "Video Call" : interviewType === "phone" ? "Phone Call" : "In Person";
+  const meetingSection = meetingLink
+    ? `<p style="margin:16px 0 0;"><a href="${escapeEmailText(meetingLink)}" style="display:inline-block;background:#1e3a2f;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;font-size:14px;">Join Meeting</a></p>`
+    : "";
+
+  const html = baseTemplate("Interview rescheduled", `
+    <h2 style="margin:0 0 16px;color:#d97706;font-size:22px;">Interview rescheduled</h2>
+    <p style="margin:0 0 24px;color:#475569;line-height:1.6;">
+      The recruiter has rescheduled your interview for <strong>${escapeEmailText(jobTitle)}</strong> to a new time.
+    </p>
+    <div style="background:#f1f5f9;border-radius:12px;padding:20px;margin:0 0 24px;">
+      <p style="margin:0 0 8px;font-size:14px;color:#475569;"><strong>New date:</strong> ${dateStr}</p>
+      <p style="margin:0 0 8px;font-size:14px;color:#475569;"><strong>Time:</strong> ${timeStr}</p>
+      <p style="margin:0;font-size:14px;color:#475569;"><strong>Type:</strong> ${typeLabel}</p>
+    </div>
+    ${meetingSection}
+    <p style="margin:24px 0 0;"><a href="${APP_URL}/calendar" style="display:inline-block;background:#1e3a2f;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:bold;font-size:15px;">View in Calendar</a></p>
+  `);
+
+  await sendEmail(
+    email,
+    `Interview rescheduled — ${jobTitle}`,
+    html,
+    `Your interview for "${jobTitle}" has been rescheduled to ${dateStr} at ${timeStr} (${typeLabel}). View at ${APP_URL}/calendar`
+  );
+}
+
+export async function sendRecruiterReviewReceivedEmail(email: string, companyName: string, rating: number) {
+  const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
+  const html = baseTemplate("New recruiter review", `
+    <h2 style="margin:0 0 16px;color:#1e293b;font-size:22px;">You received a new review</h2>
+    <p style="margin:0 0 16px;color:#475569;line-height:1.6;">
+      A candidate has submitted a review for <strong>${escapeEmailText(companyName)}</strong>.
+    </p>
+    <div style="background:#f1f5f9;border-radius:12px;padding:20px;margin:0 0 24px;text-align:center;">
+      <p style="margin:0;font-size:28px;color:#f59e0b;letter-spacing:4px;">${stars}</p>
+      <p style="margin:8px 0 0;font-size:14px;color:#475569;">Overall rating: <strong>${rating}/5</strong></p>
+    </div>
+    <a href="${APP_URL}/employer/company" style="display:inline-block;background:#1e3a2f;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:bold;font-size:15px;">
+      View my reviews
+    </a>
+    <p style="margin:24px 0 0;color:#94a3b8;font-size:13px;">
+      Reviews are submitted anonymously by candidates you have interacted with.
+    </p>
+  `);
+
+  await sendEmail(
+    email,
+    `New review for ${companyName} — ${rating}/5 stars`,
+    html,
+    `You received a ${rating}/5 star review for ${companyName}. View at ${APP_URL}/employer/company`
+  );
+}
+
 export async function send2FAChangedEmail(email: string, action: "enabled" | "disabled") {
   const title = action === "enabled" ? "Two-factor authentication enabled" : "Two-factor authentication disabled";
   const body = action === "enabled"

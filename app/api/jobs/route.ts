@@ -22,7 +22,7 @@ export async function GET(req: Request) {
       ...(jobType && { jobType }),
     },
     include: {
-      employerProfile: { select: { companyName: true, industry: true, companySize: true } },
+      employerProfile: { select: { companyName: true, industry: true, companySize: true, verificationStatus: true } },
       _count: { select: { applications: true } },
       applications: { select: { status: true } },
     },

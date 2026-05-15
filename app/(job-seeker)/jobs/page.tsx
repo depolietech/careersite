@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search, MapPin, Briefcase, Clock, DollarSign, ArrowRight,
   CheckSquare, Square, CheckCircle2, XCircle, Loader2, Lock, Flag, X,
-  FileText, AlertCircle, User,
+  FileText, AlertCircle, User, ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ type Job = {
   pipelineStatus: string;
   shortlistedCount: number;
   interviewCount: number;
-  employerProfile: { companyName: string; industry: string | null; companySize: string | null } | null;
+  employerProfile: { companyName: string; industry: string | null; companySize: string | null; verificationStatus: string } | null;
   _count: { applications: number };
 };
 
@@ -439,7 +439,14 @@ function JobsPageInner() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-semibold text-gray-900">{job.title}</p>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="font-semibold text-gray-900">{job.title}</p>
+                        {job.employerProfile?.verificationStatus === "APPROVED" && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-green-50 border border-green-200 px-1.5 py-0.5 text-[10px] font-semibold text-green-700" title="Verified employer">
+                            <ShieldCheck size={9} /> Verified
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-500 mt-0.5">
                         {job.employerProfile?.industry ?? "Company"} · {job.employerProfile?.companySize ?? "—"} {t("employer.employees")}
                       </p>
@@ -497,8 +504,16 @@ function JobsPageInner() {
                           <span className="flex items-center gap-1"><DollarSign size={13} />{formatSalary(selectedJob.salaryMin, selectedJob.salaryMax, locationToCurrency(selectedJob.location))}</span>
                         </div>
                         {selectedJob.employerProfile && (
-                          <p className="mt-1 text-sm text-gray-400">
-                            {selectedJob.employerProfile.companyName} · {selectedJob.employerProfile.industry}
+                          <p className="mt-1 text-sm text-gray-400 flex items-center gap-1.5 flex-wrap">
+                            {selectedJob.employerProfile.companyName}
+                            {selectedJob.employerProfile.verificationStatus === "APPROVED" && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-xs font-semibold text-green-700" title="Verified employer">
+                                <ShieldCheck size={11} /> Verified
+                              </span>
+                            )}
+                            {selectedJob.employerProfile.industry && (
+                              <span>· {selectedJob.employerProfile.industry}</span>
+                            )}
                           </p>
                         )}
                       </div>
