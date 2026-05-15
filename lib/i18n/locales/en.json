@@ -512,6 +512,7 @@
     "securityPolicy": "Security Policy",
     "dataRetention": "Data Retention Policy",
     "jobSeekerAgreement": "Job Seeker Agreement",
+    "recruiterAgreement": "Recruiter Agreement",
     "about": "About",
     "whatsNew": "What's New",
     "faq": "FAQ"

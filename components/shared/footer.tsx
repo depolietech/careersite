@@ -21,10 +21,8 @@ export function Footer() {
             <h3 className="text-sm font-semibold text-gray-900">{t("footer.forSeekers")}</h3>
             <ul className="mt-4 space-y-2">
               {[
-                { href: "/jobs",                     label: t("footer.browseJobs") },
-                { href: "/register?role=job-seeker", label: t("footer.createProfile") },
-                { href: "/login",                    label: t("footer.signIn") },
-                { href: "/job-seeker-agreement",     label: t("footer.jobSeekerAgreement") },
+                { href: "/jobs",                 label: t("footer.browseJobs") },
+                { href: "/job-seeker-agreement", label: t("footer.jobSeekerAgreement") },
               ].map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
@@ -39,10 +37,8 @@ export function Footer() {
             <h3 className="text-sm font-semibold text-gray-900">{t("footer.forEmployers")}</h3>
             <ul className="mt-4 space-y-2">
               {[
-                { href: "/register?role=employer",   label: t("footer.postJob") },
-                { href: "/register?role=contractor", label: t("footer.contractorAccess") },
-                { href: "/employer/dashboard",       label: t("footer.dashboard") },
-                { href: "/recruiter-agreement",      label: "Recruiter Agreement" },
+                { href: "/register?role=employer", label: t("footer.postJob") },
+                { href: "/recruiter-agreement",    label: t("footer.recruiterAgreement") },
               ].map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
