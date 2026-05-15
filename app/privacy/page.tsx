@@ -11,7 +11,7 @@ export default function PrivacyPage() {
       </Link>
 
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Privacy Policy</h1>
-      <p className="text-sm text-gray-400 mb-10">Last updated: April 30, 2026</p>
+      <p className="text-sm text-gray-400 mb-10">Last updated: May 15, 2026</p>
 
       <div className="prose prose-gray max-w-none space-y-8 text-gray-700">
 
@@ -60,6 +60,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-xl font-semibold text-gray-900 mb-3">6. Data retention</h2>
           <p>We retain your account data for as long as your account is active. You may delete your account at any time from your account settings, which will remove all associated profile and application data. Some data may be retained for up to 90 days in backups before permanent deletion.</p>
+          <p className="mt-3">We may also retain certain records for legal, compliance, security, fraud prevention, and audit purposes in accordance with applicable laws, even after an account is closed. See our <Link href="/data-retention" className="text-brand-600 hover:underline">Data Retention Policy</Link> for full details.</p>
         </section>
 
         <section>
@@ -72,7 +73,7 @@ export default function PrivacyPage() {
             <li>Opt out of marketing communications</li>
             <li>Data portability</li>
           </ul>
-          <p className="mt-3">To exercise these rights, contact us at <strong>info@equalhires.com</strong>.</p>
+          <p className="mt-3">To exercise these rights, contact us at <strong>info@equalhires.com</strong>. Requests are subject to legal and operational requirements.</p>
         </section>
 
         <section>
@@ -82,16 +83,38 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="text-xl font-semibold text-gray-900 mb-3">9. Cookies</h2>
-          <p>We use essential cookies for authentication sessions. With your consent, we also use analytics cookies to understand how the platform is used. You can manage your cookie preferences using the consent banner or your browser settings.</p>
+          <p>We use essential cookies for authentication sessions. With your consent, we also use analytics cookies to understand how the platform is used. You can manage your cookie preferences using the consent banner or your browser settings. See our <Link href="/cookie-policy" className="text-brand-600 hover:underline">Cookie Policy</Link> for more information.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-3">10. Changes to this policy</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">10. Anonymization practices</h2>
+          <p>EqualHires may remove or hide identifying information such as names, gender indicators, schools, or photographs during early recruitment stages to support fair hiring practices. This anonymization is a core feature of the platform and is applied automatically to all job seeker profiles when viewed by recruiters prior to interview scheduling.</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">11. AI processing notice</h2>
+          <p>Candidate and recruiter data may be processed using automated systems for profile matching, ranking, analytics, fraud detection, and platform optimization. These systems are designed to support bias-reduced hiring practices. AI-assisted tools are advisory in nature and do not replace human judgment in hiring decisions.</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">12. Candidate control rights</h2>
+          <p>In addition to your general privacy rights, you may at any time:</p>
+          <ul className="list-disc pl-6 space-y-2">
+            <li>Update your profile information from your account settings</li>
+            <li>Request deletion of your account and associated data</li>
+            <li>Submit a data access request to receive a copy of your personal data</li>
+            <li>Withdraw an application at any time before a hiring decision is made</li>
+          </ul>
+          <p className="mt-3">Requests are subject to legal, operational, and security limitations. Contact <strong>info@equalhires.com</strong> to submit a request.</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">13. Changes to this policy</h2>
           <p>We may update this policy periodically. We will notify you of significant changes via email or a prominent notice on the platform.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-3">11. Contact</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">14. Contact</h2>
           <p>Questions? Reach us at <strong>info@equalhires.com</strong> or through our <Link href="/about" className="text-brand-600 hover:underline">about page</Link>.</p>
         </section>
       </div>

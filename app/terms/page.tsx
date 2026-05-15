@@ -11,7 +11,7 @@ export default function TermsPage() {
       </Link>
 
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Terms of Service</h1>
-      <p className="text-sm text-gray-400 mb-10">Last updated: May 7, 2026</p>
+      <p className="text-sm text-gray-400 mb-10">Last updated: May 15, 2026</p>
 
       <div className="prose prose-gray max-w-none space-y-8 text-gray-700">
 
@@ -116,12 +116,27 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-3">13. Changes</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">13. AI and automated decision systems</h2>
+          <p>EqualHires may use AI-assisted and automated systems to analyze, rank, and recommend candidate profiles based on job-related qualifications, skills, and experience. Such systems are designed to support fair and bias-reduced hiring practices. AI-generated rankings and recommendations are advisory tools only and do not constitute hiring decisions.</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">14. No employment guarantee</h2>
+          <p>EqualHires does not guarantee interviews, employment opportunities, hiring outcomes, or candidate selection. The platform facilitates connections between job seekers and employers but has no control over, and accepts no responsibility for, the ultimate hiring decisions made by employers or recruiters.</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">15. Platform role disclaimer</h2>
+          <p>EqualHires acts as a technology platform facilitating connections between recruiters and job seekers. We are not an employer, staffing agency, or recruitment firm. We are not responsible for hiring decisions made by employers or recruiters, the accuracy of job postings, or outcomes of the recruitment process.</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">16. Changes</h2>
           <p>We may update these terms. Continued use of the platform after changes are posted constitutes acceptance. We will notify users of material changes via email.</p>
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-3">14. Contact</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">17. Contact</h2>
           <p>Questions about these terms? Email <strong>info@equalhires.com</strong> or see our <Link href="/privacy" className="text-brand-600 hover:underline">Privacy Policy</Link>.</p>
         </section>
 

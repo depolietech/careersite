@@ -11,7 +11,7 @@ export default function RecruiterAgreementPage() {
       </Link>
 
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Recruiter Agreement</h1>
-      <p className="text-sm text-gray-400 mb-2">Effective Date: May 7, 2026</p>
+      <p className="text-sm text-gray-400 mb-2">Effective Date: May 15, 2026</p>
       <p className="text-sm text-gray-500 mb-10">
         This Recruiter Agreement (&quot;Agreement&quot;) governs the use of the EqualHires platform by employers, recruiters,
         staffing agencies, contractors, and hiring representatives (&quot;Recruiter&quot;, &quot;you&quot;, or &quot;your&quot;) using the services
@@ -184,7 +184,45 @@ export default function RecruiterAgreementPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-3">14. Changes to this Agreement</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">14. Anti-Discrimination Compliance</h2>
+          <p>Recruiters agree not to use the EqualHires platform in violation of applicable employment, human rights, anti-discrimination, or labor laws. This includes, but is not limited to, the Canadian Human Rights Act, Ontario Human Rights Code, and any applicable provincial, federal, or international anti-discrimination legislation. Recruiters must evaluate candidates solely on job-related qualifications and skills.</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">15. Use of Anonymized Profiles</h2>
+          <p>Recruiters acknowledge that candidate identities may remain hidden until interview selection or an approved reveal stage. Recruiters agree to:</p>
+          <ul className="list-disc pl-6 space-y-2 mt-3">
+            <li>Evaluate candidates based solely on the anonymized profile information made available to them</li>
+            <li>Not attempt to identify candidates through external means before the authorized reveal stage</li>
+            <li>Treat revealed candidate information as strictly confidential and use it only for the stated hiring purpose</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">16. Data Usage Restrictions</h2>
+          <p>Recruiters shall not scrape, copy, export, resell, or misuse candidate information outside authorized platform usage. Specifically, recruiters may not:</p>
+          <ul className="list-disc pl-6 space-y-2 mt-3">
+            <li>Systematically extract or download candidate data</li>
+            <li>Use candidate information for marketing, sales prospecting, or any purpose unrelated to the active recruitment process</li>
+            <li>Transfer candidate data to third parties not directly involved in the hiring decision</li>
+            <li>Retain candidate data after the recruitment process concludes</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">17. AI Matching Disclaimer</h2>
+          <p>EqualHires AI ranking and recommendation systems are advisory tools only and do not replace recruiter judgment. AI-generated scores, rankings, or recommendations:</p>
+          <ul className="list-disc pl-6 space-y-2 mt-3">
+            <li>Are based on job-related qualifications and skills data submitted by candidates</li>
+            <li>Are not determinative of hiring suitability</li>
+            <li>Should be used as one input among many in the hiring process</li>
+            <li>Do not constitute an endorsement or guarantee of any candidate</li>
+          </ul>
+          <p className="mt-3">Recruiters remain solely responsible for all hiring decisions.</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">18. Changes to this Agreement</h2>
           <p>
             EqualHires may update this Agreement from time to time. Continued use of the platform after updates
             constitutes acceptance of the revised terms.
@@ -192,15 +230,14 @@ export default function RecruiterAgreementPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-3">15. Governing Law</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">19. Governing Law</h2>
           <p>
-            This Agreement shall be governed by the laws of the applicable jurisdiction in which EqualHires operates,
-            without regard to conflict of law principles.
+            This Agreement shall be governed by the laws of Ontario, Canada, without regard to conflict of law principles.
           </p>
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-3">16. Contact Information</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">20. Contact Information</h2>
           <p>
             For questions regarding this Agreement, please contact:{" "}
             <a href="mailto:support@equalhires.com" className="text-brand-600 hover:underline">support@equalhires.com</a>
