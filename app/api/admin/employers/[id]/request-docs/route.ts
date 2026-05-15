@@ -39,6 +39,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     },
   });
 
+  // In-app notification to employer
+  await db.notification.create({
+    data: {
+      userId: profile.userId,
+      type: "STATUS_CHANGED",
+      title: "Additional documents required",
+      body: `Additional documents are required to complete verification for ${profile.companyName}. Check your Verification Center.`,
+    },
+  }).catch(() => {});
+
+  // Email to employer (fire-and-forget)
   sendVerificationDocsRequestedEmail(
     profile.user.email,
     profile.companyName,

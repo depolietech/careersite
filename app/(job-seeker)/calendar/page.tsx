@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Calendar, Clock, Video, Phone, MapPin, Loader2, CheckCircle, XCircle, RefreshCw } from "lucide-react";
+import { Calendar, Clock, Video, Phone, MapPin, Loader2, CheckCircle, XCircle, RefreshCw, CalendarPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, TextArea } from "@/components/ui/input";
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/lib/i18n";
+import { buildGoogleCalendarUrl, buildOutlookCalendarUrl } from "@/lib/calendarUtils";
 
 const TYPE_ICON: Record<string, React.ElementType> = {
   video: Video, phone: Phone, "in-person": MapPin,
@@ -25,7 +26,7 @@ type Interview = {
 
 type ActionPanel = "reject" | "reschedule" | null;
 
-function InterviewCard({ interview, onUpdated }: { interview: Interview; onUpdated: (iv: Interview) => void }) {
+function InterviewCard({ interview, tz, onUpdated }: { interview: Interview; tz: string; onUpdated: (iv: Interview) => void }) {
   const Icon = TYPE_ICON[interview.type] ?? Video;
   const { t } = useI18n();
   const [panel, setPanel] = useState<ActionPanel>(null);
@@ -51,8 +52,17 @@ function InterviewCard({ interview, onUpdated }: { interview: Interview; onUpdat
   function fmtTime(s: string, duration: number) {
     const start = new Date(s);
     const end = new Date(start.getTime() + duration * 60000);
-    return `${start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} – ${end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
+    const timeStr = `${start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} – ${end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
+    return tz ? `${timeStr} (${tz})` : timeStr;
   }
+
+  const calEvent = {
+    title: `Interview: ${interview.application.job.title}`,
+    start: new Date(interview.scheduledAt),
+    durationMinutes: interview.duration,
+    description: interview.notes ?? undefined,
+    location: interview.meetingLink ?? undefined,
+  };
 
   async function sendAction(action: "ACCEPTED" | "REJECTED" | "RESCHEDULE_REQUESTED") {
     if (action === "REJECTED" && !rejectReason) return;
@@ -120,6 +130,38 @@ function InterviewCard({ interview, onUpdated }: { interview: Interview; onUpdat
         </a>
       )}
 
+      {/* Add to Calendar buttons */}
+      {panel === null && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="flex items-center gap-1 text-xs font-medium text-gray-400">
+            <CalendarPlus size={12} /> Add to calendar:
+          </span>
+          <a
+            href={buildGoogleCalendarUrl(calEvent)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            Google Calendar
+          </a>
+          <a
+            href={buildOutlookCalendarUrl(calEvent)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            Outlook
+          </a>
+          <a
+            href={`/api/calendar/ics?id=${interview.id}`}
+            download="interview.ics"
+            className="inline-flex items-center rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            Apple / Other (.ics)
+          </a>
+        </div>
+      )}
+
       {/* Action buttons — only show if pending */}
       {status === "PENDING" && panel === null && (
         <div className="flex flex-wrap gap-2 pt-1">
@@ -147,6 +189,7 @@ function InterviewCard({ interview, onUpdated }: { interview: Interview; onUpdat
       {/* Re-respond if previously acted */}
       {status !== "PENDING" && panel === null && (
         <button
+          type="button"
           onClick={() => setPanel("reject")}
           className="text-xs text-gray-400 hover:text-gray-600 underline"
         >
@@ -205,6 +248,7 @@ function InterviewCard({ interview, onUpdated }: { interview: Interview; onUpdat
 export default function CalendarPage() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tz, setTz] = useState("");
   const { t } = useI18n();
 
   useEffect(() => {
@@ -212,6 +256,11 @@ export default function CalendarPage() {
       .then((r) => r.json())
       .then((d) => { setInterviews(Array.isArray(d) ? d : []); setLoading(false); })
       .catch(() => setLoading(false));
+
+    const tzName = new Intl.DateTimeFormat("en-US", { timeZoneName: "short" })
+      .formatToParts(new Date())
+      .find((p) => p.type === "timeZoneName")?.value ?? "";
+    setTz(tzName);
   }, []);
 
   function handleUpdated(updated: Interview) {
@@ -238,7 +287,7 @@ export default function CalendarPage() {
       ) : (
         <div className="space-y-4">
           {interviews.map((iv) => (
-            <InterviewCard key={iv.id} interview={iv} onUpdated={handleUpdated} />
+            <InterviewCard key={iv.id} interview={iv} tz={tz} onUpdated={handleUpdated} />
           ))}
         </div>
       )}

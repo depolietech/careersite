@@ -225,7 +225,7 @@ export async function POST(req: NextRequest) {
         if (!userId) {
           response = {
             reply:
-              "To apply to jobs on Equalhires:\n\n1. **Create a free account** as a job seeker\n2. **Complete your profile** — add skills, work experience, and upload a resume (all required)\n3. **Browse jobs** and click a listing to open the details panel\n4. Click **Apply** — select your resume, add an optional cover letter\n5. Submit — your identity stays masked until an interview is scheduled\n\n📸 A snapshot of your profile is stored at submission so you can see exactly what the recruiter received.",
+              "To apply to jobs on Equalhires:\n\n1. **Create a free account** as a job seeker\n2. **Complete your profile** — add skills, at least one work experience, and one education entry (all required to apply)\n3. **Browse jobs** and click a listing to open the details panel\n4. Click **Apply** — optionally attach a resume and cover letter\n5. Submit — your identity stays masked until an interview is scheduled\n\n📸 A snapshot of your profile is stored at submission so you can see exactly what the recruiter received.",
             suggestions: ["Create an account", "How does masking work?", "Browse jobs"],
             links: [
               { label: "Create Account", href: "/register?role=job-seeker" },
@@ -242,7 +242,7 @@ export async function POST(req: NextRequest) {
         } else {
           response = {
             reply:
-              "To apply to a job:\n\n1. Go to **Browse Jobs** and click a listing\n2. Click **Apply** — the platform checks your profile is ready\n3. **Select your resume** from your saved resumes (up to 3 stored)\n4. Add an optional **cover letter** to personalize your application\n5. Submit — your identity stays hidden until an interview is scheduled\n\n⚠️ **Before you can apply** you need: skills added, at least one work experience, and at least one resume uploaded. If anything is missing, you'll see a guided checklist with direct links to fix it.\n\n📸 A profile snapshot is captured at submission — view it anytime from your dashboard.",
+              "To apply to a job:\n\n1. Go to **Browse Jobs** and click a listing\n2. Click **Apply** — the platform checks your profile is ready\n3. **Select a resume** (optional but recommended — upload up to 3 PDFs in your profile)\n4. Add an optional **cover letter** to personalize your application\n5. Submit — your identity stays hidden until an interview is scheduled\n\n⚠️ **Before you can apply** you need: at least one skill, one work experience entry, and one education entry. If anything is missing, you'll see a guided checklist with direct links to fix it.\n\n📸 A profile snapshot is captured at submission — view it anytime from your dashboard.",
             suggestions: ["Browse jobs", "Update my profile", "Upload a resume", "View my submissions"],
             links: [
               { label: "Browse Jobs", href: "/jobs" },
@@ -386,7 +386,7 @@ export async function POST(req: NextRequest) {
             reply:
               resumeCount > 0
                 ? `You have **${resumeCount} resume${resumeCount !== 1 ? "s" : ""}** saved (max 3 allowed).\n\nWhen you apply to a job, you'll be prompted to **select which resume to send** from your saved list. The selected resume is recorded in your application snapshot and shared with the employer once your identity is revealed after an interview is scheduled.`
-                : "⚠️ You haven't uploaded any resumes yet — and **a resume is required to apply**.\n\nYou can upload up to 3 PDFs (max 5 MB each) from your profile page. When applying, you'll choose which one to send per application.",
+                : "You haven't uploaded any resumes yet. While a resume is not required to submit an application, it is strongly recommended — employers can review it once your identity is revealed.\n\nYou can upload up to 3 PDFs (max 5 MB each) from your profile page.",
             suggestions: ["Edit my profile", "Browse jobs", "Track my applications"],
             links: [{ label: "Upload Resume", href: "/profile#resumes" }],
           };
@@ -411,7 +411,7 @@ export async function POST(req: NextRequest) {
         } else if (userRole === "JOB_SEEKER") {
           response = {
             reply:
-              "A strong profile is required before applying.\n\n**Required to apply:**\n✅ At least one skill added\n✅ Work experience added\n✅ Resume uploaded\n\n**Boosts your chances:**\n⭐ Professional headline\n⭐ Career summary\n⭐ Education history\n⭐ Certifications\n\n💡 **Tip:** The skills field has **auto-suggest** — start typing any skill and a dropdown shows matching options from 100+ common skills.\n\n⚠️ If anything required is missing, you'll see a guided checklist with direct links when you click Apply.",
+              "A strong profile is required before applying.\n\n**Required to apply:**\n✅ At least one skill added\n✅ At least one work experience entry\n✅ At least one education entry\n\n**Strongly recommended:**\n⭐ Resume uploaded (up to 3 PDFs stored)\n⭐ Professional headline\n⭐ Career summary\n⭐ Certifications\n\n💡 **Tip:** The skills field has **auto-suggest** — start typing any skill and a dropdown shows matching options from 100+ common skills.\n\n⚠️ If anything required is missing, you'll see a guided checklist with direct links when you click Apply.",
             suggestions: ["Edit my profile", "Upload a resume", "Browse jobs", "What is a profile snapshot?"],
             links: [
               { label: "Edit Profile", href: "/profile" },

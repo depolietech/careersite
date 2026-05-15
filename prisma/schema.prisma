@@ -51,7 +51,7 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   passwordHash  String?
-  role          String    @default("JOB_SEEKER") // "JOB_SEEKER" | "EMPLOYER"
+  role          String    @default("JOB_SEEKER") // "JOB_SEEKER" | "EMPLOYER" | "ADMIN"
   recruiterType String?   // "COMPANY" | "AGENCY" — set only when role = EMPLOYER
   language      String    @default("en") // "en" | "fr-CA" | "es-MX"
   isPublicEmail Boolean   @default(false) // true if gmail/yahoo/hotmail etc.
@@ -112,7 +112,7 @@ model OtpCode {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   codeHash  String
-  type      String   // "2fa_login" | "2fa_setup"
+  type      String   // "2fa_login" | "2fa_setup" | "email_verify"
   expires   DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -363,7 +363,7 @@ model Notification {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      String   // "APPLICATION_SUBMITTED" | "NEW_APPLICATION" | "STATUS_CHANGED"
+  type      String   // "APPLICATION_SUBMITTED" | "NEW_APPLICATION" | "STATUS_CHANGED" | "EMPLOYER_BLOCKED" | "DELETED_USER_SIGNUP"
   title     String
   body      String
   read      Boolean  @default(false)
@@ -409,8 +409,8 @@ model Interview {
   // Recruiter cancel reason
   cancelReason  String?
 
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime? @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 // ─── Admin Audit Log ──────────────────────────────────────────────────────────
@@ -418,7 +418,7 @@ model Interview {
 model AdminLog {
   id         String   @id @default(cuid())
   adminId    String
-  action     String   // "DELETE_USER" | "BLOCK_USER" | "UNBLOCK_USER" | "APPROVE_EMPLOYER" | "NOTE"
+  action     String   // "DELETE_USER" | "PURGE_USER" | "BLOCK" | "UNBLOCK" | "APPROVE" | "REINSTATE" | "REJECT_REINSTATE" | "APPROVE_EMPLOYER" | "REJECT_EMPLOYER" | "REQUEST_EMPLOYER_DOCS" | "CANCEL_INTERVIEW" | "NOTE"
   targetId   String?  // userId or other entity id
   targetType String?  // "USER" | "JOB" | "APPLICATION"
   note       String?

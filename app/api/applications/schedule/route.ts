@@ -16,6 +16,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "applicationId, scheduledAt, and type are required" }, { status: 400 });
     }
 
+    const VALID_TYPES = ["video", "phone", "in-person"];
+    if (!VALID_TYPES.includes(type)) {
+      return NextResponse.json({ error: "type must be video, phone, or in-person" }, { status: 400 });
+    }
+
+    const durationMin = Number(duration ?? 60);
+    if (!Number.isInteger(durationMin) || durationMin < 15 || durationMin > 480) {
+      return NextResponse.json({ error: "duration must be between 15 and 480 minutes" }, { status: 400 });
+    }
+
     if (new Date(scheduledAt) <= new Date()) {
       return NextResponse.json({ error: "Interview must be scheduled in the future." }, { status: 400 });
     }
@@ -48,7 +58,7 @@ export async function POST(req: Request) {
           applicationId,
           scheduledById: session.user.id!,
           scheduledAt: new Date(scheduledAt),
-          duration: Number(duration ?? 60),
+          duration: durationMin,
           type,
           meetingLink: meetingLink || null,
           notes: notes || null,
@@ -65,6 +75,16 @@ export async function POST(req: Request) {
       where: { applicationId },
       create: { applicationId },
       update: {},
+    });
+
+    // In-app notification to job seeker
+    await db.notification.create({
+      data: {
+        userId: application.userId,
+        type: "STATUS_CHANGED",
+        title: "Interview scheduled",
+        body: `A recruiter has scheduled an interview for "${application.job.title}". Check your calendar for details.`,
+      },
     });
 
     // Send interview notification email to job seeker (fire-and-forget)

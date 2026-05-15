@@ -39,6 +39,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     },
   });
 
+  // In-app notification to employer
+  await db.notification.create({
+    data: {
+      userId: profile.userId,
+      type: "STATUS_CHANGED",
+      title: "Verification declined",
+      body: `Your verification for ${profile.companyName} was declined. Please review the reasons and update your company details.`,
+    },
+  }).catch(() => {});
+
+  // Email to employer (fire-and-forget)
   sendVerificationDeclinedEmail(
     profile.user.email,
     profile.companyName,

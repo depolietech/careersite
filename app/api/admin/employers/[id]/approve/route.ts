@@ -36,7 +36,17 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     },
   });
 
-  // Notify the recruiter so they know they can now log in and post jobs
+  // In-app notification to employer
+  await db.notification.create({
+    data: {
+      userId: profile.userId,
+      type: "STATUS_CHANGED",
+      title: "Verification approved",
+      body: `${profile.companyName} has been verified. You can now post jobs and start hiring.`,
+    },
+  }).catch(() => {});
+
+  // Email to recruiter (fire-and-forget)
   await sendVerificationApprovedEmail(profile.user.email, profile.companyName).catch((err) =>
     console.error("[approve] email failed:", err)
   );
