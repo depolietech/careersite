@@ -7,6 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/lib/i18n";
+import type { RecruiterMatchBreakdown } from "@/lib/matching";
 
 type WorkExp = {
   id: string; title: string; roleCategory: string | null;
@@ -33,7 +34,7 @@ type Talent = {
   matchScore: number | null;
   matchedSkills: string[];
   skillGaps: string[];
-  matchBreakdown: Record<string, number> | null;
+  matchBreakdown: RecruiterMatchBreakdown | null;
 };
 
 type EmployerJob = { id: string; title: string; status: string };

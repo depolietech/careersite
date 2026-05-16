@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { scoreSeekerForJob } from "@/lib/matching";
+import { scoreSeekerForJob, type RecruiterMatchBreakdown } from "@/lib/matching";
 
 export const dynamic = "force-dynamic";
 
@@ -100,7 +100,7 @@ export async function GET(req: Request) {
     let matchScore: number | null = null;
     let matchedSkills: string[] = [];
     let skillGaps: string[] = [];
-    let matchBreakdown: Record<string, number> | null = null;
+    let matchBreakdown: RecruiterMatchBreakdown | null = null;
 
     if (rankingJob) {
       const result = scoreSeekerForJob(rankingJob, {
@@ -114,7 +114,7 @@ export async function GET(req: Request) {
       matchScore    = result.score;
       matchedSkills = result.matchedSkills;
       skillGaps     = result.skillGaps;
-      matchBreakdown = result.breakdown as Record<string, number>;
+      matchBreakdown = result.breakdown;
     }
 
     return {
