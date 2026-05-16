@@ -4,6 +4,14 @@ import { ArrowLeft, CheckCircle2, Circle, Rocket } from "lucide-react";
 export const metadata = { title: "What's New — Equalhires" };
 
 const SHIPPED = [
+  "Live hiring transparency — every job listing shows a real-time pipeline progress bar (Applied → Screening → Interviews → Offer → Filled) with live applicant counts, visible to everyone including public visitors",
+  "Auto-pipeline status — pipelineStatus syncs automatically on every application event; FILLED jobs block new applications at both the API and UI layer",
+  "Hiring stage badges — job list cards show pipeline badges (Reviewing, Interview Stage, Offer Sent, Position Filled) so seekers know where a role stands at a glance",
+  "Employer pipeline dashboard — applicants page now shows total applicants, in-review, interview, and offer counts, plus one-click Mark as Filled / Reopen controls",
+  "Hiring workflow emails — job seekers receive email notifications at every stage change: Reviewing, Shortlisted, Forwarded, Interview Completed, Rejected, Offer Made, and Hired",
+  "Interview scheduling improvements — video interviews require a validated meeting link (Zoom, Google Meet, Teams, etc.); interview date and Join Meeting button appear on the job seeker dashboard",
+  "Post-interview recruiter flow — completing an interview surfaces a guided action panel: Send Offer, Shortlist for Later, or Not a Fit",
+  "Job requirements on listings — education level and certifications required now display on job cards and in the detail panel",
   "Skills-based matching engine — job seekers see top-matched jobs with % score, skill gaps, and cert recommendations on their dashboard; recruiters can rank the entire talent pool against any posted job",
   "Multi-location job postings — employers can add multiple locations per job listing; job seekers see all locations in the detail panel",
   "Auto-suggest skills & certs — typing a job title on the post-job form surfaces relevant skills, certifications, and education requirements to add in one click",
