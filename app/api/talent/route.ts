@@ -114,7 +114,7 @@ export async function GET(req: Request) {
       matchScore    = result.score;
       matchedSkills = result.matchedSkills;
       skillGaps     = result.skillGaps;
-      matchBreakdown = result.breakdown;
+      matchBreakdown = result.breakdown as Record<string, number>;
     }
 
     return {
