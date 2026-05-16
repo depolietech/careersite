@@ -138,6 +138,49 @@ function scoreRoleMatch(
   return best;
 }
 
+// ─── Skill → Certification recommendations ────────────────────────────────────
+const SKILL_CERTS: Record<string, string[]> = {
+  "aws":              ["AWS Solutions Architect", "AWS Certified Developer", "AWS Cloud Practitioner"],
+  "google cloud":     ["Google Cloud Professional Architect", "Google Cloud Associate Engineer"],
+  "azure":            ["Azure Administrator Associate", "Azure Solutions Architect"],
+  "kubernetes":       ["Certified Kubernetes Administrator", "Certified Kubernetes Application Developer"],
+  "terraform":        ["HashiCorp Terraform Associate"],
+  "machine learning": ["AWS Machine Learning Specialty", "Google Professional ML Engineer", "Databricks ML Professional"],
+  "python":           ["Google Professional Data Engineer", "Databricks Certified Data Engineer"],
+  "java":             ["Oracle Certified Professional Java"],
+  "project management": ["PMP", "PRINCE2"],
+  "agile":            ["Certified ScrumMaster", "PMI-ACP", "SAFe Practitioner"],
+  "scrum":            ["Certified ScrumMaster", "SAFe Scrum Master"],
+  "security":         ["CompTIA Security+", "CISSP", "CEH"],
+  "sql":              ["Microsoft SQL Server Certification", "Oracle Database Certification"],
+  "data analysis":    ["Google Data Analytics Certificate", "Tableau Desktop Specialist"],
+  "tableau":          ["Tableau Desktop Specialist"],
+  "power bi":         ["Microsoft Power BI Data Analyst"],
+  "salesforce":       ["Salesforce Administrator", "Salesforce Platform Developer"],
+  "network security": ["CompTIA Network+", "CISSP", "CCNA"],
+  "linux":            ["CompTIA Linux+", "Red Hat Certified Engineer"],
+  "docker":           ["Docker Certified Associate"],
+  "devops":           ["AWS DevOps Engineer Professional", "Google Cloud DevOps Engineer"],
+  "react":            ["Meta Front-End Developer Certificate"],
+  "ux design":        ["Google UX Design Certificate", "Nielsen Norman UX Certification"],
+  "accounting":       ["CPA", "CGA"],
+  "finance":          ["CFA", "CPA"],
+};
+
+function getCertRecommendations(skillGaps: string[]): string[] {
+  const recommended = new Set<string>();
+  for (const gap of skillGaps) {
+    const norm = normalizeSkill(gap);
+    for (const [key, certs] of Object.entries(SKILL_CERTS)) {
+      if (norm.includes(key) || key.includes(norm)) {
+        certs.forEach((c) => recommended.add(c));
+        break;
+      }
+    }
+  }
+  return [...recommended].slice(0, 4);
+}
+
 // ─── Profile completeness (0–100) ────────────────────────────────────────────
 
 export function calcProfileCompleteness(
@@ -176,10 +219,11 @@ export interface MatchBreakdown {
 }
 
 export interface MatchResult {
-  score:         number;
-  breakdown:     MatchBreakdown;
-  matchedSkills: string[];
-  skillGaps:     string[];
+  score:               number;
+  breakdown:           MatchBreakdown;
+  matchedSkills:       string[];
+  skillGaps:           string[];
+  certRecommendations: string[];
 }
 
 export interface RecruiterMatchBreakdown {
@@ -255,7 +299,7 @@ export function scoreJobForSeeker(
     compScore  * 0.05
   );
 
-  return { score, breakdown, matchedSkills: matched, skillGaps: gaps };
+  return { score, breakdown, matchedSkills: matched, skillGaps: gaps, certRecommendations: getCertRecommendations(gaps) };
 }
 
 // ─── Recruiter scoring ────────────────────────────────────────────────────────

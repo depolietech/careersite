@@ -18,7 +18,10 @@ export async function GET(req: Request) {
         { description: { contains: q } },
         { skills: { contains: q } },
       ]}),
-      ...(location && { location: { contains: location } }),
+      ...(location && { OR: [
+        { location: { contains: location } },
+        { locations: { contains: location } },
+      ]}),
       ...(jobType && { jobType }),
     },
     include: {
@@ -47,7 +50,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { title, description, location, jobType, salaryMin, salaryMax, skills, experience, educationRequired, certificateRequired } = body;
+    const { title, description, location, locations, jobType, salaryMin, salaryMax, skills, experience, educationRequired, certificateRequired } = body;
 
     if (!title || !description || !location || !jobType) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -80,6 +83,7 @@ export async function POST(req: Request) {
         title,
         description,
         location,
+        locations: Array.isArray(locations) && locations.length > 1 ? JSON.stringify(locations) : null,
         jobType,
         salaryMin: minSalary,
         salaryMax: maxSalary,

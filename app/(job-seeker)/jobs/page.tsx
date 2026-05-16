@@ -17,6 +17,7 @@ type Job = {
   id: string;
   title: string;
   location: string;
+  locations: string | null;
   jobType: string;
   salaryMin: number | null;
   salaryMax: number | null;
@@ -55,6 +56,7 @@ function JobsPageInner() {
   const searchParams = useSearchParams();
   const { t } = useI18n();
   const preselectedJobId = searchParams.get("job");
+  const preselectedSkill = searchParams.get("skill");
 
   const JOB_TYPE_LABELS: Record<string, string> = {
     "full-time": t("jobs.fullTime"),
@@ -122,6 +124,12 @@ function JobsPageInner() {
     return () => clearTimeout(timer);
   }, [fetchJobs]);
 
+  // Pre-fill skill search from ?skill= URL param
+  useEffect(() => {
+    if (preselectedSkill && !query) setQuery(preselectedSkill);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preselectedSkill]);
+
   // Auto-select a job when arriving from landing page via ?job=ID
   useEffect(() => {
     if (preselectedJobId && jobs.length > 0 && !selectedJob) {
@@ -129,6 +137,13 @@ function JobsPageInner() {
       if (found) setSelectedJob(found);
     }
   }, [preselectedJobId, jobs, selectedJob]);
+
+  function parseLocations(job: Job): string[] {
+    if (job.locations) {
+      try { return JSON.parse(job.locations) as string[]; } catch { /* fall through */ }
+    }
+    return [job.location];
+  }
 
   function parseSkills(s: string): string[] {
     try { return JSON.parse(s); } catch { return []; }
@@ -454,7 +469,10 @@ function JobsPageInner() {
                     <Badge variant="outline">{JOB_TYPE_LABELS[job.jobType] ?? job.jobType}</Badge>
                   </div>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-                    <span className="flex items-center gap-1"><MapPin size={11} />{job.location}</span>
+                    <span className="flex items-center gap-1">
+                      <MapPin size={11} />
+                      {(() => { const locs = parseLocations(job); return locs.length > 1 ? `${locs[0]} +${locs.length - 1} more` : locs[0]; })()}
+                    </span>
                     <span className="flex items-center gap-1"><DollarSign size={11} />{formatSalary(job.salaryMin, job.salaryMax, locationToCurrency(job.location))}</span>
                     <span className="flex items-center gap-1"><Clock size={11} />{timeAgo(new Date(job.createdAt))}</span>
                   </div>
@@ -499,7 +517,10 @@ function JobsPageInner() {
                       <div>
                         <h1 className="text-2xl font-bold text-gray-900">{selectedJob.title}</h1>
                         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-gray-500">
-                          <span className="flex items-center gap-1"><MapPin size={13} />{selectedJob.location}</span>
+                          <span className="flex items-center gap-1 flex-wrap">
+                            <MapPin size={13} />
+                            {parseLocations(selectedJob).join(" · ")}
+                          </span>
                           <span className="flex items-center gap-1"><Briefcase size={13} />{JOB_TYPE_LABELS[selectedJob.jobType] ?? selectedJob.jobType}</span>
                           <span className="flex items-center gap-1"><DollarSign size={13} />{formatSalary(selectedJob.salaryMin, selectedJob.salaryMax, locationToCurrency(selectedJob.location))}</span>
                         </div>

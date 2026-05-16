@@ -274,6 +274,7 @@ model Job {
   title       String
   description String
   location    String
+  locations   String?  // JSON array of additional locations (multi-location support)
   jobType     String   // "full-time" | "part-time" | "contract" | "remote"
   salaryMin   Int?
   salaryMax   Int?

@@ -31,6 +31,7 @@ function timeAgo(date: Date) {
 
 function getStatusLabel(t: (k: string) => string, status: string): string {
   const map: Record<string, string> = {
+    responded:           "Responded",
     PENDING:             t("status.applied"),
     REVIEWING:           t("status.underReview"),
     SHORTLISTED:         t("status.shortlisted"),
@@ -57,6 +58,8 @@ export default async function JobSeekerDashboard({
   const params = await searchParams;
   const filterStatus = params.status ?? null;
 
+  const RESPONDED_STATUSES = ["REVIEWING", "SHORTLISTED", "FORWARDED", "INTERVIEW_SCHEDULED", "REJECTED", "OFFER_MADE", "HIRED"];
+
   const [allApps, filteredApps, profile, resumeCount, analyticsApps, activeJobs, appliedJobIds] = await Promise.all([
     db.application.findMany({
       where: { userId: session.user.id },
@@ -65,7 +68,11 @@ export default async function JobSeekerDashboard({
     db.application.findMany({
       where: {
         userId: session.user.id,
-        ...(filterStatus ? { status: filterStatus } : {}),
+        ...(filterStatus === "responded"
+          ? { status: { in: RESPONDED_STATUSES } }
+          : filterStatus
+          ? { status: filterStatus }
+          : {}),
       },
       include: {
         job: {
@@ -170,15 +177,21 @@ export default async function JobSeekerDashboard({
         .slice(0, 5)
     : [];
 
-  // Aggregate skill gaps across top matches (most frequent first)
+  // Aggregate skill gaps and cert recommendations across top matches (most frequent first)
   const gapFreq: Record<string, number> = {};
+  const certFreq: Record<string, number> = {};
   for (const m of topMatches) {
     for (const g of m.skillGaps) gapFreq[g] = (gapFreq[g] ?? 0) + 1;
+    for (const c of m.certRecommendations) certFreq[c] = (certFreq[c] ?? 0) + 1;
   }
   const topSkillGaps = Object.entries(gapFreq)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 6)
     .map(([s]) => s);
+  const topCertRecs = Object.entries(certFreq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([c]) => c);
 
   // Application analytics
   const responded = analyticsApps.filter((a) =>
@@ -314,7 +327,7 @@ export default async function JobSeekerDashboard({
               return (
                 <Link
                   key={job.id}
-                  href={`/jobs/${job.id}`}
+                  href={`/jobs?job=${job.id}`}
                   className="flex items-start gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4 hover:border-brand-200 hover:bg-brand-50 transition-all"
                 >
                   <div className={`shrink-0 rounded-lg px-2.5 py-1 text-sm font-bold tabular-nums ${scoreColor}`}>
@@ -347,19 +360,35 @@ export default async function JobSeekerDashboard({
             })}
           </div>
 
-          {/* Skill Gaps panel */}
-          {topSkillGaps.length > 0 && (
-            <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 space-y-2">
-              <p className="flex items-center gap-1.5 text-sm font-semibold text-amber-800">
-                <AlertCircle size={14} /> Skills to add to improve your matches
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {topSkillGaps.map((s) => (
-                  <span key={s} className="inline-flex rounded-full border border-amber-200 bg-white px-2.5 py-0.5 text-xs font-medium text-amber-700">
-                    {s}
-                  </span>
-                ))}
-              </div>
+          {/* Skill Gaps + Cert Recommendations panel */}
+          {(topSkillGaps.length > 0 || topCertRecs.length > 0) && (
+            <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 space-y-3">
+              {topSkillGaps.length > 0 && (
+                <div className="space-y-2">
+                  <p className="flex items-center gap-1.5 text-sm font-semibold text-amber-800">
+                    <AlertCircle size={14} /> Skills to add to improve your matches
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {topSkillGaps.map((s) => (
+                      <span key={s} className="inline-flex rounded-full border border-amber-200 bg-white px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {topCertRecs.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-amber-700">Certifications that could boost your score</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {topCertRecs.map((c) => (
+                      <span key={c} className="inline-flex rounded-full border border-amber-300 bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                        🏅 {c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               <Link href="/profile" className="text-xs text-amber-700 underline underline-offset-2 hover:no-underline">
                 Update your profile →
               </Link>
@@ -373,11 +402,14 @@ export default async function JobSeekerDashboard({
         <div className="card p-6">
           <h2 className="font-semibold text-gray-900 mb-4">Application Analytics</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="rounded-xl bg-brand-50 border border-brand-100 p-4">
+            <Link
+              href="/dashboard?status=responded"
+              className={`rounded-xl bg-brand-50 border border-brand-100 p-4 hover:shadow-card-hover transition-all block ${filterStatus === "responded" ? "ring-2 ring-brand-500" : ""}`}
+            >
               <p className="text-xs text-gray-500 mb-1">Response rate</p>
               <p className="text-2xl font-bold text-brand-700">{responseRate}%</p>
               <p className="text-xs text-gray-400 mt-0.5">{responded.length} of {analyticsApps.length} applications got a reply</p>
-            </div>
+            </Link>
             <div className="rounded-xl bg-amber-50 border border-amber-100 p-4">
               <p className="text-xs text-gray-500 mb-1">Avg. recruiter response</p>
               <p className="text-2xl font-bold text-amber-700">
@@ -392,7 +424,9 @@ export default async function JobSeekerDashboard({
               {topSkills.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
                   {topSkills.map((s) => (
-                    <span key={s} className="inline-flex rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">{s}</span>
+                    <Link key={s} href={`/jobs?skill=${encodeURIComponent(s)}`} className="inline-flex rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700 hover:bg-green-200 transition-colors" title={`Search jobs requiring ${s}`}>
+                      {s}
+                    </Link>
                   ))}
                 </div>
               ) : (

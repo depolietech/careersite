@@ -57,18 +57,19 @@ export async function GET() {
   const top = scored.slice(0, 8);
 
   return NextResponse.json(
-    top.map(({ job, score, breakdown, matchedSkills, skillGaps }) => ({
-      id:            job.id,
-      title:         job.title,
-      location:      job.location,
-      jobType:       job.jobType,
-      industry:      job.employerProfile?.industry ?? null,
-      companySize:   job.employerProfile?.companySize ?? null,
-      requiredSkills: (() => { try { return JSON.parse(job.skills); } catch { return []; } })(),
-      matchScore:    score,
+    top.map(({ job, score, breakdown, matchedSkills, skillGaps, certRecommendations }) => ({
+      id:                  job.id,
+      title:               job.title,
+      location:            job.location,
+      jobType:             job.jobType,
+      industry:            job.employerProfile?.industry ?? null,
+      companySize:         job.employerProfile?.companySize ?? null,
+      requiredSkills:      (() => { try { return JSON.parse(job.skills); } catch { return []; } })(),
+      matchScore:          score,
       breakdown,
       matchedSkills,
       skillGaps,
+      certRecommendations,
     }))
   );
 }

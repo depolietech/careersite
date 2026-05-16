@@ -1,11 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, ArrowLeft, ShieldAlert, Clock, ShieldCheck } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, ShieldAlert, Clock, ShieldCheck, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input, TextArea, Select } from "@/components/ui/input";
 import { COUNTRIES, STATES, buildLocation, CURRENCY_LABEL } from "@/lib/locations";
+import { getJobSuggestions } from "@/lib/job-taxonomy";
 
 const JOB_TYPE_OPTIONS = [
   { value: "full-time", label: "Full-time" },
@@ -27,6 +28,8 @@ export default function PostJobPage() {
   const router = useRouter();
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const [checkingVerification, setCheckingVerification] = useState(true);
+  const [jobTitle, setJobTitle] = useState("");
+  const [educationRequired, setEducationRequired] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
   const [certs, setCerts] = useState<string[]>([]);
@@ -35,6 +38,7 @@ export default function PostJobPage() {
   const [error, setError] = useState<string | null>(null);
   const [country, setCountry] = useState("");
   const [stateProvince, setStateProvince] = useState("");
+  const [locations, setLocations] = useState<string[]>([]);
   const [salaryMin, setSalaryMin] = useState("");
   const [salaryMax, setSalaryMax] = useState("");
 
@@ -50,6 +54,23 @@ export default function PostJobPage() {
   const currency = CURRENCY_LABEL[country] ?? "USD";
   const currLabel = currency !== "USD" ? currency : "$";
 
+  const suggestions = getJobSuggestions(jobTitle);
+
+  const applySuggestions = useCallback(() => {
+    if (!suggestions) return;
+    setSkills((prev) => {
+      const combined = [...prev];
+      for (const s of suggestions.skills) { if (!combined.includes(s)) combined.push(s); }
+      return combined;
+    });
+    setCerts((prev) => {
+      const combined = [...prev];
+      for (const c of suggestions.certifications) { if (!combined.includes(c)) combined.push(c); }
+      return combined;
+    });
+    if (suggestions.education) setEducationRequired(suggestions.education);
+  }, [suggestions]);
+
   function addSkill() {
     const s = skillInput.trim();
     if (s && !skills.includes(s)) setSkills((p) => [...p, s]);
@@ -62,9 +83,22 @@ export default function PostJobPage() {
     setCertInput("");
   }
 
+  function addLocation() {
+    const loc = buildLocation(country, stateProvince);
+    if (!loc) { setError("Please select a country first."); return; }
+    setError(null);
+    if (!locations.includes(loc)) setLocations((p) => [...p, loc]);
+    setCountry(""); setStateProvince("");
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+
+    if (locations.length === 0) {
+      setError("Please add at least one location.");
+      return;
+    }
 
     // Salary validation
     const minVal = salaryMin ? Number(salaryMin) : null;
@@ -75,8 +109,7 @@ export default function PostJobPage() {
     }
 
     const fd = new FormData(e.currentTarget);
-    const location = buildLocation(country, stateProvince);
-    if (!location) { setError("Please select a location."); return; }
+    const location = locations[0];
 
     setLoading(true);
     try {
@@ -87,11 +120,12 @@ export default function PostJobPage() {
           title: fd.get("title"),
           description: fd.get("description"),
           location,
+          locations: locations.length > 1 ? locations : null,
           jobType: fd.get("jobType"),
           salaryMin: minVal,
           salaryMax: maxVal,
           experience: fd.get("experience") || null,
-          educationRequired: fd.get("educationRequired") || null,
+          educationRequired: educationRequired || null,
           certificateRequired: certs.length > 0 ? certs.join(", ") : null,
           skills,
         }),
@@ -165,13 +199,75 @@ export default function PostJobPage() {
         {/* Basic info */}
         <div className="card p-6 space-y-5">
           <h2 className="font-semibold text-gray-900">Job details</h2>
-          <Input name="title" label="Job title" required placeholder="e.g. Senior React Developer" />
+          <Input
+            name="title"
+            label="Job title"
+            required
+            placeholder="e.g. Senior React Developer"
+            value={jobTitle}
+            onChange={(e) => setJobTitle(e.target.value)}
+          />
+          {suggestions && (
+            <div className="rounded-xl border border-brand-100 bg-brand-50 p-4 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-brand-800">
+                  <Sparkles size={14} /> Suggested for &ldquo;{jobTitle}&rdquo;
+                </p>
+                <Button type="button" size="sm" variant="secondary" onClick={applySuggestions}>
+                  Add all suggestions
+                </Button>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <p className="text-xs text-brand-600 font-medium mb-1">Skills</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {suggestions.skills.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        aria-label={`Add skill ${s}`}
+                        onClick={() => { if (!skills.includes(s)) setSkills((p) => [...p, s]); }}
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                          skills.includes(s)
+                            ? "bg-brand-200 text-brand-700 cursor-default"
+                            : "bg-white border border-brand-200 text-brand-700 hover:bg-brand-100"
+                        }`}
+                      >
+                        {skills.includes(s) ? "✓ " : "+ "}{s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {suggestions.certifications.length > 0 && (
+                  <div>
+                    <p className="text-xs text-brand-600 font-medium mb-1">Certifications</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {suggestions.certifications.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          aria-label={`Add certification ${c}`}
+                          onClick={() => { if (!certs.includes(c)) setCerts((p) => [...p, c]); }}
+                          className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                            certs.includes(c)
+                              ? "bg-brand-200 text-brand-700 cursor-default"
+                              : "bg-white border border-brand-200 text-brand-700 hover:bg-brand-100"
+                          }`}
+                        >
+                          {certs.includes(c) ? "✓ " : "+ "}{c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-3">
               <Select
                 label="Country"
                 options={COUNTRIES}
-                required
                 value={country}
                 onChange={(e) => { setCountry(e.target.value); setStateProvince(""); }}
               />
@@ -183,9 +279,29 @@ export default function PostJobPage() {
                   onChange={(e) => setStateProvince(e.target.value)}
                 />
               )}
+              <Button type="button" variant="secondary" size="sm" onClick={addLocation}>
+                <Plus size={14} /> Add location
+              </Button>
             </div>
             <Select name="jobType" label="Job type" options={JOB_TYPE_OPTIONS} required />
           </div>
+          {locations.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">
+                Job location{locations.length > 1 ? "s" : ""} <span className="text-xs text-gray-400 font-normal">(first is primary)</span>
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {locations.map((loc) => (
+                  <span key={loc} className="flex items-center gap-1.5 badge bg-brand-50 text-brand-700 text-sm px-3 py-1">
+                    {loc}
+                    <button type="button" aria-label={`Remove ${loc}`} onClick={() => setLocations((p) => p.filter((l) => l !== loc))}>
+                      <Trash2 size={11} className="text-brand-400 hover:text-brand-700" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           <TextArea name="description" label="Job description" required placeholder="Describe the role, responsibilities, and what success looks like. Focus on skills rather than background." />
         </div>
 
@@ -194,7 +310,13 @@ export default function PostJobPage() {
           <h2 className="font-semibold text-gray-900">Requirements</h2>
           <div className="grid grid-cols-2 gap-4">
             <Input name="experience" label="Years of experience required" type="number" placeholder="3" />
-            <Select name="educationRequired" label="Minimum education" options={EDUCATION_OPTIONS} />
+            <Select
+              name="educationRequired"
+              label="Minimum education"
+              options={EDUCATION_OPTIONS}
+              value={educationRequired}
+              onChange={(e) => setEducationRequired(e.target.value)}
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Required certifications <span className="text-gray-400 font-normal">(optional)</span></label>
@@ -202,7 +324,7 @@ export default function PostJobPage() {
               {certs.map((c) => (
                 <span key={c} className="flex items-center gap-1.5 badge bg-brand-50 text-brand-700 text-sm px-3 py-1">
                   {c}
-                  <button type="button" onClick={() => setCerts((p) => p.filter((x) => x !== c))}>
+                  <button type="button" aria-label={`Remove ${c}`} onClick={() => setCerts((p) => p.filter((x) => x !== c))}>
                     <Trash2 size={11} className="text-brand-400 hover:text-brand-700" />
                   </button>
                 </span>
@@ -227,7 +349,7 @@ export default function PostJobPage() {
               {skills.map((s) => (
                 <span key={s} className="flex items-center gap-1.5 badge bg-brand-50 text-brand-700 text-sm px-3 py-1">
                   {s}
-                  <button type="button" onClick={() => setSkills((p) => p.filter((k) => k !== s))}>
+                  <button type="button" aria-label={`Remove ${s}`} onClick={() => setSkills((p) => p.filter((k) => k !== s))}>
                     <Trash2 size={11} className="text-brand-400 hover:text-brand-700" />
                   </button>
                 </span>
