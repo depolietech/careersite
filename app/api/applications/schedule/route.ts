@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { sendInterviewScheduledEmail } from "@/lib/email";
+import { syncPipelineStatus } from "@/lib/job-status";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -110,6 +111,9 @@ export async function POST(req: Request) {
         meetingLink || null
       ).catch(() => {});
     }
+
+    // Sync job pipeline status (fire-and-forget)
+    syncPipelineStatus(application.jobId).catch(() => {});
 
     return NextResponse.json({ application: updatedApp, interview }, { status: 201 });
   } catch (err) {

@@ -1,8 +1,8 @@
 "use client";
-import { useState, use, useEffect } from "react";
+import { useState, use, useEffect, useMemo } from "react";
 import {
   EyeOff, Calendar, ChevronDown, ChevronUp,
-  ArrowLeft, MapPin, Clock, Star, StarOff, X, Loader2, User,
+  ArrowLeft, MapPin, Clock, Star, StarOff, X, Loader2, User, BarChart2,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -526,12 +526,24 @@ function CandidateCard({
 }
 
 // ─── Page ──────────────────────────────────────────────────────────────────
+const PIPELINE_LABELS: Record<string, { label: string; cls: string }> = {
+  OPEN:            { label: "Actively Hiring",          cls: "text-green-700 bg-green-50 border border-green-200" },
+  IN_REVIEW:       { label: "Reviewing Applications",   cls: "text-amber-700 bg-amber-50 border border-amber-200" },
+  INTERVIEW_STAGE: { label: "Interview Stage",          cls: "text-blue-700 bg-blue-50 border border-blue-200" },
+  OFFERED:         { label: "Offer Sent",               cls: "text-purple-700 bg-purple-50 border border-purple-200" },
+  FILLED:          { label: "Position Filled",          cls: "text-gray-600 bg-gray-100 border border-gray-300" },
+  CLOSED:          { label: "Closed",                   cls: "text-red-700 bg-red-50 border border-red-200" },
+};
+
 export default function ApplicantsPage({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = use(params);
   const { t } = useI18n();
   const [filter, setFilter] = useState("all");
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [jobTitle, setJobTitle] = useState<string | null>(null);
+  const [pipelineStatus, setPipelineStatus] = useState("OPEN");
+  const [updatingPipeline, setUpdatingPipeline] = useState(false);
 
   useEffect(() => {
     fetch(`/api/applications?jobId=${jobId}`)
@@ -541,12 +553,39 @@ export default function ApplicantsPage({ params }: { params: Promise<{ jobId: st
         setLoading(false);
       })
       .catch(() => setLoading(false));
+    fetch(`/api/jobs/${jobId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.title) setJobTitle(data.title);
+        if (data.pipelineStatus) setPipelineStatus(data.pipelineStatus);
+      })
+      .catch(() => {});
   }, [jobId]);
 
   function handleStatusChange(id: string, status: string) {
     setCandidates((prev) =>
       prev.map((c) => (c.id === id ? { ...c, status } : c))
     );
+  }
+
+  const stats = useMemo(() => ({
+    total:      candidates.length,
+    reviewing:  candidates.filter((c) => ["REVIEWING", "SHORTLISTED", "FORWARDED"].includes(c.status)).length,
+    interviews: candidates.filter((c) => ["INTERVIEW_SCHEDULED", "INTERVIEW_COMPLETED"].includes(c.status)).length,
+    offers:     candidates.filter((c) => ["OFFER_MADE", "HIRED"].includes(c.status)).length,
+  }), [candidates]);
+
+  async function updatePipeline(newStatus: string, jobStatus?: string) {
+    setUpdatingPipeline(true);
+    const body: Record<string, string> = { pipelineStatus: newStatus };
+    if (jobStatus) body.status = jobStatus;
+    const res = await fetch(`/api/jobs/${jobId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) setPipelineStatus(newStatus);
+    setUpdatingPipeline(false);
   }
 
   const filtered = filter === "all"
@@ -587,6 +626,67 @@ export default function ApplicantsPage({ params }: { params: Promise<{ jobId: st
           </div>
         </div>
       </div>
+
+      {/* Pipeline Stats Panel */}
+      {!loading && (
+        <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <BarChart2 size={16} className="text-gray-400" />
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Hiring Pipeline</p>
+                {jobTitle && <p className="text-xs text-gray-400 mt-0.5">{jobTitle}</p>}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              {(() => {
+                const pipe = PIPELINE_LABELS[pipelineStatus] ?? PIPELINE_LABELS["OPEN"];
+                return (
+                  <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full ${pipe.cls}`}>
+                    {pipe.label}
+                  </span>
+                );
+              })()}
+              {pipelineStatus === "FILLED" ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={updatingPipeline}
+                  onClick={() => updatePipeline("OPEN")}
+                >
+                  {updatingPipeline ? <Loader2 size={13} className="animate-spin" /> : null}
+                  Reopen Position
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={updatingPipeline}
+                  onClick={() => updatePipeline("FILLED")}
+                >
+                  {updatingPipeline ? <Loader2 size={13} className="animate-spin" /> : null}
+                  Mark as Filled
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: "Total Applicants", value: stats.total,      color: "text-gray-900" },
+              { label: "In Review",        value: stats.reviewing,   color: "text-amber-700" },
+              { label: "Interviews",       value: stats.interviews,  color: "text-blue-700" },
+              { label: "Offers Made",      value: stats.offers,      color: "text-green-700" },
+            ].map(({ label, value, color }) => (
+              <div key={label} className="rounded-xl bg-gray-50 border border-gray-100 p-3 text-center">
+                <p className={`text-2xl font-bold ${color}`}>{value}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Bias info banner */}
       <div className="rounded-xl bg-brand-50 border border-brand-100 p-4 text-sm text-brand-800 flex items-center gap-3">

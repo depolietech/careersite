@@ -28,8 +28,10 @@ type Job = {
   description: string;
   createdAt: string;
   pipelineStatus: string;
+  reviewCount: number;
   shortlistedCount: number;
   interviewCount: number;
+  offerCount: number;
   employerProfile: { companyName: string; industry: string | null; companySize: string | null; verificationStatus: string } | null;
   _count: { applications: number };
 };
@@ -40,7 +42,8 @@ const PIPELINE_LABELS: Record<string, { label: string; cls: string }> = {
   OPEN:            { label: "Actively Hiring",          cls: "text-green-700 bg-green-50 border border-green-200" },
   IN_REVIEW:       { label: "Reviewing Applications",   cls: "text-amber-700 bg-amber-50 border border-amber-200" },
   INTERVIEW_STAGE: { label: "Interview Stage",          cls: "text-blue-700 bg-blue-50 border border-blue-200" },
-  FILLED:          { label: "Position Filled",          cls: "text-gray-600 bg-gray-50 border border-gray-200" },
+  OFFERED:         { label: "Offer Sent — Likely Filled", cls: "text-purple-700 bg-purple-50 border border-purple-200" },
+  FILLED:          { label: "Position Filled",          cls: "text-gray-600 bg-gray-100 border border-gray-300" },
   CLOSED:          { label: "Closed",                   cls: "text-red-700 bg-red-50 border border-red-200" },
 };
 
@@ -318,6 +321,7 @@ function JobsPageInner() {
           <div className="relative sm:w-52">
             <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             <select
+              aria-label={t("jobs.allLocations")}
               className="input pl-9 appearance-none"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
@@ -329,6 +333,7 @@ function JobsPageInner() {
           </div>
 
           <select
+            aria-label="Job type"
             className="input sm:w-44"
             value={jobType}
             onChange={(e) => setJobType(e.target.value)}
@@ -349,6 +354,7 @@ function JobsPageInner() {
           {bulkMode ? (
             <>
               <button
+                type="button"
                 onClick={toggleAll}
                 className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900"
               >
@@ -450,13 +456,16 @@ function JobsPageInner() {
               <div key={job.id} className="relative">
                 {bulkMode && (
                   <button
+                    type="button"
                     onClick={() => toggleSelect(job.id)}
                     className="absolute top-3 left-3 z-10 text-brand-600"
+                    aria-label={isBulkSelected ? "Deselect job" : "Select job"}
                   >
                     {isBulkSelected ? <CheckSquare size={18} /> : <Square size={18} />}
                   </button>
                 )}
                 <button
+                  type="button"
                   onClick={() => { setSelectedJob(job); if (!bulkMode) { setApplying(false); setProfileStatus(null); } }}
                   className={`card w-full text-left p-5 space-y-3 transition-all ${bulkMode ? "pl-10" : ""} ${
                     isSelected && !bulkMode ? "ring-2 ring-brand-500 shadow-card-hover" : ""
@@ -469,6 +478,11 @@ function JobsPageInner() {
                         {job.employerProfile?.verificationStatus === "APPROVED" && (
                           <span className="inline-flex items-center gap-0.5 rounded-full bg-green-50 border border-green-200 px-1.5 py-0.5 text-[10px] font-semibold text-green-700" title="Verified employer">
                             <ShieldCheck size={9} /> Verified
+                          </span>
+                        )}
+                        {job.pipelineStatus && job.pipelineStatus !== "OPEN" && PIPELINE_LABELS[job.pipelineStatus] && (
+                          <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full ${PIPELINE_LABELS[job.pipelineStatus].cls}`}>
+                            {PIPELINE_LABELS[job.pipelineStatus].label}
                           </span>
                         )}
                       </div>
@@ -520,6 +534,7 @@ function JobsPageInner() {
             <div className="card p-6 md:p-8 md:sticky md:top-24 space-y-6 md:max-h-[calc(100vh-8rem)] md:overflow-y-auto">
               {/* Back button — mobile only */}
               <button
+                type="button"
                 className="flex md:hidden items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 -mt-1 mb-1"
                 onClick={() => setSelectedJob(null)}
               >
@@ -600,22 +615,76 @@ function JobsPageInner() {
                       <p className="text-gray-600 leading-relaxed whitespace-pre-line">{selectedJob.description}</p>
                     </div>
 
-                    {/* Pipeline status badge */}
+                    {/* Hiring Progress */}
                     {(() => {
                       const pipe = PIPELINE_LABELS[selectedJob.pipelineStatus] ?? PIPELINE_LABELS["OPEN"];
+                      const STAGE_INDEX: Record<string, number> = {
+                        OPEN: 0, IN_REVIEW: 1, INTERVIEW_STAGE: 2, OFFERED: 3, FILLED: 4, CLOSED: 4,
+                      };
+                      const current = STAGE_INDEX[selectedJob.pipelineStatus] ?? 0;
+                      const stages = ["Applied", "Screening", "Interviews", "Offer", "Filled"];
                       return (
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${pipe.cls}`}>
-                            {pipe.label}
-                          </span>
-                          <span className="text-xs text-gray-400">
-                            {selectedJob._count.applications} applicant{selectedJob._count.applications !== 1 ? "s" : ""}
-                            {selectedJob.shortlistedCount > 0 && ` · ${selectedJob.shortlistedCount} shortlisted`}
-                            {selectedJob.interviewCount > 0 && ` · ${selectedJob.interviewCount} in interview`}
-                          </span>
+                        <div className="rounded-xl bg-gray-50 border border-gray-100 p-4 space-y-3">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Hiring Progress</p>
+                            <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full ${pipe.cls}`}>
+                              {pipe.label}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-4 gap-2 text-center">
+                            {[
+                              { label: "Applied",    value: selectedJob._count.applications },
+                              { label: "In Review",  value: selectedJob.reviewCount },
+                              { label: "Interviews", value: selectedJob.interviewCount },
+                              { label: "Offers",     value: selectedJob.offerCount },
+                            ].map(({ label, value }) => (
+                              <div key={label}>
+                                <p className="text-lg font-bold text-gray-900">{value}</p>
+                                <p className="text-[10px] text-gray-500">{label}</p>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex items-center">
+                            {stages.map((stage, i) => (
+                              <div key={stage} className="flex items-center flex-1 last:flex-none">
+                                <div
+                                  title={stage}
+                                  className={`w-3 h-3 rounded-full shrink-0 transition-colors ${
+                                    i <= current ? "bg-brand-500" : "bg-gray-200"
+                                  } ${i === current ? "ring-2 ring-brand-200" : ""}`}
+                                />
+                                {i < stages.length - 1 && (
+                                  <div className={`h-0.5 flex-1 ${i < current ? "bg-brand-500" : "bg-gray-200"}`} />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex justify-between text-[10px] text-gray-400">
+                            {stages.map((s) => <span key={s}>{s}</span>)}
+                          </div>
                         </div>
                       );
                     })()}
+
+                    {/* Context banners for pipeline stage — shown only when not yet applied */}
+                    {!appliedAppIds.has(selectedJob.id) && selectedJob.pipelineStatus === "OFFERED" && (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex items-start gap-3">
+                        <AlertCircle size={15} className="text-amber-600 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-semibold text-amber-800">An offer has been sent — this position may be filled soon</p>
+                          <p className="text-xs text-amber-700 mt-0.5">Applications are still accepted but may not be considered.</p>
+                        </div>
+                      </div>
+                    )}
+                    {!appliedAppIds.has(selectedJob.id) && selectedJob.pipelineStatus === "INTERVIEW_STAGE" && (
+                      <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 flex items-start gap-3">
+                        <AlertCircle size={15} className="text-blue-500 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-semibold text-blue-800">Currently in interview stage</p>
+                          <p className="text-xs text-blue-700 mt-0.5">Applications are still being accepted for this position.</p>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Success confirmation — shown after a successful application */}
                     {selectedJob && appliedAppIds.has(selectedJob.id) ? (
@@ -644,6 +713,7 @@ function JobsPageInner() {
                             Track Status
                           </Link>
                           <button
+                            type="button"
                             onClick={() => setSelectedJob(null)}
                             className="text-xs text-green-600 hover:underline px-1"
                           >
@@ -689,6 +759,7 @@ function JobsPageInner() {
                               ))}
                             </div>
                             <button
+                              type="button"
                               onClick={() => setProfileStatus(null)}
                               className="text-xs text-amber-600 hover:underline"
                             >
@@ -699,7 +770,12 @@ function JobsPageInner() {
                       </>
                     )}
 
-                    {!appliedAppIds.has(selectedJob.id) && applying ? (
+                    {selectedJob.pipelineStatus === "FILLED" && !appliedAppIds.has(selectedJob.id) ? (
+                      <div className="rounded-xl border border-gray-200 bg-gray-50 p-5 text-center space-y-1.5">
+                        <p className="text-sm font-semibold text-gray-700">This position has been filled</p>
+                        <p className="text-xs text-gray-500">Applications are no longer being accepted for this role.</p>
+                      </div>
+                    ) : !appliedAppIds.has(selectedJob.id) && applying ? (
                       <div className="space-y-4">
                         {/* Resume selection — optional */}
                         {resumes.length > 0 && (
@@ -708,6 +784,7 @@ function JobsPageInner() {
                               <FileText size={14} /> Resume <span className="text-gray-400 font-normal text-xs">(optional)</span>
                             </label>
                             <select
+                              aria-label="Select resume"
                               className="input w-full"
                               value={selectedResumeId ?? ""}
                               onChange={(e) => setSelectedResumeId(e.target.value || null)}
@@ -777,11 +854,12 @@ function JobsPageInner() {
                             <p className="text-sm font-semibold text-red-700 flex items-center gap-1.5">
                               <Flag size={14} /> Report this job / recruiter
                             </p>
-                            <button onClick={() => setReporting(false)} className="text-red-400 hover:text-red-600">
+                            <button type="button" aria-label="Close report form" onClick={() => setReporting(false)} className="text-red-400 hover:text-red-600">
                               <X size={16} />
                             </button>
                           </div>
                           <select
+                            aria-label="Report category"
                             className="input w-full text-sm"
                             value={reportCategory}
                             onChange={(e) => setReportCategory(e.target.value)}
@@ -814,6 +892,7 @@ function JobsPageInner() {
                         </div>
                       ) : (
                         <button
+                          type="button"
                           onClick={openReport}
                           className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 transition-colors mx-auto"
                         >
@@ -874,7 +953,7 @@ function JobsPageInner() {
             ? <CheckCircle2 size={16} className="shrink-0" />
             : <XCircle size={16} className="shrink-0" />}
           {toast.message}
-          <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100">✕</button>
+          <button type="button" aria-label="Dismiss" onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100">✕</button>
         </div>
       )}
     </div>

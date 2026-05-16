@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { maskProfile, revealProfile } from "@/lib/masking";
 import { sendApplicationSubmittedEmail, sendNewApplicationReceivedEmail } from "@/lib/email";
+import { syncPipelineStatus } from "@/lib/job-status";
 
 export const dynamic = "force-dynamic";
 
@@ -127,6 +128,21 @@ export async function POST(req: Request) {
       );
     }
 
+    // Block applications on filled positions
+    const targetJob = await db.job.findUnique({
+      where: { id: jobId },
+      select: { status: true, pipelineStatus: true },
+    });
+    if (!targetJob || targetJob.status !== "ACTIVE") {
+      return NextResponse.json({ error: "This job is no longer active." }, { status: 400 });
+    }
+    if (targetJob.pipelineStatus === "FILLED") {
+      return NextResponse.json(
+        { error: "This position has been filled and is no longer accepting applications." },
+        { status: 400 }
+      );
+    }
+
     // Validate resume belongs to this user (if provided — resume is optional)
     let resumeName: string | null = null;
     if (resumeId) {
@@ -216,6 +232,9 @@ export async function POST(req: Request) {
         sendNewApplicationReceivedEmail(recruiterRecord.email, application.job.title).catch(() => {});
       }
     }
+
+    // Sync job pipeline status (fire-and-forget)
+    syncPipelineStatus(jobId).catch(() => {});
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { job: _job, ...applicationData } = application;

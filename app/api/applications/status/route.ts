@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { sendApplicationStatusEmail } from "@/lib/email";
+import { syncPipelineStatus } from "@/lib/job-status";
 
 export const dynamic = "force-dynamic";
 
@@ -80,6 +81,9 @@ export async function PATCH(req: Request) {
       status
     ).catch(() => {});
   }
+
+  // Sync job pipeline status (fire-and-forget)
+  syncPipelineStatus(application.jobId).catch(() => {});
 
   return NextResponse.json(updated);
 }

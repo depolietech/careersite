@@ -283,7 +283,7 @@ model Job {
   educationRequired   String?  // "high-school" | "college" | "bachelor" | "master" | "phd"
   certificateRequired String?  // free-text, e.g. "PMP, AWS Solutions Architect"
   status         String @default("ACTIVE")        // "DRAFT" | "ACTIVE" | "PAUSED" | "CLOSED"
-  pipelineStatus String @default("OPEN")          // "OPEN" | "IN_REVIEW" | "INTERVIEW_STAGE" | "FILLED" | "CLOSED"
+  pipelineStatus String @default("OPEN")          // "OPEN" | "IN_REVIEW" | "INTERVIEW_STAGE" | "OFFERED" | "FILLED" | "CLOSED"
 
   postedById          String?
   postedBy            User?              @relation("PostedJobs", fields: [postedById], references: [id])

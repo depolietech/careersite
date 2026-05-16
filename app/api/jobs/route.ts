@@ -35,8 +35,10 @@ export async function GET(req: Request) {
 
   const result = jobs.map(({ applications, ...job }) => ({
     ...job,
+    reviewCount:      applications.filter((a) => ["REVIEWING", "SHORTLISTED", "FORWARDED"].includes(a.status)).length,
     shortlistedCount: applications.filter((a) => ["SHORTLISTED", "FORWARDED"].includes(a.status)).length,
-    interviewCount:   applications.filter((a) => a.status === "INTERVIEW_SCHEDULED").length,
+    interviewCount:   applications.filter((a) => ["INTERVIEW_SCHEDULED", "INTERVIEW_COMPLETED"].includes(a.status)).length,
+    offerCount:       applications.filter((a) => ["OFFER_MADE", "HIRED"].includes(a.status)).length,
   }));
 
   return NextResponse.json(result);
