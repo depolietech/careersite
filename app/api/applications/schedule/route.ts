@@ -21,6 +21,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "type must be video, phone, or in-person" }, { status: 400 });
     }
 
+    // Video interviews require a valid meeting link
+    const MEETING_LINK_RE = /^https?:\/\/([\w-]+\.)?(zoom\.us|meet\.google\.com|hangouts\.google\.com|teams\.microsoft\.com|teams\.live\.com|gotomeeting\.com|webex\.com|whereby\.com)/i;
+    if (type === "video") {
+      if (!meetingLink?.trim()) {
+        return NextResponse.json({ error: "A meeting link is required for video interviews." }, { status: 400 });
+      }
+      if (!MEETING_LINK_RE.test(meetingLink.trim())) {
+        return NextResponse.json({ error: "Invalid meeting link. Use Zoom, Google Meet, Microsoft Teams, GoToMeeting, Webex, or Whereby." }, { status: 400 });
+      }
+    } else if (meetingLink?.trim() && !MEETING_LINK_RE.test(meetingLink.trim())) {
+      return NextResponse.json({ error: "Invalid meeting link format." }, { status: 400 });
+    }
+
     const durationMin = Number(duration ?? 60);
     if (!Number.isInteger(durationMin) || durationMin < 15 || durationMin > 480) {
       return NextResponse.json({ error: "duration must be between 15 and 480 minutes" }, { status: 400 });

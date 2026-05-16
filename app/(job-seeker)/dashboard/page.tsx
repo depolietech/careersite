@@ -503,20 +503,28 @@ export default async function JobSeekerDashboard({
                     >
                       <Eye size={12} /> View Submission
                     </Link>
-                    {app.status === "INTERVIEW_SCHEDULED" && app.interview?.meetingLink && (
-                      <a
-                        href={app.interview.meetingLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-green-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-600 transition-colors"
-                      >
-                        <Calendar size={12} /> {t("interview.accept")}
-                      </a>
-                    )}
-                    {app.status === "INTERVIEW_SCHEDULED" && !app.interview?.meetingLink && (
-                      <span className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
-                        <CheckCircle2 size={13} /> Interview confirmed
-                      </span>
+                    {app.status === "INTERVIEW_SCHEDULED" && app.interview && (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Link
+                          href="/calendar"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-green-50 border border-green-200 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition-colors"
+                        >
+                          <Calendar size={12} />
+                          {app.interview.scheduledAt
+                            ? new Date(app.interview.scheduledAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+                            : "Interview scheduled"}
+                        </Link>
+                        {app.interview.meetingLink && (
+                          <a
+                            href={app.interview.meetingLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-green-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-600 transition-colors"
+                          >
+                            <CheckCircle2 size={12} /> Join Meeting
+                          </a>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>

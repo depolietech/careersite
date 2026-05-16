@@ -598,6 +598,89 @@ export async function sendReinstatementRejectedEmail(email: string, reason?: str
   );
 }
 
+export async function sendApplicationStatusEmail(
+  email: string,
+  jobTitle: string,
+  status: string
+) {
+  type StatusCfg = { subject: string; heading: string; headingColor: string; body: string; cta: string; ctaHref: string };
+
+  const configs: Record<string, StatusCfg> = {
+    REVIEWING: {
+      subject: `Application under review — ${jobTitle}`,
+      heading: "Your application is being reviewed",
+      headingColor: "#2563eb",
+      body: `Good news — a recruiter is actively reviewing your application for <strong>${escapeEmailText(jobTitle)}</strong>. We'll notify you as soon as there's an update.`,
+      cta: "Track your application",
+      ctaHref: `${APP_URL}/dashboard`,
+    },
+    SHORTLISTED: {
+      subject: `You've been shortlisted! — ${jobTitle}`,
+      heading: "🎉 You've been shortlisted",
+      headingColor: "#16a34a",
+      body: `Congratulations! You've been <strong>shortlisted</strong> for <strong>${escapeEmailText(jobTitle)}</strong>. The recruiter was impressed with your skills and experience. An interview may be scheduled soon.`,
+      cta: "View your application",
+      ctaHref: `${APP_URL}/dashboard`,
+    },
+    FORWARDED: {
+      subject: `Application advancing — ${jobTitle}`,
+      heading: "Your application is moving forward",
+      headingColor: "#2563eb",
+      body: `Your application for <strong>${escapeEmailText(jobTitle)}</strong> has been <strong>forwarded</strong> to the next stage of the hiring process. Keep an eye on your dashboard for updates.`,
+      cta: "Track your application",
+      ctaHref: `${APP_URL}/dashboard`,
+    },
+    INTERVIEW_COMPLETED: {
+      subject: `Interview completed — ${jobTitle}`,
+      heading: "Thank you for your interview",
+      headingColor: "#1e293b",
+      body: `Thank you for completing your interview for <strong>${escapeEmailText(jobTitle)}</strong>. The hiring team is reviewing feedback and will be in touch soon regarding next steps.`,
+      cta: "View your dashboard",
+      ctaHref: `${APP_URL}/dashboard`,
+    },
+    REJECTED: {
+      subject: `Application update — ${jobTitle}`,
+      heading: "Thank you for your interest",
+      headingColor: "#475569",
+      body: `Thank you for applying to <strong>${escapeEmailText(jobTitle)}</strong>. After careful consideration, the hiring team has decided to move forward with other candidates at this time. We encourage you to apply to other opportunities on the platform.`,
+      cta: "Browse more jobs",
+      ctaHref: `${APP_URL}/jobs`,
+    },
+    OFFER_MADE: {
+      subject: `🎉 Congratulations — Job offer received for ${jobTitle}`,
+      heading: "🎉 You've received a job offer!",
+      headingColor: "#16a34a",
+      body: `Congratulations! You have received a <strong>job offer</strong> for the <strong>${escapeEmailText(jobTitle)}</strong> position. Please log in to your dashboard to review and respond to the offer.`,
+      cta: "View my offer",
+      ctaHref: `${APP_URL}/dashboard`,
+    },
+    HIRED: {
+      subject: `🎉 Congratulations — You're hired for ${jobTitle}!`,
+      heading: "🎉 Congratulations, you're hired!",
+      headingColor: "#16a34a",
+      body: `This is an exciting moment — you have officially been <strong>hired</strong> for the <strong>${escapeEmailText(jobTitle)}</strong> position! The recruiter will reach out with next steps, including your start date and onboarding details.`,
+      cta: "View your dashboard",
+      ctaHref: `${APP_URL}/dashboard`,
+    },
+  };
+
+  const cfg = configs[status];
+  if (!cfg) return; // unknown status — skip
+
+  const html = baseTemplate(cfg.heading.replace(/🎉 /, ""), `
+    <h2 style="margin:0 0 16px;color:${cfg.headingColor};font-size:22px;">${cfg.heading}</h2>
+    <p style="margin:0 0 24px;color:#475569;line-height:1.6;">${cfg.body}</p>
+    <a href="${cfg.ctaHref}" style="display:inline-block;background:#1e3a2f;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:bold;font-size:15px;">
+      ${cfg.cta}
+    </a>
+    <p style="margin:24px 0 0;color:#94a3b8;font-size:13px;">
+      Your identity remains masked during the hiring process unless an interview is scheduled and accepted.
+    </p>
+  `);
+
+  await sendEmail(email, cfg.subject, html, `${cfg.heading} for "${jobTitle}". View your dashboard at ${APP_URL}/dashboard`);
+}
+
 export async function send2FAChangedEmail(email: string, action: "enabled" | "disabled") {
   const title = action === "enabled" ? "Two-factor authentication enabled" : "Two-factor authentication disabled";
   const body = action === "enabled"

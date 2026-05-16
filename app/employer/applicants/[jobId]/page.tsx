@@ -64,12 +64,16 @@ function ScheduleModal({ candidateCode, applicationId, onClose, onScheduled }: {
   const [loading, setLoading] = useState(false);
   const [meetingLink, setMeetingLink] = useState("");
   const [linkError, setLinkError] = useState("");
+  const [interviewType, setInterviewType] = useState("video");
+  const [submitError, setSubmitError] = useState("");
 
   const INTERVIEW_TYPES = [
     { value: "video",     label: t("interview.videoCall") },
     { value: "phone",     label: t("interview.phoneCall") },
     { value: "in-person", label: t("interview.inPerson") },
   ];
+
+  const isVideoType = interviewType === "video";
 
   function handleLinkChange(e: React.ChangeEvent<HTMLInputElement>) {
     const v = e.target.value;
@@ -83,24 +87,43 @@ function ScheduleModal({ candidateCode, applicationId, onClose, onScheduled }: {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setSubmitError("");
+
+    if (isVideoType && !meetingLink.trim()) {
+      setLinkError("A meeting link is required for video interviews.");
+      return;
+    }
     if (meetingLink && !validateMeetingLink(meetingLink)) {
       setLinkError(t("interview.invalidMeetingLink"));
       return;
     }
+
     setLoading(true);
     const fd = new FormData(e.currentTarget);
-    await fetch("/api/applications/schedule", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        applicationId,
-        scheduledAt: fd.get("scheduledAt"),
-        duration: Number(fd.get("duration") ?? 60),
-        type: fd.get("type"),
-        meetingLink: meetingLink || null,
-        notes: fd.get("notes"),
-      }),
-    });
+    try {
+      const res = await fetch("/api/applications/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          applicationId,
+          scheduledAt: fd.get("scheduledAt"),
+          duration: Number(fd.get("duration") ?? 60),
+          type: interviewType,
+          meetingLink: meetingLink || null,
+          notes: fd.get("notes"),
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setSubmitError(data.error ?? "Failed to schedule interview.");
+        setLoading(false);
+        return;
+      }
+    } catch {
+      setSubmitError("Something went wrong. Please try again.");
+      setLoading(false);
+      return;
+    }
     setLoading(false);
     onScheduled(applicationId);
     onClose();
@@ -116,7 +139,7 @@ function ScheduleModal({ candidateCode, applicationId, onClose, onScheduled }: {
               {t("interview.schedule")} — <strong>{candidateCode}</strong>
             </p>
           </div>
-          <button onClick={onClose} className="btn-ghost p-1.5 rounded-lg"><X size={18} /></button>
+          <button onClick={onClose} aria-label="Close" className="btn-ghost p-1.5 rounded-lg"><X size={18} /></button>
         </div>
 
         <div className="rounded-xl bg-green-50 border border-green-100 px-4 py-3 text-sm text-green-800 flex items-start gap-2">
@@ -127,7 +150,14 @@ function ScheduleModal({ candidateCode, applicationId, onClose, onScheduled }: {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input name="scheduledAt" label={t("interview.dateTime")} type="datetime-local" required />
-            <Select name="type" label={t("interview.interviewFormat")} options={INTERVIEW_TYPES} required />
+            <Select
+              name="type"
+              label={t("interview.interviewFormat")}
+              options={INTERVIEW_TYPES}
+              value={interviewType}
+              onChange={(e) => { setInterviewType(e.target.value); setLinkError(""); }}
+              required
+            />
           </div>
           <Select name="duration" label={t("interview.interviewDuration")} options={[
             { value: "30", label: t("interview.duration30") },
@@ -137,15 +167,23 @@ function ScheduleModal({ candidateCode, applicationId, onClose, onScheduled }: {
           ]} />
           <div className="space-y-1">
             <Input
-              label={t("interview.meetingLink")}
+              label={`${t("interview.meetingLink")}${isVideoType ? " *" : " (optional)"}`}
               placeholder="https://meet.google.com/... or Zoom/Teams link"
               value={meetingLink}
               onChange={handleLinkChange}
+              required={isVideoType}
             />
             {linkError && <p className="text-xs text-red-600">{linkError}</p>}
-            <p className="text-xs text-gray-400">{t("interview.supportedLinks")}</p>
+            {isVideoType && !linkError && (
+              <p className="text-xs text-amber-600">Required for video interviews. Supported: Zoom, Google Meet, Microsoft Teams, Webex, GoToMeeting, Whereby.</p>
+            )}
+            {!isVideoType && <p className="text-xs text-gray-400">{t("interview.supportedLinks")}</p>}
           </div>
           <TextArea name="notes" label={t("interview.notesForCandidate")} placeholder={t("interview.notesForCandidatePlaceholder")} />
+
+          {submitError && (
+            <div className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-sm text-red-700">{submitError}</div>
+          )}
 
           <div className="flex gap-3 pt-2">
             <Button type="submit" className="flex-1" loading={loading}>
@@ -178,24 +216,26 @@ function CandidateCard({
   const [cancellingInterview, setCancellingInterview] = useState(false);
 
   const STATUS_LABELS: Record<string, string> = {
-    PENDING:             t("status.pending"),
-    REVIEWING:           t("status.reviewing"),
-    SHORTLISTED:         t("status.shortlisted"),
-    FORWARDED:           t("status.forwarded"),
-    INTERVIEW_SCHEDULED: t("status.interviewStage"),
-    OFFER_MADE:          t("status.offerMade"),
-    HIRED:               t("status.hired"),
-    REJECTED:            t("status.rejected"),
+    PENDING:              t("status.pending"),
+    REVIEWING:            t("status.reviewing"),
+    SHORTLISTED:          t("status.shortlisted"),
+    FORWARDED:            t("status.forwarded"),
+    INTERVIEW_SCHEDULED:  t("status.interviewStage"),
+    INTERVIEW_COMPLETED:  "Interview Completed",
+    OFFER_MADE:           t("status.offerMade"),
+    HIRED:                t("status.hired"),
+    REJECTED:             t("status.rejected"),
   };
 
   const STATUS_OPTIONS = [
-    { value: "PENDING",     label: t("status.pending") },
-    { value: "REVIEWING",   label: t("status.reviewing") },
-    { value: "SHORTLISTED", label: t("status.shortlisted") },
-    { value: "FORWARDED",   label: t("status.forwarded") },
-    { value: "OFFER_MADE",  label: t("status.offerMade") },
-    { value: "HIRED",       label: t("status.hired") },
-    { value: "REJECTED",    label: t("status.rejected") },
+    { value: "PENDING",              label: t("status.pending") },
+    { value: "REVIEWING",            label: t("status.reviewing") },
+    { value: "SHORTLISTED",          label: t("status.shortlisted") },
+    { value: "FORWARDED",            label: t("status.forwarded") },
+    { value: "INTERVIEW_COMPLETED",  label: "Interview Completed" },
+    { value: "OFFER_MADE",           label: t("status.offerMade") },
+    { value: "HIRED",                label: t("status.hired") },
+    { value: "REJECTED",             label: t("status.rejected") },
   ];
 
   const revealed = candidate.revealed;
@@ -274,14 +314,18 @@ function CandidateCard({
 
             <div className="flex items-center gap-2 shrink-0">
               <button
+                type="button"
                 onClick={() => setStarred((s) => !s)}
                 className={`btn-ghost p-2 rounded-xl ${starred ? "text-amber-500" : "text-gray-400"}`}
-                title="Shortlist"
+                title={starred ? "Remove from shortlist" : "Add to shortlist"}
+                aria-label={starred ? "Remove from shortlist" : "Add to shortlist"}
               >
                 {starred ? <Star size={18} className="fill-amber-400" /> : <StarOff size={18} />}
               </button>
               <button
+                type="button"
                 onClick={() => setExpanded((e) => !e)}
+                aria-label={expanded ? "Collapse candidate details" : "Expand candidate details"}
                 className="btn-ghost p-2 rounded-xl text-gray-400"
               >
                 {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -316,11 +360,13 @@ function CandidateCard({
           {/* Status change */}
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <div className="flex items-center gap-2">
-              <label className="text-xs font-medium text-gray-500">{t("employer.statusLabel")}:</label>
+              <label htmlFor={`status-${candidate.id}`} className="text-xs font-medium text-gray-500">{t("employer.statusLabel")}:</label>
               <select
+                id={`status-${candidate.id}`}
                 value={localStatus}
                 onChange={(e) => updateStatus(e.target.value)}
                 disabled={updatingStatus}
+                aria-label="Update application status"
                 className="text-sm border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-300"
               >
                 {STATUS_OPTIONS.map((o) => (
@@ -330,9 +376,9 @@ function CandidateCard({
               {updatingStatus && <Loader2 size={14} className="animate-spin text-gray-400" />}
             </div>
 
-            {/* Actions */}
-            {localStatus !== "INTERVIEW_SCHEDULED" && localStatus !== "REJECTED" && localStatus !== "OFFER_MADE" && localStatus !== "HIRED" && (
-              <Button size="sm" onClick={() => setShowSchedule(true)}>
+            {/* Schedule interview button — show unless already at terminal/interview state */}
+            {!["INTERVIEW_SCHEDULED", "INTERVIEW_COMPLETED", "REJECTED", "OFFER_MADE", "HIRED"].includes(localStatus) && (
+              <Button type="button" size="sm" onClick={() => setShowSchedule(true)}>
                 <Calendar size={14} /> {t("interview.scheduleInterview")}
               </Button>
             )}
@@ -342,6 +388,7 @@ function CandidateCard({
                   <Calendar size={14} /> {t("employer.interviewScheduledBadge")}
                 </div>
                 <button
+                  type="button"
                   onClick={cancelInterview}
                   disabled={cancellingInterview}
                   className="flex items-center gap-1.5 text-xs font-medium text-red-500 hover:text-red-700 border border-red-200 rounded-xl px-3 py-1.5 hover:bg-red-50 transition-colors disabled:opacity-50"
@@ -352,6 +399,46 @@ function CandidateCard({
               </div>
             )}
           </div>
+
+          {/* Post-interview action prompt */}
+          {localStatus === "INTERVIEW_COMPLETED" && (
+            <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 space-y-3">
+              <p className="text-sm font-semibold text-blue-800">Interview completed — what's next?</p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => updateStatus("OFFER_MADE")}
+                  loading={updatingStatus}
+                >
+                  🎉 Send Offer
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => updateStatus("SHORTLISTED")}
+                  loading={updatingStatus}
+                >
+                  Shortlist for Later
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => updateStatus("REJECTED")}
+                  disabled={updatingStatus}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                >
+                  Not a Fit
+                </button>
+              </div>
+            </div>
+          )}
+
+          {localStatus === "OFFER_MADE" && (
+            <div className="rounded-xl border border-green-100 bg-green-50 px-4 py-3 flex items-center gap-2 text-sm text-green-800">
+              🎉 <span>Offer sent — the candidate has been notified and will respond from their dashboard.</span>
+            </div>
+          )}
         </div>
 
         {/* Expanded detail */}
@@ -487,6 +574,7 @@ export default function ApplicantsPage({ params }: { params: Promise<{ jobId: st
               { value: "shortlisted",label: t("status.shortlisted") },
             ].map((f) => (
               <button
+                type="button"
                 key={f.value}
                 onClick={() => setFilter(f.value)}
                 className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors capitalize ${

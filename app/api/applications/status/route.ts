@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { sendApplicationStatusEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -8,18 +9,19 @@ export const dynamic = "force-dynamic";
 // which creates the Interview record and reveals the profile atomically.
 const VALID_STATUSES = [
   "PENDING", "REVIEWING", "SHORTLISTED", "FORWARDED",
-  "REJECTED", "OFFER_MADE", "HIRED",
+  "INTERVIEW_COMPLETED", "REJECTED", "OFFER_MADE", "HIRED",
 ];
 
 const STATUS_MESSAGES: Record<string, string> = {
-  PENDING:             "is pending review",
-  REVIEWING:           "is being reviewed",
-  SHORTLISTED:         "has been shortlisted",
-  FORWARDED:           "has been forwarded to the next stage",
-  INTERVIEW_SCHEDULED: "has an interview scheduled — check your calendar",
-  REJECTED:            "was not selected for this role",
-  OFFER_MADE:          "has received an offer",
-  HIRED:               "resulted in a hire — congratulations!",
+  PENDING:              "is pending review",
+  REVIEWING:            "is being reviewed",
+  SHORTLISTED:          "has been shortlisted",
+  FORWARDED:            "has been forwarded to the next stage",
+  INTERVIEW_SCHEDULED:  "has an interview scheduled — check your calendar",
+  INTERVIEW_COMPLETED:  "interview has been completed — the recruiter will be in touch soon",
+  REJECTED:             "was not selected for this role",
+  OFFER_MADE:           "has received an offer — check your dashboard",
+  HIRED:                "resulted in a hire — congratulations!",
 };
 
 export async function PATCH(req: Request) {
@@ -42,7 +44,8 @@ export async function PATCH(req: Request) {
   const application = await db.application.findUnique({
     where: { id: applicationId },
     include: {
-      job: { select: { postedById: true, title: true } },
+      job:  { select: { postedById: true, title: true } },
+      user: { select: { email: true, emailAppUpdates: true } },
     },
   });
 
@@ -68,6 +71,15 @@ export async function PATCH(req: Request) {
       body: `Your application for "${application.job.title}" ${STATUS_MESSAGES[status] ?? "has been updated"}.`,
     },
   });
+
+  // Send email notification (fire-and-forget, respects emailAppUpdates preference)
+  if (application.user?.email && application.user.emailAppUpdates !== false) {
+    sendApplicationStatusEmail(
+      application.user.email,
+      application.job.title,
+      status
+    ).catch(() => {});
+  }
 
   return NextResponse.json(updated);
 }

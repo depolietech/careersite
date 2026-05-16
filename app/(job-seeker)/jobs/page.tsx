@@ -22,6 +22,8 @@ type Job = {
   salaryMin: number | null;
   salaryMax: number | null;
   experience: number | null;
+  educationRequired: string | null;
+  certificateRequired: string | null;
   skills: string;
   description: string;
   createdAt: string;
@@ -63,6 +65,14 @@ function JobsPageInner() {
     "part-time": t("jobs.partTime"),
     "contract":  t("jobs.contract"),
     "remote":    t("jobs.remote"),
+  };
+
+  const EDU_LABELS: Record<string, string> = {
+    "high-school": "High School / GED",
+    "college":     "College / Diploma",
+    "bachelor":    "Bachelor's Degree",
+    "master":      "Master's Degree",
+    "phd":         "PhD / Doctorate",
   };
 
   const NA_LOCATIONS = [
@@ -483,6 +493,12 @@ function JobsPageInner() {
                     {skills.length > 3 && (
                       <span className="badge bg-gray-100 text-gray-600">+{skills.length - 3}</span>
                     )}
+                    {job.educationRequired && (
+                      <span className="badge bg-purple-50 text-purple-700 text-xs">🎓 {EDU_LABELS[job.educationRequired] ?? job.educationRequired}</span>
+                    )}
+                    {job.certificateRequired && (
+                      <span className="badge bg-amber-50 text-amber-700 text-xs">🏅 Cert required</span>
+                    )}
                   </div>
                 </button>
               </div>
@@ -549,6 +565,35 @@ function JobsPageInner() {
                         ))}
                       </div>
                     </div>
+
+                    {/* Requirements: education, certs, experience */}
+                    {(selectedJob.experience || selectedJob.educationRequired || selectedJob.certificateRequired) && (
+                      <div className="rounded-xl bg-gray-50 border border-gray-100 p-4 space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Requirements</p>
+                        {selectedJob.experience && (
+                          <div className="flex items-center gap-2 text-sm text-gray-700">
+                            <span className="text-gray-400 w-32 shrink-0 text-xs">Experience</span>
+                            <span className="font-medium">{selectedJob.experience}+ years</span>
+                          </div>
+                        )}
+                        {selectedJob.educationRequired && (
+                          <div className="flex items-center gap-2 text-sm text-gray-700">
+                            <span className="text-gray-400 w-32 shrink-0 text-xs">Min. Education</span>
+                            <span className="font-medium">{EDU_LABELS[selectedJob.educationRequired] ?? selectedJob.educationRequired}</span>
+                          </div>
+                        )}
+                        {selectedJob.certificateRequired && (
+                          <div className="flex items-start gap-2 text-sm text-gray-700">
+                            <span className="text-gray-400 w-32 shrink-0 text-xs mt-0.5">Certifications</span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {selectedJob.certificateRequired.split(/[,;]/).map((c) => c.trim()).filter(Boolean).map((c) => (
+                                <span key={c} className="inline-flex rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs font-medium text-amber-800">{c}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     <div>
                       <p className="text-sm font-medium text-gray-700 mb-2">{t("jobs.aboutRole")}</p>
