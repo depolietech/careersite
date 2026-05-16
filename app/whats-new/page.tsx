@@ -1,26 +1,7 @@
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Circle, Rocket } from "lucide-react";
+import { ArrowLeft, Circle, Rocket } from "lucide-react";
 
 export const metadata = { title: "What's New — Equalhires" };
-
-const SHIPPED = [
-  "Live hiring transparency — every job listing shows a real-time pipeline progress bar (Applied → Screening → Interviews → Offer → Filled) with live applicant counts, visible to everyone including public visitors",
-  "Auto-pipeline status — pipelineStatus syncs automatically on every application event; FILLED jobs block new applications at both the API and UI layer",
-  "Hiring stage badges — job list cards show pipeline badges (Reviewing, Interview Stage, Offer Sent, Position Filled) so seekers know where a role stands at a glance",
-  "Employer pipeline dashboard — applicants page now shows total applicants, in-review, interview, and offer counts, plus one-click Mark as Filled / Reopen controls",
-  "Hiring workflow emails — job seekers receive email notifications at every stage change: Reviewing, Shortlisted, Forwarded, Interview Completed, Rejected, Offer Made, and Hired",
-  "Interview scheduling improvements — video interviews require a validated meeting link (Zoom, Google Meet, Teams, etc.); interview date and Join Meeting button appear on the job seeker dashboard",
-  "Post-interview recruiter flow — completing an interview surfaces a guided action panel: Send Offer, Shortlist for Later, or Not a Fit",
-  "Job requirements on listings — education level and certifications required now display on job cards and in the detail panel",
-  "Skills-based matching engine — job seekers see top-matched jobs with % score, skill gaps, and cert recommendations on their dashboard; recruiters can rank the entire talent pool against any posted job",
-  "Multi-location job postings — employers can add multiple locations per job listing; job seekers see all locations in the detail panel",
-  "Auto-suggest skills & certs — typing a job title on the post-job form surfaces relevant skills, certifications, and education requirements to add in one click",
-  "Application analytics now clickable — Response Rate card filters to responded applications; Top Skills badges link to job search for that skill",
-  "Recruiter login fixed — company verification pending no longer blocks login; recruiters can update their profile and request verification while using the platform",
-  "Reinstatement emails — users who request account reinstatement now receive confirmation, approval, and rejection emails",
-  "Recruiter Reviews & Ratings — rate communication, fairness, and professionalism",
-  "Email Preferences — opt-out of job alerts, app updates, and marketing (CAN-SPAM / CASL)",
-];
 
 const IN_PROGRESS = [
   "Mobile app — iOS & Android",
@@ -45,24 +26,6 @@ export default function WhatsNewPage() {
         <p className="text-sm text-gray-500">
           We ship continuously. Here&apos;s what just launched and what&apos;s on the horizon.
         </p>
-      </div>
-
-      {/* Recently Shipped */}
-      <div className="rounded-2xl border border-green-100 bg-green-50/50 p-6">
-        <div className="flex items-center gap-2 mb-5">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-green-500">
-            <CheckCircle2 size={14} className="text-white" />
-          </span>
-          <h2 className="font-semibold text-gray-900">Recently Shipped</h2>
-        </div>
-        <ul className="space-y-3">
-          {SHIPPED.map((item) => (
-            <li key={item} className="flex items-start gap-2.5 text-sm text-gray-700">
-              <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-green-500" />
-              {item}
-            </li>
-          ))}
-        </ul>
       </div>
 
       {/* In Progress */}
