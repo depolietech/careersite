@@ -1,4 +1,4 @@
-import { Briefcase, FileCheck, Calendar, Clock, ArrowRight, TrendingUp, CheckCircle2, XCircle, Eye } from "lucide-react";
+import { Briefcase, FileCheck, Calendar, Clock, ArrowRight, TrendingUp, CheckCircle2, XCircle, Eye, Sparkles, AlertCircle, MapPin } from "lucide-react";
 import { DashboardRefresher } from "@/components/shared/DashboardRefresher";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { getServerLocale, createServerT } from "@/lib/i18n/server";
+import { scoreJobForSeeker } from "@/lib/matching";
 
 const STATUS_VARIANT: Record<string, "default" | "success" | "warning" | "info" | "danger"> = {
   PENDING:             "default",
@@ -56,7 +57,7 @@ export default async function JobSeekerDashboard({
   const params = await searchParams;
   const filterStatus = params.status ?? null;
 
-  const [allApps, filteredApps, profile, resumeCount, analyticsApps] = await Promise.all([
+  const [allApps, filteredApps, profile, resumeCount, analyticsApps, activeJobs, appliedJobIds] = await Promise.all([
     db.application.findMany({
       where: { userId: session.user.id },
       select: { status: true },
@@ -80,7 +81,11 @@ export default async function JobSeekerDashboard({
     }),
     db.jobSeekerProfile.findUnique({
       where: { userId: session.user.id },
-      include: { workExperiences: true, educations: true },
+      include: {
+        workExperiences: true,
+        educations: true,
+        certifications: { select: { name: true, verificationLevel: true } },
+      },
     }),
     db.resume.count({ where: { userId: session.user.id } }),
     db.application.findMany({
@@ -91,6 +96,20 @@ export default async function JobSeekerDashboard({
         updatedAt: true,
         job: { select: { skills: true } },
       },
+    }),
+    db.job.findMany({
+      where: { status: "ACTIVE" },
+      select: {
+        id: true, title: true, location: true, jobType: true,
+        skills: true, experience: true, certificateRequired: true,
+        employerProfile: { select: { industry: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 80,
+    }),
+    db.application.findMany({
+      where: { userId: session.user.id },
+      select: { jobId: true },
     }),
   ]);
 
@@ -128,6 +147,38 @@ export default async function JobSeekerDashboard({
   }
 
   const completion = calcCompletion();
+
+  // ── Top matches ────────────────────────────────────────────────────────────
+  const appliedSet = new Set(appliedJobIds.map((a) => a.jobId));
+  const topMatches = profile
+    ? activeJobs
+        .filter((j) => !appliedSet.has(j.id))
+        .map((job) => ({
+          job,
+          ...scoreJobForSeeker(
+            job,
+            {
+              ...profile,
+              workExperiences: profile.workExperiences.map((w) => ({ skills: w.skills })),
+              certifications: profile.certifications,
+              educations: profile.educations,
+            },
+            resumeCount
+          ),
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5)
+    : [];
+
+  // Aggregate skill gaps across top matches (most frequent first)
+  const gapFreq: Record<string, number> = {};
+  for (const m of topMatches) {
+    for (const g of m.skillGaps) gapFreq[g] = (gapFreq[g] ?? 0) + 1;
+  }
+  const topSkillGaps = Object.entries(gapFreq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([s]) => s);
 
   // Application analytics
   const responded = analyticsApps.filter((a) =>
@@ -240,6 +291,82 @@ export default async function JobSeekerDashboard({
         </div>
         <p className="mt-2 text-sm text-gray-500">{completionHint()}</p>
       </div>
+
+      {/* Top Matches */}
+      {topMatches.length > 0 && (
+        <div className="card p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles size={16} className="text-brand-500" />
+              <h2 className="font-semibold text-gray-900">Top Matches For You</h2>
+            </div>
+            <Link href="/jobs" className="text-sm text-brand-600 hover:underline">
+              Browse all <ArrowRight size={13} className="inline" />
+            </Link>
+          </div>
+
+          <div className="space-y-3">
+            {topMatches.map(({ job, score, matchedSkills, skillGaps }) => {
+              const scoreColor =
+                score >= 80 ? "bg-green-100 text-green-700" :
+                score >= 60 ? "bg-amber-100 text-amber-700" :
+                              "bg-gray-100 text-gray-600";
+              return (
+                <Link
+                  key={job.id}
+                  href={`/jobs/${job.id}`}
+                  className="flex items-start gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4 hover:border-brand-200 hover:bg-brand-50 transition-all"
+                >
+                  <div className={`shrink-0 rounded-lg px-2.5 py-1 text-sm font-bold tabular-nums ${scoreColor}`}>
+                    {score}%
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    <p className="font-medium text-gray-900 truncate">{job.title}</p>
+                    <p className="text-xs text-gray-500 flex items-center gap-1">
+                      <MapPin size={11} />
+                      {job.location} · {job.jobType}
+                      {job.employerProfile?.industry ? ` · ${job.employerProfile.industry}` : ""}
+                    </p>
+                    {matchedSkills.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {matchedSkills.slice(0, 4).map((s) => (
+                          <span key={s} className="inline-flex rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                            ✓ {s}
+                          </span>
+                        ))}
+                        {skillGaps.slice(0, 2).map((s) => (
+                          <span key={s} className="inline-flex rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
+                            + {s}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Skill Gaps panel */}
+          {topSkillGaps.length > 0 && (
+            <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 space-y-2">
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-amber-800">
+                <AlertCircle size={14} /> Skills to add to improve your matches
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {topSkillGaps.map((s) => (
+                  <span key={s} className="inline-flex rounded-full border border-amber-200 bg-white px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                    {s}
+                  </span>
+                ))}
+              </div>
+              <Link href="/profile" className="text-xs text-amber-700 underline underline-offset-2 hover:no-underline">
+                Update your profile →
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Application Analytics */}
       {analyticsApps.length > 0 && (

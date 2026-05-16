@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { sendAdminAccountRequestEmail } from "@/lib/email";
+import { sendAdminAccountRequestEmail, sendReinstatementRequestedEmail } from "@/lib/email";
 
 // POST /api/auth/recover-account
 // body: { email: string; action: "request" | "new" | "contact" }
@@ -91,6 +91,9 @@ export async function POST(req: Request) {
         email,
         "restore"
       );
+
+      // Send confirmation to the user (fire-and-forget)
+      sendReinstatementRequestedEmail(email).catch(() => {});
 
       return NextResponse.json({ ok: true });
     }

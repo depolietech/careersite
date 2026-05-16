@@ -534,6 +534,70 @@ export async function sendRecruiterReviewReceivedEmail(email: string, companyNam
   );
 }
 
+export async function sendReinstatementRequestedEmail(email: string) {
+  const html = baseTemplate("Reinstatement request received", `
+    <h2 style="margin:0 0 16px;color:#1e293b;font-size:22px;">We received your reinstatement request</h2>
+    <p style="margin:0 0 24px;color:#475569;line-height:1.6;">
+      Your account reinstatement request is currently <strong>under review</strong> by our team.
+      We will notify you as soon as a decision has been made.
+    </p>
+    <p style="margin:0;color:#94a3b8;font-size:13px;">
+      If you did not submit this request, please contact support.
+    </p>
+  `);
+
+  await sendEmail(
+    email,
+    "Your Equalhires reinstatement request is under review",
+    html,
+    "We received your account reinstatement request. Your request is currently under review. We will notify you once a decision has been made."
+  );
+}
+
+export async function sendReinstatementApprovedEmail(email: string) {
+  const html = baseTemplate("Account reinstated", `
+    <h2 style="margin:0 0 16px;color:#16a34a;font-size:22px;">Your account has been reinstated</h2>
+    <p style="margin:0 0 24px;color:#475569;line-height:1.6;">
+      Your Equalhires account has been <strong>reinstated successfully</strong>.
+      You will receive a separate email to verify your address before you can log in.
+    </p>
+    <p style="margin:0;color:#94a3b8;font-size:13px;">
+      If you did not request this, please contact support immediately.
+    </p>
+  `);
+
+  await sendEmail(
+    email,
+    "Your Equalhires account has been reinstated",
+    html,
+    "Your Equalhires account has been reinstated successfully. Check your inbox for a verification email to complete the process."
+  );
+}
+
+export async function sendReinstatementRejectedEmail(email: string, reason?: string | null) {
+  const reasonSection = reason
+    ? `<p style="margin:0 0 24px;color:#475569;font-size:14px;"><strong>Reason:</strong> ${escapeEmailText(reason)}</p>`
+    : "";
+
+  const html = baseTemplate("Reinstatement request declined", `
+    <h2 style="margin:0 0 16px;color:#dc2626;font-size:22px;">Reinstatement request declined</h2>
+    <p style="margin:0 0 16px;color:#475569;line-height:1.6;">
+      Unfortunately, your Equalhires account reinstatement request has been <strong>declined</strong>.
+    </p>
+    ${reasonSection}
+    <p style="margin:0;color:#94a3b8;font-size:13px;">
+      If you believe this is an error, please contact our support team.
+    </p>
+  `);
+
+  await sendEmail(
+    email,
+    "Your Equalhires reinstatement request was declined",
+    html,
+    `Your reinstatement request was declined.${reason ? ` Reason: ${reason}` : ""} Contact support if you believe this is an error.`
+  );
+}
+
 export async function send2FAChangedEmail(email: string, action: "enabled" | "disabled") {
   const title = action === "enabled" ? "Two-factor authentication enabled" : "Two-factor authentication disabled";
   const body = action === "enabled"

@@ -4,6 +4,9 @@ import { ArrowLeft, CheckCircle2, Circle, Rocket } from "lucide-react";
 export const metadata = { title: "What's New — Equalhires" };
 
 const SHIPPED = [
+  "Skills-based matching engine — job seekers see top-matched jobs with % score and skill gaps on their dashboard; recruiters can rank the entire talent pool against any posted job",
+  "Recruiter login fixed — company verification pending no longer blocks login; recruiters can update their profile and request verification while using the platform",
+  "Reinstatement emails — users who request account reinstatement now receive confirmation, approval, and rejection emails",
   "Recruiter Reviews & Ratings — rate communication, fairness, and professionalism",
   "Email Preferences — opt-out of job alerts, app updates, and marketing (CAN-SPAM / CASL)",
 ];
@@ -13,7 +16,6 @@ const IN_PROGRESS = [
 ];
 
 const PLANNED = [
-  "AI-powered skills-to-job matching",
   "Indeed & job board integration",
   "Additional Language Support — Arabic, Portuguese, German, Mandarin, Hindi",
 ];

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { scoreSeekerForJob } from "@/lib/matching";
 
 export const dynamic = "force-dynamic";
 
@@ -11,15 +12,22 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url);
-  const skill    = searchParams.get("skill")?.trim() ?? "";
+  const skill    = searchParams.get("skill")?.trim()    ?? "";
   const minExp   = searchParams.get("minExp") ? Number(searchParams.get("minExp")) : null;
   const location = searchParams.get("location")?.trim() ?? "";
+  const cert     = searchParams.get("cert")?.trim()     ?? "";
+  const remote   = searchParams.get("remote") === "true";
+  const jobId    = searchParams.get("jobId")?.trim()    ?? "";
 
   const profiles = await db.jobSeekerProfile.findMany({
     where: {
-      ...(skill && { skills: { contains: skill } }),
+      ...(skill    && { skills: { contains: skill, mode: "insensitive" } }),
       ...(minExp !== null && { yearsExperience: { gte: minExp } }),
-      ...(location && { location: { contains: location } }),
+      ...(location && { location: { contains: location, mode: "insensitive" } }),
+      ...(remote   && { jobType: "remote" }),
+      ...(cert     && {
+        certifications: { some: { name: { contains: cert, mode: "insensitive" } } },
+      }),
     },
     select: {
       id: true,
@@ -56,23 +64,75 @@ export async function GET(req: Request) {
           name: true,
           issuer: true,
           dateObtained: true,
+          verificationLevel: true,
         },
       },
     },
     orderBy: { updatedAt: "desc" },
-    take: 50,
+    take: 100,
   });
 
-  // Assign deterministic anonymous codes
-  const masked = profiles.map((p, i) => ({
-    ...p,
-    candidateCode: `CAND-${String(i + 1).padStart(4, "0")}`,
-    skills: (() => { try { return JSON.parse(p.skills); } catch { return []; } })(),
-    workExperiences: p.workExperiences.map((w) => ({
-      ...w,
-      skills: (() => { try { return JSON.parse(w.skills); } catch { return []; } })(),
-    })),
-  }));
+  // Load job for ranking if jobId provided (must belong to this employer)
+  let rankingJob: {
+    title: string; skills: string; experience: number | null;
+    certificateRequired: string | null; jobType: string; location: string;
+  } | null = null;
 
-  return NextResponse.json(masked);
+  if (jobId) {
+    const job = await db.job.findFirst({
+      where: { id: jobId, postedById: session.user.id },
+      select: { title: true, skills: true, experience: true, certificateRequired: true, jobType: true, location: true },
+    });
+    rankingJob = job ?? null;
+  }
+
+  const parseSkills = (raw: string) => {
+    try { return JSON.parse(raw) as string[]; } catch { return [] as string[]; }
+  };
+
+  const masked = profiles.map((p, i) => {
+    const skills = parseSkills(p.skills);
+    const workExps = p.workExperiences.map((w) => ({
+      ...w,
+      skills: parseSkills(w.skills),
+    }));
+
+    let matchScore: number | null = null;
+    let matchedSkills: string[] = [];
+    let skillGaps: string[] = [];
+    let matchBreakdown: Record<string, number> | null = null;
+
+    if (rankingJob) {
+      const result = scoreSeekerForJob(rankingJob, {
+        skills: p.skills,
+        yearsExperience: p.yearsExperience,
+        jobType: p.jobType,
+        location: p.location,
+        workExperiences: p.workExperiences.map((w) => ({ title: w.title, skills: w.skills })),
+        certifications: p.certifications.map((c) => ({ name: c.name, verificationLevel: c.verificationLevel })),
+      });
+      matchScore    = result.score;
+      matchedSkills = result.matchedSkills;
+      skillGaps     = result.skillGaps;
+      matchBreakdown = result.breakdown;
+    }
+
+    return {
+      ...p,
+      candidateCode: `CAND-${String(i + 1).padStart(4, "0")}`,
+      skills,
+      workExperiences: workExps,
+      matchScore,
+      matchedSkills,
+      skillGaps,
+      matchBreakdown,
+    };
+  });
+
+  // Sort by match score when a job is selected
+  if (rankingJob) {
+    masked.sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0));
+  }
+
+  return NextResponse.json(masked.slice(0, 50));
 }

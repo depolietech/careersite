@@ -40,9 +40,6 @@ export async function POST(req: Request) {
       if (user.employerProfile.isBlocked) {
         return NextResponse.json({ status: "ACCOUNT_SUSPENDED" });
       }
-      if (user.employerProfile.verificationStatus === "PENDING_REVIEW") {
-        return NextResponse.json({ status: "ACCOUNT_PENDING_APPROVAL" });
-      }
     }
 
     return NextResponse.json({ status: "ok" });

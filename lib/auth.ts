@@ -86,7 +86,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (user.role === "EMPLOYER" && user.employerProfile) {
           if (user.employerProfile.isBlocked) throw new Error("ACCOUNT_SUSPENDED");
-          if (user.employerProfile.verificationStatus === "PENDING_REVIEW") throw new Error("ACCOUNT_PENDING_APPROVAL");
         }
 
         const valid = await bcrypt.compare(

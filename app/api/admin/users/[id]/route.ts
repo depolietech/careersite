@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { sendVerificationEmail, sendNewAccountApprovedEmail } from "@/lib/email";
+import { sendVerificationEmail, sendNewAccountApprovedEmail, sendReinstatementApprovedEmail, sendReinstatementRejectedEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -95,6 +95,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         },
       });
       try {
+        await sendReinstatementApprovedEmail(user.email);
+      } catch {
+        // Don't block reinstatement if email fails
+      }
+      try {
         await sendVerificationEmail(user.email, token, verifyCode);
       } catch {
         // Don't block reinstatement if email fails
@@ -107,6 +112,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       where: { id },
       data: { reinstateRequestedAt: null, reinstateType: null },
     });
+    try {
+      await sendReinstatementRejectedEmail(user.email, note ?? null);
+    } catch {
+      // Don't block if email fails
+    }
     result = { rejected: true };
   } else if (action === "purge") {
     await db.adminLog.create({

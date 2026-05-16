@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   Search, MapPin, Clock, Briefcase, GraduationCap, Award,
-  ChevronDown, ChevronUp, EyeOff, Loader2, Users,
+  ChevronDown, ChevronUp, EyeOff, Loader2, Users, Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,7 @@ type WorkExp = {
   description: string | null; skills: string[];
 };
 type Education = { id: string; degree: string; field: string | null; durationYears: number | null };
-type Cert = { id: string; name: string; issuer: string; dateObtained: string | null };
+type Cert = { id: string; name: string; issuer: string; dateObtained: string | null; verificationLevel: string };
 
 type Talent = {
   id: string;
@@ -30,9 +30,27 @@ type Talent = {
   workExperiences: WorkExp[];
   educations: Education[];
   certifications: Cert[];
+  matchScore: number | null;
+  matchedSkills: string[];
+  skillGaps: string[];
+  matchBreakdown: Record<string, number> | null;
 };
 
-function TalentCard({ talent }: { talent: Talent }) {
+type EmployerJob = { id: string; title: string; status: string };
+
+function MatchBadge({ score }: { score: number }) {
+  const color =
+    score >= 80 ? "bg-green-100 text-green-700 border-green-200" :
+    score >= 60 ? "bg-amber-100 text-amber-700 border-amber-200" :
+                  "bg-gray-100 text-gray-600 border-gray-200";
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-sm font-bold tabular-nums ${color}`}>
+      <Target size={12} /> {score}%
+    </span>
+  );
+}
+
+function TalentCard({ talent, hasJobSelected }: { talent: Talent; hasJobSelected: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const { t } = useI18n();
 
@@ -45,11 +63,17 @@ function TalentCard({ talent }: { talent: Talent }) {
               <EyeOff size={18} className="text-brand-500" />
             </div>
             <div>
-              <p className="font-bold text-gray-900 text-lg">{talent.candidateCode}</p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-bold text-gray-900 text-lg">{talent.candidateCode}</p>
+                {hasJobSelected && talent.matchScore !== null && (
+                  <MatchBadge score={talent.matchScore} />
+                )}
+              </div>
               {talent.headline && <p className="text-sm text-gray-600 mt-0.5">{talent.headline}</p>}
             </div>
           </div>
           <button
+            type="button"
             onClick={() => setExpanded((e) => !e)}
             className="btn-ghost p-2 rounded-xl text-gray-400"
           >
@@ -74,8 +98,31 @@ function TalentCard({ talent }: { talent: Talent }) {
 
         {talent.skills.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {talent.skills.map((s) => (
-              <span key={s} className="badge bg-brand-50 text-brand-700 text-sm">{s}</span>
+            {talent.skills.map((s) => {
+              const isMatch = talent.matchedSkills.includes(s);
+              return (
+                <span
+                  key={s}
+                  className={`badge text-sm ${
+                    hasJobSelected && isMatch
+                      ? "bg-green-100 text-green-700"
+                      : "bg-brand-50 text-brand-700"
+                  }`}
+                >
+                  {hasJobSelected && isMatch && "✓ "}{s}
+                </span>
+              );
+            })}
+          </div>
+        )}
+
+        {hasJobSelected && talent.skillGaps.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            <span className="text-xs text-gray-400 self-center">Missing:</span>
+            {talent.skillGaps.slice(0, 4).map((s) => (
+              <span key={s} className="badge bg-orange-50 text-orange-600 text-xs">
+                + {s}
+              </span>
             ))}
           </div>
         )}
@@ -87,6 +134,20 @@ function TalentCard({ talent }: { talent: Talent }) {
 
       {expanded && (
         <div className="border-t border-gray-100 bg-gray-50 p-6 space-y-5">
+          {hasJobSelected && talent.matchBreakdown && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Match Breakdown</p>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {Object.entries(talent.matchBreakdown).map(([key, val]) => (
+                  <div key={key} className="rounded-lg bg-white border border-gray-100 px-3 py-2">
+                    <p className="text-xs text-gray-400 capitalize">{key.replace(/([A-Z])/g, " $1")}</p>
+                    <p className="text-sm font-bold text-gray-800">{val}%</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {talent.workExperiences.length > 0 && (
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">{t("profile.workExperience")}</p>
@@ -140,10 +201,13 @@ function TalentCard({ talent }: { talent: Talent }) {
               </p>
               <div className="space-y-1">
                 {talent.certifications.map((c) => (
-                  <div key={c.id} className="text-sm text-gray-700">
+                  <div key={c.id} className="flex items-center gap-2 text-sm text-gray-700">
                     <span className="font-medium">{c.name}</span>
-                    <span className="text-gray-500"> · {c.issuer}</span>
-                    {c.dateObtained && <span className="text-gray-400"> · {c.dateObtained}</span>}
+                    <span className="text-gray-500">· {c.issuer}</span>
+                    {c.dateObtained && <span className="text-gray-400">· {c.dateObtained}</span>}
+                    {c.verificationLevel !== "SELF_REPORTED" && (
+                      <span className="rounded-full bg-green-100 px-1.5 py-0.5 text-xs text-green-700 font-medium">verified</span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -161,12 +225,25 @@ function TalentCard({ talent }: { talent: Talent }) {
 }
 
 export default function TalentPage() {
-  const [talents, setTalents] = useState<Talent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [talents, setTalents]           = useState<Talent[]>([]);
+  const [loading, setLoading]           = useState(true);
+  const [employerJobs, setEmployerJobs] = useState<EmployerJob[]>([]);
   const { t } = useI18n();
-  const [skillFilter, setSkillFilter] = useState("");
+
+  const [skillFilter,    setSkillFilter]    = useState("");
   const [locationFilter, setLocationFilter] = useState("");
-  const [minExpFilter, setMinExpFilter] = useState("");
+  const [minExpFilter,   setMinExpFilter]   = useState("");
+  const [certFilter,     setCertFilter]     = useState("");
+  const [remoteOnly,     setRemoteOnly]     = useState(false);
+  const [selectedJobId,  setSelectedJobId]  = useState("");
+
+  // Load employer's jobs for the ranking selector
+  useEffect(() => {
+    fetch("/api/employer/jobs")
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data)) setEmployerJobs(data); })
+      .catch(() => {});
+  }, []);
 
   const fetchTalent = useCallback(async () => {
     setLoading(true);
@@ -174,13 +251,18 @@ export default function TalentPage() {
     if (skillFilter)    params.set("skill",    skillFilter);
     if (locationFilter) params.set("location", locationFilter);
     if (minExpFilter)   params.set("minExp",   minExpFilter);
+    if (certFilter)     params.set("cert",     certFilter);
+    if (remoteOnly)     params.set("remote",   "true");
+    if (selectedJobId)  params.set("jobId",    selectedJobId);
     const res = await fetch(`/api/talent?${params}`);
     const data = await res.json();
     setTalents(Array.isArray(data) ? data : []);
     setLoading(false);
-  }, [skillFilter, locationFilter, minExpFilter]);
+  }, [skillFilter, locationFilter, minExpFilter, certFilter, remoteOnly, selectedJobId]);
 
   useEffect(() => { fetchTalent(); }, [fetchTalent]);
+
+  const hasJobSelected = !!selectedJobId;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
@@ -217,6 +299,37 @@ export default function TalentPage() {
             value={minExpFilter}
             onChange={(e) => setMinExpFilter(e.target.value)}
           />
+          <Input
+            label="Certification"
+            placeholder="e.g. AWS, PMP"
+            value={certFilter}
+            onChange={(e) => setCertFilter(e.target.value)}
+          />
+          <div className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-gray-700">Rank for job</span>
+            <select
+              value={selectedJobId}
+              onChange={(e) => setSelectedJobId(e.target.value)}
+              aria-label="Rank candidates for job"
+              className="input w-full"
+            >
+              <option value="">— No ranking —</option>
+              {employerJobs.map((j) => (
+                <option key={j.id} value={j.id}>{j.title}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-end pb-1">
+            <label className="flex items-center gap-2 cursor-pointer select-none text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={remoteOnly}
+                onChange={(e) => setRemoteOnly(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 accent-brand-500"
+              />
+              Remote only
+            </label>
+          </div>
         </div>
         <Button size="sm" onClick={fetchTalent}>
           <Search size={14} /> {t("jobs.search")}
@@ -237,8 +350,13 @@ export default function TalentPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          <p className="text-sm text-gray-500">{talents.length} {t("employer.candidatesFound")}</p>
-          {talents.map((talent) => <TalentCard key={talent.id} talent={talent} />)}
+          <p className="text-sm text-gray-500">
+            {talents.length} {t("employer.candidatesFound")}
+            {hasJobSelected && " · sorted by match score"}
+          </p>
+          {talents.map((talent) => (
+            <TalentCard key={talent.id} talent={talent} hasJobSelected={hasJobSelected} />
+          ))}
         </div>
       )}
     </div>
